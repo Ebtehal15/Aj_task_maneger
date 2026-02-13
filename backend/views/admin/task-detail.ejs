@@ -1,0 +1,124 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= task.title %></h1>
+  <div class="d-flex gap-2">
+    <a href="/admin/tasks/<%= task.id %>/edit" class="btn btn-sm btn-outline-primary">
+      <%= t('edit') %>
+    </a>
+    <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+    <form
+      method="post"
+      action="/admin/tasks/<%= task.id %>/delete"
+      onsubmit="return confirm('Bu görevi silmek istediğinize emin misiniz?');"
+    >
+      <button class="btn btn-sm btn-outline-danger">Sil</button>
+    </form>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <p class="mb-1 text-muted"><strong><%= t('taskDescription') %>:</strong></p>
+        <p><%= task.description || '-' %></p>
+
+        <p class="mb-1"><strong><%= t('assignedTo') %>:</strong> <%= task.assigned_username %></p>
+        <p class="mb-1">
+          <strong><%= t('status') %>:</strong>
+          <span class="badge status-<%= task.status %>">
+            <%= t('status_' + task.status) %>
+          </span>
+        </p>
+        <p class="mb-1">
+          <strong><%= t('deadline') %>:</strong>
+          <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
+        </p>
+        <p class="mb-0">
+          <strong><%= t('createdBy') %>:</strong> <%= task.created_username %>
+        </p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('status') %> (<%= t('adminLabel') %>)</h2>
+        <form method="post" action="/admin/tasks/<%= task.id %>/status" class="d-flex gap-2">
+          <select name="status" class="form-select">
+            <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>
+              <%= t('status_pending') %>
+            </option>
+            <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>
+              <%= t('status_in_progress') %>
+            </option>
+            <option value="done" <%= task.status === 'done' ? 'selected' : '' %>>
+              <%= t('status_done') %>
+            </option>
+          </select>
+          <button class="btn btn-primary"><%= t('save') %></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('uploadFiles') %></h2>
+        <% if (!files.length) { %>
+        <p class="text-muted mb-2"><%= t('noTasks') %></p>
+        <% } else { %>
+        <ul class="list-group mb-3">
+          <% files.forEach(file => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><%= file.original_name %></span>
+            <a href="/uploads/<%= file.filename %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <%= t('view') %>
+            </a>
+          </li>
+          <% }) %>
+        </ul>
+        <% } %>
+        <p class="small text-muted mb-0">
+          <%= t('filesHelpText') %>
+        </p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('recentUpdates') %></h2>
+        <% if (!updates || !updates.length) { %>
+        <p class="text-muted mb-0"><%= t('noUpdates') %></p>
+        <% } else { %>
+        <ul class="list-group">
+          <% updates.forEach(update => { %>
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong><%= update.username %></strong>
+              <span class="small text-muted">
+                <%= update.created_at ? (typeof update.created_at === 'string' ? update.created_at.slice(0,19).replace('T',' ') : new Date(update.created_at).toISOString().slice(0,19).replace('T',' ')) : '-' %>
+              </span>
+            </div>
+            <div class="small text-muted mt-1">
+              <%= t('statusLabel') %>:
+              <%= update.status === 'done'
+                ? t('status_done')
+                : update.status === 'in_progress'
+                ? t('status_in_progress')
+                : t('status_pending') %>
+            </div>
+            <% if (update.note) { %>
+            <div class="mt-1">
+              <em><%= update.note %></em>
+            </div>
+            <% } %>
+          </li>
+          <% }) %>
+        </ul>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+

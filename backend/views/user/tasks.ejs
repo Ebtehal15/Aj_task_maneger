@@ -1,0 +1,78 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('userTasks') %></h1>
+</div>
+
+<form class="card card-body shadow-sm mb-3" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label"><%= t('filterByStatus') %></label>
+      <select name="status" class="form-select">
+        <option value="">--</option>
+        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>
+          <%= t('status_pending') %>
+        </option>
+        <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>
+          <%= t('status_in_progress') %>
+        </option>
+        <option value="done" <%= filters.status === 'done' ? 'selected' : '' %>>
+          <%= t('status_done') %>
+        </option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label"><%= t('filterByDate') %> (from)</label>
+      <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control" />
+    </div>
+    <div class="col-md-3">
+      <label class="form-label"><%= t('filterByDate') %> (to)</label>
+      <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control" />
+    </div>
+    <div class="col-md-2 text-end">
+      <button class="btn btn-primary mt-3"><%= t('save') %></button>
+    </div>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <% if (!tasks.length) { %>
+    <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th><%= t('taskTitle') %></th>
+            <th><%= t('status') %></th>
+            <th><%= t('deadline') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% tasks.forEach(task => { %>
+          <tr>
+            <td><%= task.id %></td>
+            <td><%= task.title %></td>
+            <td>
+              <span class="badge status-<%= task.status %>">
+                <%= t('status_' + task.status) %>
+              </span>
+            </td>
+            <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
+            <td class="text-end">
+              <a href="/user/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
+                Detay
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+
+

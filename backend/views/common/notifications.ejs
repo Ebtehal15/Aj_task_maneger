@@ -1,0 +1,102 @@
+<%
+  function translateNotification(msg, t) {
+    // "Yeni görev atandı (by {by}): {title}"
+    if (msg.startsWith('Yeni görev atandı')) {
+      const match = msg.match(/^Yeni görev atandı \(by (.+?)\):\s*(.+)$/);
+      const by = match ? match[1] : '';
+      const title = match ? match[2] : msg.replace('Yeni görev atandı:', '').trim();
+      return t('notification_task_assigned')
+        .replace('{by}', by)
+        .replace('{title}', title);
+    }
+    
+    // "Personel ({by}) görev durumunu güncelledi (ID: {id}) - Durum: {status}..."
+    if (msg.includes('görev durumunu güncelledi')) {
+      const byMatch = msg.match(/Personel \((.+?)\) görev/);
+      const idMatch = msg.match(/ID: (\d+)/);
+      const statusMatch = msg.match(/Durum: ([^-]+)/);
+      const noteMatch = msg.match(/Not: ([^-]+)/);
+      const fileMatch = msg.match(/Ek: (\d+) dosya yüklendi/);
+      
+      const by = byMatch ? byMatch[1] : '';
+      const id = idMatch ? idMatch[1] : '';
+      let status = statusMatch ? statusMatch[1].trim() : '';
+      const note = noteMatch ? noteMatch[1].trim() : '';
+      const fileCount = fileMatch ? fileMatch[1] : '0';
+      
+      // Translate status
+      if (status === 'Tamamlandı') status = t('status_completed');
+      else if (status === 'Devam ediyor') status = t('status_in_progress_text');
+      else if (status === 'Beklemede') status = t('status_pending_text');
+      
+      let template = '';
+      if (note && fileCount !== '0') {
+        template = t('notification_task_updated');
+      } else if (note) {
+        template = t('notification_task_updated_no_file');
+      } else if (fileCount !== '0') {
+        template = t('notification_task_updated_no_note');
+      } else {
+        template = t('notification_task_updated_simple');
+      }
+      
+      return template
+        .replace('{by}', by)
+        .replace('{id}', id)
+        .replace('{status}', status)
+        .replace('{note}', note)
+        .replace('{fileCount}', fileCount);
+    }
+    
+    return msg; // Fallback to original
+  }
+%>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('notificationsTitle') %></h1>
+  <a href="/" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <% if (!notifications.length) { %>
+    <p class="text-muted mb-0"><%= t('noNotifications') %></p>
+    <% } else { %>
+    <p class="text-muted small mb-3">
+      <span class="badge bg-danger me-1" style="width: 8px; height: 8px; padding: 0; border-radius: 50%; display: inline-block;"></span>
+      <%= t('unread') %> / 
+      <span class="ms-1"></span>
+      <%= t('read') %>
+    </p>
+    <ul class="list-group">
+      <% notifications.forEach(n => { %>
+      <li class="list-group-item d-flex justify-content-between align-items-center <%= n.is_read ? '' : 'bg-light' %>">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center">
+            <% if (!n.is_read) { %>
+            <span class="badge bg-danger me-2" style="width: 8px; height: 8px; padding: 0; border-radius: 50%;"></span>
+            <% } else { %>
+            <span class="me-2" style="width: 8px; height: 8px;"></span>
+            <% } %>
+            <div>
+              <div><%= translateNotification(n.message, t) %></div>
+              <div class="small text-muted"><%= n.created_at ? (typeof n.created_at === 'string' ? n.created_at.slice(0,19).replace('T',' ') : new Date(n.created_at).toISOString().slice(0,19).replace('T',' ')) : '-' %></div>
+            </div>
+          </div>
+        </div>
+        <% if (n.related_task_id) { %>
+        <a
+          href="<%= (currentUser && currentUser.role === 'admin') ? '/admin/tasks/' + n.related_task_id : '/user/tasks/' + n.related_task_id %>"
+          class="btn btn-sm btn-outline-primary ms-2"
+        >
+          <%= t('viewTask') %>
+        </a>
+        <% } %>
+      </li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+
+

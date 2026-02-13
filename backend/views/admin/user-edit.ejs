@@ -1,0 +1,62 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('edit') %> - <%= user.username %></h1>
+  <a href="/admin/users" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form method="post" action="/admin/users/<%= user.id %>">
+          <div class="mb-3">
+            <label class="form-label"><%= t('username') %></label>
+            <input
+              type="text"
+              name="username"
+              class="form-control"
+              value="<%= user.username %>"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('email') %></label>
+            <input
+              type="email"
+              name="email"
+              class="form-control"
+              value="<%= user.email || '' %>"
+            />
+            <div class="form-text"><%= t('emailHelpText') %></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('password') %> (optional)</label>
+            <input
+              type="password"
+              name="password"
+              class="form-control"
+              placeholder="••••••••"
+            />
+            <div class="form-text">
+              Leave blank to keep current password.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('role') %></label>
+            <select name="role" class="form-select">
+              <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>
+                <%= t('role_user') %>
+              </option>
+              <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>
+                <%= t('role_admin') %>
+              </option>
+            </select>
+          </div>
+          <button class="btn btn-primary"><%= t('save') %></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

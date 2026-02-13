@@ -1,0 +1,60 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('usersPageTitle') %></h1>
+  <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="row">
+  <div class="col-md-5">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('addUser') %></h2>
+        <form method="post" action="/admin/users">
+          <div class="mb-3">
+            <label class="form-label"><%= t('username') %></label>
+            <input type="text" name="username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('email') %></label>
+            <input type="email" name="email" class="form-control" />
+            <div class="form-text"><%= t('emailHelpText') %></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('password') %></label>
+            <input type="password" name="password" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('role') %></label>
+            <select name="role" class="form-select">
+              <option value="user"><%= t('role_user') %></option>
+              <option value="admin"><%= t('role_admin') %></option>
+            </select>
+          </div>
+          <button class="btn btn-primary"><%= t('save') %></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('existingUsers') %></h2>
+        <ul class="list-group">
+          <% users.forEach(u => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div><strong><%= u.username %></strong></div>
+              <div class="small text-muted"><%= u.email || '-' %></div>
+              <div class="small text-muted text-uppercase"><%= u.role %></div>
+            </div>
+            <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-primary">
+              <%= t('edit') %>
+            </a>
+          </li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+

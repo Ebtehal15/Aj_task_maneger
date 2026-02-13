@@ -1,0 +1,73 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4">
+    <% if (typeof task !== 'undefined') { %>
+    <%= t('editTask') %>
+    <% } else { %>
+    <%= t('createTask') %>
+    <% } %>
+  </h1>
+  <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form
+      method="post"
+      action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
+      <% if (typeof task === 'undefined' || !task) { %>enctype="multipart/form-data"<% } %>
+    >
+      <div class="mb-3">
+        <label class="form-label"><%= t('taskTitle') %></label>
+        <input
+          type="text"
+          name="title"
+          class="form-control"
+          value="<%= (typeof task !== 'undefined' && task) ? task.title : '' %>"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label"><%= t('taskDescription') %></label>
+        <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('deadline') %></label>
+          <input
+            type="date"
+            name="deadline"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"
+          />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('assignedTo') %></label>
+          <select name="assigned_to" class="form-select" required>
+            <% users.forEach(u => { %>
+            <option
+              value="<%= u.id %>"
+              <%= (typeof task !== 'undefined' && task && task.assigned_to === u.id) ? 'selected' : '' %>
+            >
+              <%= u.username %>
+            </option>
+            <% }) %>
+          </select>
+        </div>
+        <% if (typeof task === 'undefined' || !task) { %>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('uploadFiles') %></label>
+          <input
+            type="file"
+            name="attachments"
+            class="form-control"
+            multiple
+            accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+          />
+        </div>
+        <% } %>
+      </div>
+      <button class="btn btn-primary"><%= t('save') %></button>
+    </form>
+  </div>
+</div>
+

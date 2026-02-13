@@ -1,0 +1,36 @@
+{
+  "name": "task-maneger",
+  "version": "1.0.0",
+  "description": "Multi-user task management app with admin/user roles and bilingual (Arabic/English) interface.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "lint": "echo \"No linter configured\""
+  },
+  "keywords": [
+    "task",
+    "manager",
+    "arabic",
+    "english",
+    "rtl",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^9.0.1",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "method-override": "^3.0.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.1",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

@@ -1,0 +1,48 @@
+<%- include('../partials/flash'); %>
+
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3 text-center">
+          <% if (typeof targetRole !== 'undefined' && targetRole === 'user') { %>
+          <%= t('userTasks') %> - <%= t('loginTitle') %>
+          <% } else { %>
+          <%= t('adminDashboard') %> / <%= t('userTasks') %> - <%= t('loginTitle') %>
+          <% } %>
+        </h1>
+        <% if (error) { %>
+        <div class="alert alert-danger py-2">
+          <%= error %>
+        </div>
+        <% } %>
+        <form method="post" action="<%= (typeof targetRole !== 'undefined' && targetRole === 'user') ? '/user-login' : '/login' %>">
+          <div class="mb-3">
+            <label class="form-label"><%= t('username') %></label>
+            <input type="text" name="username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('password') %></label>
+            <input
+              type="password"
+              name="password"
+              class="form-control"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <%= t('loginButton') %>
+          </button>
+        </form>
+        <% if (!targetRole) { %>
+        <p class="mt-3 small text-muted">
+          Demo admin: <code>admin / admin123</code>
+        </p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+

@@ -1,0 +1,99 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= task.title %></h1>
+  <a href="/user/tasks" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <p class="mb-1 text-muted"><strong><%= t('taskDescription') %>:</strong></p>
+        <p><%= task.description || '-' %></p>
+
+        <p class="mb-1">
+          <strong><%= t('status') %>:</strong>
+          <span class="badge status-<%= task.status %>">
+            <%= t('status_' + task.status) %>
+          </span>
+        </p>
+        <p class="mb-1">
+          <strong><%= t('deadline') %>:</strong>
+          <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
+        </p>
+        <p class="mb-0">
+          <strong><%= t('createdBy') %>:</strong> <%= task.created_username %>
+        </p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('status') %></h2>
+        <form
+          method="post"
+          action="/user/tasks/<%= task.id %>/update"
+          enctype="multipart/form-data"
+          class="row g-2 align-items-end"
+        >
+          <div class="col-md-4">
+            <select name="status" class="form-select">
+              <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>
+                <%= t('status_pending') %>
+              </option>
+              <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>
+                <%= t('status_in_progress') %>
+              </option>
+              <option value="done" <%= task.status === 'done' ? 'selected' : '' %>>
+                <%= t('status_done') %>
+              </option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <textarea
+              name="note"
+              rows="2"
+              class="form-control"
+              placeholder="<%= t('notePlaceholder') %>"
+            ></textarea>
+          </div>
+          <div class="col-md-4">
+            <input
+              type="file"
+              name="attachments"
+              class="form-control"
+              multiple
+              accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+            />
+          </div>
+          <div class="col-md-12 col-lg-2">
+            <button class="btn btn-primary w-100"><%= t('save') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><%= t('uploadFiles') %></h2>
+        <% if (!files.length) { %>
+        <p class="text-muted mb-0"><%= t('noTasks') %></p>
+        <% } else { %>
+        <ul class="list-group">
+          <% files.forEach(file => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><%= file.original_name %></span>
+            <a href="/uploads/<%= file.filename %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <%= t('view') %>
+            </a>
+          </li>
+          <% }) %>
+        </ul>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+
