@@ -29,23 +29,10 @@
             <span class="navbar-toggler-icon"></span>
           </button>
 
-          <a class="navbar-brand d-flex align-items-center gap-2 order-1 ms-2" href="/">
-            <span class="tm-logo-icon d-inline-flex align-items-center justify-content-center overflow-hidden">
-              <!-- If you place logo.jpg under backend/public/img/logo.jpg it will be used here -->
-              <img
-                src="/public/img/logo.jpg"
-                alt="Logo"
-                class="tm-logo-img"
-                onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
-              />
-              <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
-            </span>
-            <span class="fw-semibold"><%= t('appTitle') %></span>
-          </a>
         <% if (currentUser) { %>
         <a
           href="/notifications"
-          class="position-relative text-decoration-none ms-auto me-3 d-lg-none"
+          class="position-relative text-decoration-none order-1 me-3 d-lg-none"
         >
           <i class="bi bi-bell-fill"></i>
           <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
@@ -112,6 +99,20 @@
             <% } %>
           </div>
         </div>
+
+          <a class="navbar-brand d-flex align-items-center gap-2 order-last ms-auto flex-row-reverse" href="/">
+            <span class="tm-logo-icon d-inline-flex align-items-center justify-content-center overflow-hidden">
+              <!-- If you place logo.jpg under backend/public/img/logo.jpg it will be used here -->
+              <img
+                src="/public/img/logo.jpg"
+                alt="Logo"
+                class="tm-logo-img"
+                onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
+              />
+              <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
+            </span>
+            <span class="fw-semibold"><%= t('appTitle') %></span>
+          </a>
       </nav>
 
       <main class="tm-main container">
