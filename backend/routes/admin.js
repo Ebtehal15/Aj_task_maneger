@@ -46,6 +46,7 @@ const upload = multer({
 
 // Admin dashboard with filters
 router.get('/dashboard', async (req, res) => {
+  console.log(`📊 Admin dashboard accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
   const { userId, status, from, to } = req.query;
 
   const params = [];
