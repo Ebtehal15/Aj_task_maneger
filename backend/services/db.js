@@ -198,19 +198,26 @@ async function initSchema() {
 
     await client.query('COMMIT');
 
-    // Seed default admin if not exists
-    const adminCheck = await client.query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['admin']);
-    if (parseInt(adminCheck.rows[0].count) === 0) {
-      const passwordHash = bcrypt.hashSync('admin123', 10);
-      await client.query(
-        'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-        ['admin', passwordHash, 'admin']
-      );
-      console.log('Default admin created: username=admin, password=admin123');
+    // Seed default admin if not exists (outside transaction for safety)
+    try {
+      const adminCheck = await client.query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['admin']);
+      if (parseInt(adminCheck.rows[0].count) === 0) {
+        const passwordHash = bcrypt.hashSync('admin123', 10);
+        await client.query(
+          'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+          ['admin', passwordHash, 'admin']
+        );
+        console.log('✅ Default admin created: username=admin, password=admin123');
+      } else {
+        console.log('ℹ️  Admin user already exists');
+      }
+    } catch (adminErr) {
+      console.error('⚠️  Warning: Could not create default admin user:', adminErr.message);
+      // Don't throw - app can still run, admin might exist
     }
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Error initializing database schema', err);
+    console.error('❌ Error initializing database schema', err);
     throw err;
   } finally {
     client.release();

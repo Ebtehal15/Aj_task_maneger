@@ -22,11 +22,14 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const pool = getDb();
 
+  console.log(`🔐 Login attempt for username: ${username}`);
+
   try {
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     const user = result.rows[0];
 
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    if (!user) {
+      console.log(`❌ User not found: ${username}`);
       return res.render('auth/login', {
         pageTitle: req.t('loginTitle'),
         error: req.t('invalidCredentials'),
@@ -34,13 +37,24 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    const passwordMatch = bcrypt.compareSync(password, user.password_hash);
+    if (!passwordMatch) {
+      console.log(`❌ Invalid password for user: ${username}`);
+      return res.render('auth/login', {
+        pageTitle: req.t('loginTitle'),
+        error: req.t('invalidCredentials'),
+        targetRole: null
+      });
+    }
+
+    console.log(`✅ Login successful for user: ${username} (role: ${user.role})`);
     req.session.userId = user.id;
     if (user.role === 'admin') {
       return res.redirect('/admin/dashboard');
     }
     return res.redirect('/user/tasks');
   } catch (err) {
-    console.error('Login error', err);
+    console.error('❌ Login error', err);
     return res.render('auth/login', {
       pageTitle: req.t('loginTitle'),
       error: 'Server error',
