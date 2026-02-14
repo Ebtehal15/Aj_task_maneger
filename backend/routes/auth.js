@@ -63,20 +63,14 @@ router.post('/login', async (req, res) => {
       }
       console.log(`✅ Session saved successfully for user: ${username}, sessionId: ${req.sessionID}`);
       
-      // Cookie'nin gönderildiğinden emin olmak için cookie'yi manuel set et
-      res.cookie('connect.sid', req.sessionID, {
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
-      
+      // Redirect yapmadan önce response'u commit et
+      // Bu, cookie'nin tarayıcıya gönderilmesini garanti eder
       if (user.role === 'admin') {
         console.log(`🔄 Redirecting to /admin/dashboard with sessionId: ${req.sessionID}`);
-        return res.redirect('/admin/dashboard');
+        return res.redirect(302, '/admin/dashboard');
       }
       console.log(`🔄 Redirecting to /user/tasks with sessionId: ${req.sessionID}`);
-      return res.redirect('/user/tasks');
+      return res.redirect(302, '/user/tasks');
     });
   } catch (err) {
     console.error('❌ Login error', err);

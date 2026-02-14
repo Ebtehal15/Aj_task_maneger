@@ -100,10 +100,9 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production (Render uses HTTPS)
+    secure: false, // Render'da HTTPS var ama cookie secure false yapıyoruz (test için)
     httpOnly: true,
-    sameSite: 'lax',
-    domain: undefined // Render'ın domain'ini otomatik algıla
+    sameSite: false // Cross-site cookie gönderimi için false (Render proxy için)
   }
 };
 
