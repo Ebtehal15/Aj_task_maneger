@@ -40,16 +40,47 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 
 // Session config (PostgreSQL store)
-const sessionPool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'task_manager',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  // Ensure UTF-8 encoding for Arabic/English text support
-  client_encoding: 'UTF8'
-});
+// Render'da DATABASE_URL kullanılıyorsa onu parse et
+console.log('🔍 Session Pool Config Check:');
+console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
+console.log('  DB_HOST:', process.env.DB_HOST || '❌ Not set (using default: localhost)');
+console.log('  DB_PORT:', process.env.DB_PORT || '❌ Not set (using default: 5432)');
+console.log('  DB_NAME:', process.env.DB_NAME || '❌ Not set (using default: task_manager)');
+console.log('  DB_USER:', process.env.DB_USER || '❌ Not set (using default: postgres)');
+console.log('  DB_PASSWORD:', process.env.DB_PASSWORD ? '✅ Set' : '❌ Not set (using default)');
+console.log('  DB_SSL:', process.env.DB_SSL || '❌ Not set');
+
+let sessionPoolConfig;
+if (process.env.DATABASE_URL) {
+  console.log('✅ Session Pool: Using DATABASE_URL connection string');
+  sessionPoolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DB_SSL === 'true' || process.env.DATABASE_URL.includes('render.com')
+      ? { rejectUnauthorized: false }
+      : false,
+    client_encoding: 'UTF8'
+  };
+} else {
+  console.log('⚠️  Session Pool: Using individual DB environment variables (or defaults)');
+  sessionPoolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'task_manager',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    client_encoding: 'UTF8'
+  };
+  console.log('📝 Session Pool connecting to:', {
+    host: sessionPoolConfig.host,
+    port: sessionPoolConfig.port,
+    database: sessionPoolConfig.database,
+    user: sessionPoolConfig.user,
+    ssl: sessionPoolConfig.ssl ? 'enabled' : 'disabled'
+  });
+}
+
+const sessionPool = new Pool(sessionPoolConfig);
 
 app.use(
   session({
