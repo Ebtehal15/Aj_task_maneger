@@ -11,9 +11,12 @@ async function attachUserToRequest(req, res, next) {
     const pool = getDb();
     const result = await pool.query('SELECT id, username, role FROM users WHERE id = $1', [userId]);
     req.user = result.rows[0] || null;
+    if (!req.user) {
+      console.log(`⚠️  User not found in database for session userId: ${userId}`);
+    }
     next();
   } catch (err) {
-    console.error('Error loading user from session', err);
+    console.error('❌ Error loading user from session', err);
     req.user = null;
     next();
   }

@@ -49,10 +49,24 @@ router.post('/login', async (req, res) => {
 
     console.log(`✅ Login successful for user: ${username} (role: ${user.role})`);
     req.session.userId = user.id;
-    if (user.role === 'admin') {
-      return res.redirect('/admin/dashboard');
-    }
-    return res.redirect('/user/tasks');
+    console.log(`💾 Session saved - userId: ${user.id}, sessionId: ${req.sessionID}`);
+    
+    // Session'ın kaydedilmesini bekle
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Error saving session:', err);
+        return res.render('auth/login', {
+          pageTitle: req.t('loginTitle'),
+          error: 'Session error',
+          targetRole: null
+        });
+      }
+      console.log(`✅ Session saved successfully for user: ${username}`);
+      if (user.role === 'admin') {
+        return res.redirect('/admin/dashboard');
+      }
+      return res.redirect('/user/tasks');
+    });
   } catch (err) {
     console.error('❌ Login error', err);
     return res.render('auth/login', {

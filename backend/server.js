@@ -43,24 +43,32 @@ app.use(methodOverride('_method'));
 // Render'da DATABASE_URL kullanılıyorsa onu parse et
 console.log('🔍 Session Pool Config Check:');
 console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
-console.log('  DB_HOST:', process.env.DB_HOST || '❌ Not set (using default: localhost)');
-console.log('  DB_PORT:', process.env.DB_PORT || '❌ Not set (using default: 5432)');
-console.log('  DB_NAME:', process.env.DB_NAME || '❌ Not set (using default: task_manager)');
-console.log('  DB_USER:', process.env.DB_USER || '❌ Not set (using default: postgres)');
-console.log('  DB_PASSWORD:', process.env.DB_PASSWORD ? '✅ Set' : '❌ Not set (using default)');
-console.log('  DB_SSL:', process.env.DB_SSL || '❌ Not set');
 
 let sessionPoolConfig;
 if (process.env.DATABASE_URL) {
+  // DATABASE_URL varsa, içeriğini kontrol et (şifreyi gizle)
+  const urlForLog = process.env.DATABASE_URL.replace(/:[^:@]+@/, ':****@');
+  console.log('  DATABASE_URL (masked):', urlForLog);
+  console.log('  DATABASE_URL includes render.com:', process.env.DATABASE_URL.includes('render.com') ? '✅ Yes' : '❌ No');
+  console.log('  DATABASE_URL includes postgresql://:', process.env.DATABASE_URL.startsWith('postgresql://') ? '✅ Yes' : '❌ No');
+  console.log('  DATABASE_URL includes port:', process.env.DATABASE_URL.includes(':5432') ? '✅ Yes' : '❌ No');
+  
   console.log('✅ Session Pool: Using DATABASE_URL connection string');
+  const sslEnabled = process.env.DB_SSL === 'true' || process.env.DATABASE_URL.includes('render.com');
+  console.log('  SSL enabled:', sslEnabled ? '✅ Yes' : '❌ No');
   sessionPoolConfig = {
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' || process.env.DATABASE_URL.includes('render.com')
-      ? { rejectUnauthorized: false }
-      : false,
+    ssl: sslEnabled ? { rejectUnauthorized: false } : false,
     client_encoding: 'UTF8'
   };
 } else {
+  console.log('  DB_HOST:', process.env.DB_HOST || '❌ Not set (using default: localhost)');
+  console.log('  DB_PORT:', process.env.DB_PORT || '❌ Not set (using default: 5432)');
+  console.log('  DB_NAME:', process.env.DB_NAME || '❌ Not set (using default: task_manager)');
+  console.log('  DB_USER:', process.env.DB_USER || '❌ Not set (using default: postgres)');
+  console.log('  DB_PASSWORD:', process.env.DB_PASSWORD ? '✅ Set' : '❌ Not set (using default)');
+  console.log('  DB_SSL:', process.env.DB_SSL || '❌ Not set');
+  
   console.log('⚠️  Session Pool: Using individual DB environment variables (or defaults)');
   sessionPoolConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -82,21 +90,29 @@ if (process.env.DATABASE_URL) {
 
 const sessionPool = new Pool(sessionPoolConfig);
 
-app.use(
-  session({
-    store: new pgSession({
-      pool: sessionPool,
-      tableName: 'session'
-    }),
-    secret: process.env.SESSION_SECRET || 'super-secret-demo-key-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      secure: process.env.NODE_ENV === 'production' // HTTPS only in production
-    }
-  })
-);
+const sessionConfig = {
+  store: new pgSession({
+    pool: sessionPool,
+    tableName: 'session'
+  }),
+  secret: process.env.SESSION_SECRET || 'super-secret-demo-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true,
+    sameSite: 'lax'
+  }
+};
+
+// Debug: Session config
+console.log('🔍 Session Config:');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('  Cookie secure:', sessionConfig.cookie.secure ? '✅ Yes (HTTPS only)' : '❌ No (HTTP allowed)');
+console.log('  SESSION_SECRET:', process.env.SESSION_SECRET ? '✅ Set' : '❌ Not set (using default)');
+
+app.use(session(sessionConfig));
 
 // Attach user + language handling + notifications
 app.use(attachUserToRequest);
