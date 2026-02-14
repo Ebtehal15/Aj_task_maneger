@@ -29,19 +29,30 @@
             <span class="navbar-toggler-icon"></span>
           </button>
 
-        <% if (currentUser) { %>
-        <a
-          href="/notifications"
-          class="position-relative text-decoration-none order-1 me-3 d-lg-none"
-        >
-          <i class="bi bi-bell-fill"></i>
-          <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
-          <span class="badge rounded-pill bg-danger tm-bell-badge">
-            <%= unreadNotifications %>
-          </span>
+        <div class="d-flex align-items-center gap-2 order-1">
+          <% if (currentUser) { %>
+          <a
+            href="/notifications"
+            class="position-relative text-decoration-none me-2 d-lg-none"
+          >
+            <i class="bi bi-bell-fill"></i>
+            <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
+            <span class="badge rounded-pill bg-danger tm-bell-badge">
+              <%= unreadNotifications %>
+            </span>
+            <% } %>
+          </a>
           <% } %>
-        </a>
-        <% } %>
+          <div class="dropdown d-lg-none">
+            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
+              <%= lang === 'en' ? t('languageEnglish') : t('languageArabic') %>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="langDropdownMobile">
+              <li><a class="dropdown-item" href="/lang/en"><%= t('languageEnglish') %></a></li>
+              <li><a class="dropdown-item" href="/lang/ar"><%= t('languageArabic') %></a></li>
+            </ul>
+          </div>
+        </div>
 
         <div class="collapse navbar-collapse order-2" id="mainNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -68,7 +79,7 @@
             <% if (currentUser) { %>
             <a
               href="/notifications"
-              class="position-relative text-decoration-none me-1 d-none d-lg-inline-block"
+              class="position-relative text-decoration-none me-2 d-none d-lg-inline-block"
             >
               <i class="bi bi-bell-fill"></i>
               <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
@@ -78,19 +89,14 @@
               <% } %>
             </a>
             <% } %>
-            <div class="btn-group" role="group">
-              <a
-                href="/lang/en"
-                class="btn btn-sm <%= lang === 'en' ? 'btn-light' : 'btn-outline-light' %>"
-              >
-                <%= t('languageEnglish') %>
-              </a>
-              <a
-                href="/lang/ar"
-                class="btn btn-sm <%= lang === 'ar' ? 'btn-light' : 'btn-outline-light' %>"
-              >
-                <%= t('languageArabic') %>
-              </a>
+            <div class="dropdown me-2 d-none d-lg-block">
+              <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <%= lang === 'en' ? t('languageEnglish') : t('languageArabic') %>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="langDropdown">
+                <li><a class="dropdown-item" href="/lang/en"><%= t('languageEnglish') %></a></li>
+                <li><a class="dropdown-item" href="/lang/ar"><%= t('languageArabic') %></a></li>
+              </ul>
             </div>
             <% if (currentUser) { %>
             <form action="/logout" method="post" class="ms-2">

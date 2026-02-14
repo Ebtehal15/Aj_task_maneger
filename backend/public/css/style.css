@@ -100,13 +100,59 @@ html[dir='rtl'] {
   right: -10px;
 }
 
-/* RTL tweaks */
+/* Bildirim ikonu için spacing ve boyut */
+.tm-navbar a[href="/notifications"] {
+  margin-right: 0.5rem;
+  padding: 0.25rem;
+}
+
+.tm-navbar a[href="/notifications"] i {
+  font-size: 1rem;
+  color: #000000;
+}
+
+/* Mobil bildirim ikonu da küçük */
+.tm-navbar a[href="/notifications"].d-lg-none i {
+  font-size: 1rem;
+}
+
+/* Hamburger menu (dropdown) ikonu küçült */
+.tm-navbar .navbar-toggler {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.tm-navbar .navbar-toggler-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+/* Navbar her zaman LTR (soldan sağa) - dil değişse bile */
+.tm-navbar {
+  direction: ltr !important;
+}
+
+.tm-navbar * {
+  direction: ltr !important;
+}
+
+/* RTL tweaks - sadece içerik için */
 html[dir='rtl'] .navbar .navbar-brand {
   margin-left: 0;
 }
 
 html[dir='rtl'] .tm-page-wrapper {
   text-align: right;
+}
+
+/* Logo ve yazı sıralaması - hem LTR hem RTL'de aynı: Yazı solda, Logo sağda */
+.tm-navbar .navbar-brand.flex-row-reverse {
+  flex-direction: row-reverse !important;
+}
+
+html[dir='rtl'] .tm-navbar .navbar-brand.flex-row-reverse {
+  flex-direction: row-reverse !important;
 }
 
 /* Tables & cards */

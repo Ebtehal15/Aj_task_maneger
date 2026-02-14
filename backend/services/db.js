@@ -15,21 +15,31 @@ function initDb() {
   // Debug: Environment variables kontrolü
   console.log('🔍 Database Config Check:');
   console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
-  console.log('  DB_HOST:', process.env.DB_HOST || '❌ Not set (using default: localhost)');
-  console.log('  DB_PORT:', process.env.DB_PORT || '❌ Not set (using default: 5432)');
-  console.log('  DB_NAME:', process.env.DB_NAME || '❌ Not set (using default: task_manager)');
-  console.log('  DB_USER:', process.env.DB_USER || '❌ Not set (using default: postgres)');
-  console.log('  DB_PASSWORD:', process.env.DB_PASSWORD ? '✅ Set' : '❌ Not set (using default)');
+  
+  if (process.env.DATABASE_URL) {
+    // DATABASE_URL varsa, içeriğini kontrol et (şifreyi gizle)
+    const urlForLog = process.env.DATABASE_URL.replace(/:[^:@]+@/, ':****@');
+    console.log('  DATABASE_URL (masked):', urlForLog);
+    console.log('  DATABASE_URL includes render.com:', process.env.DATABASE_URL.includes('render.com') ? '✅ Yes' : '❌ No');
+    console.log('  DATABASE_URL includes postgresql://:', process.env.DATABASE_URL.startsWith('postgresql://') ? '✅ Yes' : '❌ No');
+    console.log('  DATABASE_URL includes port:', process.env.DATABASE_URL.includes(':5432') ? '✅ Yes' : '❌ No');
+  } else {
+    console.log('  DB_HOST:', process.env.DB_HOST || '❌ Not set (using default: localhost)');
+    console.log('  DB_PORT:', process.env.DB_PORT || '❌ Not set (using default: 5432)');
+    console.log('  DB_NAME:', process.env.DB_NAME || '❌ Not set (using default: task_manager)');
+    console.log('  DB_USER:', process.env.DB_USER || '❌ Not set (using default: postgres)');
+    console.log('  DB_PASSWORD:', process.env.DB_PASSWORD ? '✅ Set' : '❌ Not set (using default)');
+  }
   console.log('  DB_SSL:', process.env.DB_SSL || '❌ Not set');
   
   if (process.env.DATABASE_URL) {
     // Render'ın Internal Database URL'i kullanılıyor
     console.log('✅ Using DATABASE_URL connection string');
+    const sslEnabled = process.env.DB_SSL === 'true' || process.env.DATABASE_URL.includes('render.com');
+    console.log('  SSL enabled:', sslEnabled ? '✅ Yes' : '❌ No');
     config = {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DB_SSL === 'true' || process.env.DATABASE_URL.includes('render.com') 
-        ? { rejectUnauthorized: false } 
-        : false,
+      ssl: sslEnabled ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
