@@ -23,13 +23,27 @@
           <button
             class="navbar-toggler order-0"
             type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#mainNav"
+            id="sidebarToggle"
+            aria-label="Toggle sidebar"
           >
             <span class="navbar-toggler-icon"></span>
           </button>
 
-        <div class="d-flex align-items-center gap-1 order-1">
+          <a class="navbar-brand d-flex align-items-center gap-2 order-1 order-lg-1 tm-navbar-brand" href="/">
+            <span class="tm-logo-icon d-inline-flex align-items-center justify-content-center overflow-hidden">
+              <!-- If you place logo.jpg under backend/public/img/logo.jpg it will be used here -->
+              <img
+                src="/public/img/logo.jpg"
+                alt="Logo"
+                class="tm-logo-img"
+                onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
+              />
+              <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
+            </span>
+            <span class="fw-semibold"><%= t('appTitle') %></span>
+          </a>
+
+        <div class="d-flex align-items-center gap-2 order-2">
           <% if (currentUser) { %>
           <div class="d-lg-none tm-user-avatar-mobile">
             <% if (currentUser.avatar) { %>
@@ -42,7 +56,7 @@
           </div>
           <a
             href="/notifications"
-            class="position-relative text-decoration-none me-1 d-lg-none"
+            class="position-relative text-decoration-none d-lg-none"
           >
             <i class="bi bi-bell-fill"></i>
             <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
@@ -53,10 +67,10 @@
           </a>
           <% } %>
           <div class="dropdown d-lg-none">
-            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdownMobile" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
               <%= lang === 'en' ? t('languageEnglish') : lang === 'ar' ? t('languageArabic') : t('languageTurkish') %>
             </button>
-            <ul class="dropdown-menu" aria-labelledby="langDropdownMobile">
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdownMobile">
               <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
               <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
               <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
@@ -71,32 +85,7 @@
           <% } %>
         </div>
 
-        <div class="collapse navbar-collapse order-2 order-lg-2" id="mainNav">
-          <!-- Sidebar kapatma butonu (sadece mobilde görünür) -->
-          <button type="button" class="btn d-lg-none tm-sidebar-close" aria-label="Close" id="sidebarCloseBtn">
-            <i class="bi bi-x-lg"></i>
-          </button>
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <% if (currentUser && currentUser.role === 'admin') { %>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/dashboard"><%= t('adminDashboard') %></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/users"><%= t('usersPageTitle') %></a>
-            </li>
-            <% } %>
-            <% if (currentUser && currentUser.role === 'user') { %>
-            <li class="nav-item">
-              <a class="nav-link" href="/user/tasks"><%= t('userTasks') %></a>
-            </li>
-            <% } %>
-            <% if (!currentUser) { %>
-            <li class="nav-item">
-              <a class="nav-link" href="/user-login"><%= t('loginTitle') %></a>
-            </li>
-            <% } %>
-          </ul>
-          <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 order-3 order-lg-3 ms-auto">
             <% if (currentUser) { %>
             <div class="d-none d-lg-block tm-user-avatar">
               <% if (currentUser.avatar) { %>
@@ -120,10 +109,10 @@
             </a>
             <% } %>
             <div class="dropdown d-none d-lg-block">
-              <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdown" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
                 <%= lang === 'en' ? t('languageEnglish') : lang === 'ar' ? t('languageArabic') : t('languageTurkish') %>
               </button>
-              <ul class="dropdown-menu" aria-labelledby="langDropdown">
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
                 <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
                 <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
                 <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
@@ -136,21 +125,38 @@
             <% } %>
           </div>
         </div>
-
-          <a class="navbar-brand d-flex align-items-center gap-2 order-last order-lg-last ms-auto flex-row-reverse tm-navbar-brand" href="/">
-            <span class="tm-logo-icon d-inline-flex align-items-center justify-content-center overflow-hidden">
-              <!-- If you place logo.jpg under backend/public/img/logo.jpg it will be used here -->
-              <img
-                src="/public/img/logo.jpg"
-                alt="Logo"
-                class="tm-logo-img"
-                onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
-              />
-              <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
-            </span>
-            <span class="fw-semibold"><%= t('appTitle') %></span>
-          </a>
       </nav>
+
+      <!-- Yeni Sidebar -->
+      <div class="tm-sidebar" id="tmSidebar">
+        <div class="tm-sidebar-header">
+          <h3 class="tm-sidebar-title">Menu</h3>
+          <button type="button" class="tm-sidebar-close-btn" id="tmSidebarClose" aria-label="Close sidebar">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <nav class="tm-sidebar-nav">
+          <ul class="tm-sidebar-menu">
+            <li class="tm-sidebar-item">
+              <a href="/" class="tm-sidebar-link">
+                <i class="bi bi-house-door"></i>
+                <span>Home</span>
+              </a>
+            </li>
+            <% if (currentUser) { %>
+            <li class="tm-sidebar-item">
+              <a href="/user/tasks" class="tm-sidebar-link">
+                <i class="bi bi-person"></i>
+                <span>User</span>
+              </a>
+            </li>
+            <% } %>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Sidebar Overlay -->
+      <div class="tm-sidebar-overlay" id="tmSidebarOverlay"></div>
 
       <main class="tm-main container">
         <div class="tm-page-wrapper shadow-sm">
@@ -178,76 +184,104 @@
       updateNavbarHeight();
       window.addEventListener('resize', updateNavbarHeight);
 
-      // Sidebar açıldığında body'ye class ekle
-      const navbarToggler = document.querySelector('.navbar-toggler');
-      const navbarCollapse = document.querySelector('#mainNav');
+      // Yeni Sidebar kontrolü
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebar = document.getElementById('tmSidebar');
+      const sidebarOverlay = document.getElementById('tmSidebarOverlay');
+      const sidebarClose = document.getElementById('tmSidebarClose');
       const body = document.body;
 
-      if (navbarToggler && navbarCollapse) {
-        // Bootstrap collapse event listener
-        navbarCollapse.addEventListener('show.bs.collapse', function() {
-          updateNavbarHeight();
-          body.classList.add('menu-open');
-        });
+      function openSidebar() {
+        sidebar.classList.add('tm-sidebar-open');
+        sidebarOverlay.classList.add('tm-sidebar-overlay-active');
+        body.style.overflow = 'hidden';
+      }
 
-        navbarCollapse.addEventListener('hide.bs.collapse', function() {
-          body.classList.remove('menu-open');
-        });
+      function closeSidebar() {
+        sidebar.classList.remove('tm-sidebar-open');
+        sidebarOverlay.classList.remove('tm-sidebar-overlay-active');
+        body.style.overflow = '';
+      }
 
-        // Sidebar dışına tıklandığında sidebar'ı kapat
-        body.addEventListener('click', function(e) {
-          if (body.classList.contains('menu-open') && 
-              !navbarCollapse.contains(e.target) && 
-              !navbarToggler.contains(e.target)) {
-            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-            if (bsCollapse) {
-              bsCollapse.hide();
-            }
-            body.classList.remove('menu-open');
-          }
-        });
-
-        // Sidebar kapatma butonu
-        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-        if (sidebarCloseBtn) {
-          sidebarCloseBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-            if (bsCollapse) {
-              bsCollapse.hide();
-            }
-            body.classList.remove('menu-open');
-            // Hemen kapatmak için display'i none yap
-            navbarCollapse.style.display = 'none';
-          });
-        }
-
-        // Nav link'e tıklandığında sidebar'ı kapat (mobilde)
-        function setupNavLinks() {
-          if (window.innerWidth <= 991) {
-            const navLinks = navbarCollapse.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-              link.addEventListener('click', function() {
-                const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-                if (bsCollapse) {
-                  bsCollapse.hide();
-                }
-                body.classList.remove('menu-open');
-                // Hemen kapatmak için display'i none yap
-                navbarCollapse.style.display = 'none';
-              });
-            });
-          }
-        }
-
-        // Sayfa yüklendiğinde ve resize'da nav linkleri ayarla
-        setupNavLinks();
-        window.addEventListener('resize', function() {
-          updateNavbarHeight();
-          setupNavLinks();
+      // Sidebar açma
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+          openSidebar();
         });
       }
+
+      // Sidebar kapatma butonu
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', function() {
+          closeSidebar();
+        });
+      }
+
+      // Overlay'e tıklandığında kapat
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          closeSidebar();
+        });
+      }
+
+      // Sidebar linklerine tıklandığında kapat
+      const sidebarLinks = sidebar.querySelectorAll('.tm-sidebar-link');
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          setTimeout(() => {
+            closeSidebar();
+          }, 100);
+        });
+      });
+
+      // Dropdown menüleri navbar dışında açılması için
+      document.addEventListener('DOMContentLoaded', function() {
+        const langDropdowns = ['langDropdown', 'langDropdownMobile'];
+        
+        langDropdowns.forEach(function(dropdownId) {
+          const dropdownBtn = document.getElementById(dropdownId);
+          if (dropdownBtn) {
+            dropdownBtn.addEventListener('show.bs.dropdown', function() {
+              const dropdownMenu = this.nextElementSibling;
+              if (dropdownMenu && dropdownMenu.classList.contains('dropdown-menu')) {
+                // Dropdown menüyü body'ye taşı
+                document.body.appendChild(dropdownMenu);
+                
+                // Pozisyonu hesapla
+                const rect = this.getBoundingClientRect();
+                dropdownMenu.style.position = 'fixed';
+                dropdownMenu.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+                
+                // Sağa hizala (dropdown-menu-end için)
+                if (dropdownMenu.classList.contains('dropdown-menu-end')) {
+                  dropdownMenu.style.right = (window.innerWidth - rect.right) + 'px';
+                  dropdownMenu.style.left = 'auto';
+                } else {
+                  dropdownMenu.style.left = (rect.left + window.scrollX) + 'px';
+                  dropdownMenu.style.right = 'auto';
+                }
+                
+                dropdownMenu.style.zIndex = '10050';
+              }
+            });
+            
+            dropdownBtn.addEventListener('hide.bs.dropdown', function() {
+              const dropdownMenu = document.querySelector('.dropdown-menu.show');
+              if (dropdownMenu) {
+                const originalDropdown = this.closest('.dropdown');
+                if (originalDropdown && dropdownMenu.parentElement === document.body) {
+                  originalDropdown.appendChild(dropdownMenu);
+                  dropdownMenu.style.position = '';
+                  dropdownMenu.style.top = '';
+                  dropdownMenu.style.left = '';
+                  dropdownMenu.style.right = '';
+                  dropdownMenu.style.zIndex = '';
+                }
+              }
+            });
+          }
+        });
+      });
     </script>
   </body>
 </html>
