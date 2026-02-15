@@ -29,7 +29,7 @@
             <span class="navbar-toggler-icon"></span>
           </button>
 
-        <div class="d-flex align-items-center gap-2 order-1">
+        <div class="d-flex align-items-center gap-1 order-1">
           <% if (currentUser) { %>
           <div class="d-lg-none tm-user-avatar-mobile">
             <% if (currentUser.avatar) { %>
@@ -42,7 +42,7 @@
           </div>
           <a
             href="/notifications"
-            class="position-relative text-decoration-none me-2 d-lg-none"
+            class="position-relative text-decoration-none me-1 d-lg-none"
           >
             <i class="bi bi-bell-fill"></i>
             <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>

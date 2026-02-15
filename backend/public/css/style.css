@@ -221,27 +221,30 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
 
 /* Mobil bildirim ikonu */
 .tm-navbar a[href="/notifications"].d-lg-none i {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 /* Mobil logout ikonu */
 .tm-logout-icon-btn {
-  padding: 0.5rem !important;
-  width: 2.5rem;
-  height: 2.5rem;
+  padding: 0.4rem !important;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .tm-logout-icon-btn i {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 /* Kullanıcı avatar - Desktop */
 .tm-user-avatar {
   margin-right: 0.75rem;
   order: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tm-avatar-img {
@@ -251,6 +254,7 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
   object-fit: cover;
   border: 2px solid rgba(250, 204, 21, 0.3);
   box-shadow: 0 2px 8px rgba(250, 204, 21, 0.2);
+  display: block;
 }
 
 .tm-avatar-placeholder {
@@ -270,21 +274,26 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
 
 /* Kullanıcı avatar - Mobile */
 .tm-user-avatar-mobile {
-  margin-right: 0.5rem;
+  margin-right: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tm-avatar-img-mobile {
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(250, 204, 21, 0.3);
-  box-shadow: 0 2px 6px rgba(250, 204, 21, 0.2);
+  border: 1.5px solid rgba(250, 204, 21, 0.3);
+  box-shadow: 0 1px 4px rgba(250, 204, 21, 0.2);
+  display: block;
+  margin: 0 auto;
 }
 
 .tm-avatar-placeholder-mobile {
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
   background: linear-gradient(135deg, #facc15, #eab308);
   display: flex;
@@ -292,9 +301,10 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
   justify-content: center;
   color: #020617;
   font-weight: 700;
-  font-size: 0.875rem;
-  border: 2px solid rgba(250, 204, 21, 0.3);
-  box-shadow: 0 2px 6px rgba(250, 204, 21, 0.2);
+  font-size: 0.75rem;
+  border: 1.5px solid rgba(250, 204, 21, 0.3);
+  box-shadow: 0 1px 4px rgba(250, 204, 21, 0.2);
+  margin: 0 auto;
 }
 
 /* Hamburger menu (dropdown) ikonu modern design */
@@ -308,6 +318,72 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
   -webkit-backdrop-filter: blur(5px);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Küçük ekranlar için navbar elementleri */
+@media (max-width: 576px) {
+  .tm-navbar .navbar-toggler {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .tm-navbar .navbar-toggler-icon {
+    width: 1em;
+    height: 1em;
+  }
+
+  .tm-user-avatar-mobile {
+    margin-right: 0.1rem;
+  }
+
+  .tm-avatar-img-mobile {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 1px;
+  }
+
+  .tm-avatar-placeholder-mobile {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.65rem;
+    border-width: 1px;
+  }
+
+  .tm-navbar a[href="/notifications"].d-lg-none i {
+    font-size: 0.9rem;
+  }
+
+  .tm-navbar .dropdown-toggle {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .tm-logout-icon-btn {
+    padding: 0.3rem !important;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .tm-logout-icon-btn i {
+    font-size: 0.8rem;
+  }
+
+  .tm-navbar .navbar-brand {
+    font-size: 0.85rem;
+  }
+
+  .tm-logo-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .tm-bell-badge {
+    font-size: 0.55rem;
+    top: -3px;
+    right: -8px;
+    padding: 0.15em 0.3em;
+  }
 }
 
 .tm-navbar .navbar-toggler:hover {
