@@ -30,6 +30,16 @@ html[dir='rtl'] {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: 0.5rem 0;
   transition: all 0.3s ease;
+  overflow-x: hidden;
+}
+
+.tm-navbar .container-fluid {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .tm-navbar:hover {
@@ -322,9 +332,23 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
 
 /* Küçük ekranlar için navbar elementleri */
 @media (max-width: 576px) {
+  .tm-navbar {
+    overflow-x: hidden;
+  }
+
+  .tm-navbar .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    overflow-x: hidden;
+    max-width: 100%;
+    flex-wrap: nowrap;
+  }
+
   .tm-navbar .navbar-toggler {
     padding: 0.3rem 0.5rem;
     font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-right: 0.25rem;
   }
 
   .tm-navbar .navbar-toggler-icon {
@@ -332,8 +356,17 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
     height: 1em;
   }
 
+  .tm-navbar .d-flex.align-items-center.gap-1 {
+    gap: 0.25rem !important;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    min-width: 0;
+    max-width: calc(100% - 3rem);
+  }
+
   .tm-user-avatar-mobile {
     margin-right: 0.1rem;
+    flex-shrink: 0;
   }
 
   .tm-avatar-img-mobile {
@@ -349,19 +382,35 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
     border-width: 1px;
   }
 
+  .tm-navbar a[href="/notifications"].d-lg-none {
+    flex-shrink: 0;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
   .tm-navbar a[href="/notifications"].d-lg-none i {
     font-size: 0.9rem;
   }
 
+  .tm-navbar .dropdown {
+    flex-shrink: 0;
+  }
+
   .tm-navbar .dropdown-toggle {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap;
+    max-width: 4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .tm-logout-icon-btn {
     padding: 0.3rem !important;
     width: 1.75rem;
     height: 1.75rem;
+    flex-shrink: 0;
   }
 
   .tm-logout-icon-btn i {
@@ -369,20 +418,29 @@ html[dir='rtl'] .tm-navbar .tm-navbar-brand {
   }
 
   .tm-navbar .navbar-brand {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 1rem);
+    margin-right: 0.5rem !important;
   }
 
   .tm-logo-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
+    width: 26px;
+    height: 26px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
   }
 
   .tm-bell-badge {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     top: -3px;
     right: -8px;
-    padding: 0.15em 0.3em;
+    padding: 0.1em 0.25em;
+    min-width: 0.9rem;
   }
 }
 
