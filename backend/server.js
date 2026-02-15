@@ -129,13 +129,7 @@ app.get('/lang/:code', (req, res) => {
   res.redirect(back);
 });
 
-// Routes
-app.use('/', authRoutes);
-app.use('/notifications', ensureAuthenticated, notificationRoutes);
-app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
-app.use('/user', ensureAuthenticated, ensureRole('user'), userRoutes);
-
-// Home redirect
+// Home redirect - must be before other routes
 app.get('/', (req, res) => {
   if (!req.user) {
     return res.redirect('/login');
@@ -145,6 +139,12 @@ app.get('/', (req, res) => {
   }
   return res.redirect('/user/tasks');
 });
+
+// Routes
+app.use('/', authRoutes);
+app.use('/notifications', ensureAuthenticated, notificationRoutes);
+app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
+app.use('/user', ensureAuthenticated, ensureRole('user'), userRoutes);
 
 // 404
 app.use((req, res) => {
