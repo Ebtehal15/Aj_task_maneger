@@ -65,13 +65,13 @@ router.post('/login', async (req, res) => {
       
       // Redirect yapmadan önce response'u commit et
       // Bu, cookie'nin tarayıcıya gönderilmesini garanti eder
-      if (user.role === 'admin') {
+    if (user.role === 'admin') {
         console.log(`🔄 Redirecting to /admin/dashboard with sessionId: ${req.sessionID}`);
         return res.redirect(302, '/admin/dashboard');
-      }
+    }
       console.log(`🔄 Redirecting to /user/tasks with sessionId: ${req.sessionID}`);
       return res.redirect(302, '/user/tasks');
-    });
+  });
   } catch (err) {
     console.error('❌ Login error', err);
     return res.render('auth/login', {
@@ -119,7 +119,7 @@ router.post('/user-login', async (req, res) => {
       pageTitle: req.t('loginTitle'),
       error: 'Server error',
       targetRole: 'user'
-    });
+  });
   }
 });
 

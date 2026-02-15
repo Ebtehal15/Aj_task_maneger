@@ -2,11 +2,11 @@
   <h1 class="h4"><%= t('userTasks') %></h1>
 </div>
 
-<form class="card card-body shadow-sm mb-3" method="get">
+<form class="card card-body shadow-sm mb-3" method="get" id="filterForm">
   <div class="row g-2 align-items-end">
     <div class="col-md-4">
       <label class="form-label"><%= t('filterByStatus') %></label>
-      <select name="status" class="form-select">
+      <select name="status" class="form-select filter-input">
         <option value="">--</option>
         <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>
           <%= t('status_pending') %>
@@ -21,17 +21,38 @@
     </div>
     <div class="col-md-3">
       <label class="form-label"><%= t('filterByDate') %> (from)</label>
-      <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control" />
+      <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control filter-input" />
     </div>
     <div class="col-md-3">
       <label class="form-label"><%= t('filterByDate') %> (to)</label>
-      <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control" />
+      <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control filter-input" />
     </div>
     <div class="col-md-2 text-end">
-      <button class="btn btn-primary mt-3"><%= t('save') %></button>
+      <button type="button" class="btn btn-primary mt-3" style="display: none;"><%= t('save') %></button>
     </div>
   </div>
 </form>
+
+<script>
+  // Filtreleme formunu otomatik submit et
+  (function() {
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+      const filterInputs = filterForm.querySelectorAll('.filter-input');
+      let submitTimeout;
+      
+      filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+          // Debounce: Kullanıcı yazmayı bitirdikten 300ms sonra submit et
+          clearTimeout(submitTimeout);
+          submitTimeout = setTimeout(() => {
+            filterForm.submit();
+          }, 300);
+        });
+      });
+    }
+  })();
+</script>
 
 <div class="card shadow-sm">
   <div class="card-body p-0">

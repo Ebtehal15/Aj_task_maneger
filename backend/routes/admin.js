@@ -26,6 +26,37 @@ const storage = multer.diskStorage({
   }
 });
 
+// Avatar upload için ayrı storage
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const avatarDir = path.join(__dirname, '..', 'uploads', 'avatars');
+    if (!fs.existsSync(avatarDir)) {
+      fs.mkdirSync(avatarDir, { recursive: true });
+    }
+    cb(null, avatarDir);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'avatar-' + unique + ext);
+  }
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim dosyaları yüklenebilir!'));
+    }
+  }
+});
+
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -104,7 +135,7 @@ router.get('/dashboard', async (req, res) => {
 // New staff form + list
 router.get('/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, email, role FROM users ORDER BY role DESC, username');
+    const result = await pool.query('SELECT id, username, email, role, avatar FROM users ORDER BY role DESC, username');
     res.render('admin/users', {
       pageTitle: 'Users',
       users: result.rows,
@@ -116,16 +147,17 @@ router.get('/users', async (req, res) => {
   }
 });
 
-router.post('/users', async (req, res) => {
+router.post('/users', avatarUpload.single('avatar'), async (req, res) => {
   const { username, email, password, role } = req.body;
   if (!username || !password || !role) {
     return res.redirect('/admin/users');
   }
   try {
     const passwordHash = bcrypt.hashSync(password, 10);
+    const avatarPath = req.file ? `uploads/avatars/${req.file.filename}` : null;
     await pool.query(
-      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-      [username, email || null, passwordHash, role]
+      'INSERT INTO users (username, email, password_hash, role, avatar) VALUES ($1, $2, $3, $4, $5)',
+      [username, email || null, passwordHash, role, avatarPath]
     );
     res.redirect('/admin/users');
   } catch (err) {
@@ -138,7 +170,7 @@ router.post('/users', async (req, res) => {
 router.get('/users/:id/edit', async (req, res) => {
   const userId = req.params.id;
   try {
-    const result = await pool.query('SELECT id, username, email, role FROM users WHERE id = $1', [userId]);
+    const result = await pool.query('SELECT id, username, email, role, avatar FROM users WHERE id = $1', [userId]);
     if (result.rows.length === 0) {
       return res.sendStatus(404);
     }
@@ -153,7 +185,7 @@ router.get('/users/:id/edit', async (req, res) => {
 });
 
 // Update user
-router.post('/users/:id', async (req, res) => {
+router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
   const userId = req.params.id;
   const { username, email, password, role } = req.body;
 
@@ -162,16 +194,34 @@ router.post('/users/:id', async (req, res) => {
   }
 
   try {
+    // Eski avatar'ı kontrol et ve yeni avatar varsa güncelle
+    let avatarPath = null;
+    if (req.file) {
+      avatarPath = `uploads/avatars/${req.file.filename}`;
+      // Eski avatar'ı sil (opsiyonel)
+      const oldUser = await pool.query('SELECT avatar FROM users WHERE id = $1', [userId]);
+      if (oldUser.rows[0] && oldUser.rows[0].avatar) {
+        const oldAvatarPath = path.join(__dirname, '..', oldUser.rows[0].avatar);
+        if (fs.existsSync(oldAvatarPath)) {
+          fs.unlinkSync(oldAvatarPath);
+        }
+      }
+    } else {
+      // Avatar değiştirilmediyse mevcut avatar'ı koru
+      const currentUser = await pool.query('SELECT avatar FROM users WHERE id = $1', [userId]);
+      avatarPath = currentUser.rows[0]?.avatar || null;
+    }
+
     if (password && password.trim().length) {
       const passwordHash = bcrypt.hashSync(password, 10);
       await pool.query(
-        'UPDATE users SET username = $1, email = $2, role = $3, password_hash = $4 WHERE id = $5',
-        [username, email || null, role, passwordHash, userId]
+        'UPDATE users SET username = $1, email = $2, role = $3, password_hash = $4, avatar = $5 WHERE id = $6',
+        [username, email || null, role, passwordHash, avatarPath, userId]
       );
     } else {
       await pool.query(
-        'UPDATE users SET username = $1, email = $2, role = $3 WHERE id = $4',
-        [username, email || null, role, userId]
+        'UPDATE users SET username = $1, email = $2, role = $3, avatar = $4 WHERE id = $5',
+        [username, email || null, role, avatarPath, userId]
       );
     }
     res.redirect('/admin/users');

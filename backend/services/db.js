@@ -135,6 +135,17 @@ async function initSchema() {
       END $$;
     `);
 
+    // Add avatar column if it doesn't exist (for existing databases)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='users' AND column_name='avatar') THEN
+          ALTER TABLE users ADD COLUMN avatar VARCHAR(500);
+        END IF;
+      END $$;
+    `);
+
     // Create tasks table
     await client.query(`
       CREATE TABLE IF NOT EXISTS tasks (

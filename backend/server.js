@@ -122,7 +122,7 @@ app.use(attachNotificationCount);
 // Language switcher
 app.get('/lang/:code', (req, res) => {
   const { code } = req.params;
-  if (code === 'en' || code === 'ar') {
+  if (code === 'en' || code === 'ar' || code === 'tr') {
     req.session.lang = code;
   }
   const back = req.get('Referer') || '/';

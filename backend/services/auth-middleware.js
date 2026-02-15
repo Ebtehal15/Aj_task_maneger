@@ -12,10 +12,10 @@ async function attachUserToRequest(req, res, next) {
     return next();
   }
 
-  try {
-    const pool = getDb();
-    const result = await pool.query('SELECT id, username, role FROM users WHERE id = $1', [userId]);
-    req.user = result.rows[0] || null;
+        try {
+          const pool = getDb();
+          const result = await pool.query('SELECT id, username, role, avatar FROM users WHERE id = $1', [userId]);
+          req.user = result.rows[0] || null;
     if (!req.user) {
       console.log(`⚠️  User not found in database for session userId: ${userId}`);
     } else {

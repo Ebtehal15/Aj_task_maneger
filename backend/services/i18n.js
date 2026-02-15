@@ -25,6 +25,7 @@ const STRINGS = {
     noTasks: 'No tasks found',
     languageEnglish: 'English',
     languageArabic: 'Arabic',
+    languageTurkish: 'Turkish',
     invalidCredentials: 'Invalid username or password',
     back: 'Back',
     edit: 'Edit',
@@ -60,6 +61,68 @@ const STRINGS = {
     unread: 'Unread',
     read: 'Read'
   },
+  tr: {
+    appTitle: 'Görev Yönetimi',
+    loginTitle: 'Giriş Yap',
+    username: 'Kullanıcı Adı',
+    password: 'Şifre',
+    loginButton: 'Giriş',
+    logout: 'Çıkış',
+    adminDashboard: 'Yönetici Paneli',
+    userTasks: 'Görevlerim',
+    createTask: 'Görev Oluştur',
+    taskTitle: 'Görev Başlığı',
+    taskDescription: 'Açıklama',
+    deadline: 'Teslim Tarihi',
+    assignedTo: 'Atanan',
+    status: 'Durum',
+    status_pending: 'Beklemede',
+    status_in_progress: 'Devam Ediyor',
+    status_done: 'Tamamlandı',
+    uploadFiles: 'Dosya Yükle',
+    save: 'Kaydet',
+    filterByUser: 'Kullanıcıya göre filtrele',
+    filterByStatus: 'Duruma göre filtrele',
+    filterByDate: 'Tarihe göre filtrele',
+    noTasks: 'Görev bulunamadı',
+    languageEnglish: 'İngilizce',
+    languageArabic: 'Arapça',
+    languageTurkish: 'Türkçe',
+    invalidCredentials: 'Geçersiz kullanıcı adı veya şifre',
+    back: 'Geri',
+    edit: 'Düzenle',
+    createdBy: 'Oluşturan',
+    adminLabel: 'Yönetici',
+    view: 'Görüntüle',
+    filesHelpText: 'Dosyalar görev oluştururken veya güncellerken hem yönetici hem de personel tarafından yüklenebilir.',
+    recentUpdates: 'Son Güncellemeler',
+    noUpdates: 'Henüz güncelleme yok.',
+    statusLabel: 'Durum',
+    usersPageTitle: 'Kullanıcılar',
+    addUser: 'Kullanıcı Ekle',
+    existingUsers: 'Mevcut Kullanıcılar',
+    role: 'Rol',
+    role_user: 'Kullanıcı',
+    role_admin: 'Yönetici',
+    notificationsTitle: 'Bildirimler',
+    noNotifications: 'Yeni bildirim yok.',
+    viewTask: 'Görevi Görüntüle',
+    email: 'E-posta',
+    emailHelpText: 'Bildirimler için e-posta adresi (isteğe bağlı)',
+    editTask: 'Görevi Düzenle',
+    notePlaceholder: 'Yapılan iş / açıklama (isteğe bağlı)',
+    makeReport: 'Rapor oluştur',
+    notification_task_assigned: '{by} tarafından yeni görev atandı: {title}',
+    notification_task_updated: 'Personel ({by}) görev durumunu güncelledi (ID: {id}) - Durum: {status} - Not: {note} - Ek: {fileCount} dosya yüklendi',
+    notification_task_updated_no_note: 'Personel ({by}) görev durumunu güncelledi (ID: {id}) - Durum: {status} - Ek: {fileCount} dosya yüklendi',
+    notification_task_updated_no_file: 'Personel ({by}) görev durumunu güncelledi (ID: {id}) - Durum: {status} - Not: {note}',
+    notification_task_updated_simple: 'Personel ({by}) görev durumunu güncelledi (ID: {id}) - Durum: {status}',
+    status_completed: 'Tamamlandı',
+    status_in_progress_text: 'Devam Ediyor',
+    status_pending_text: 'Beklemede',
+    unread: 'Okunmamış',
+    read: 'Okundu'
+  },
   ar: {
     appTitle: 'نظام إدارة المهام',
     loginTitle: 'تسجيل الدخول',
@@ -86,6 +149,7 @@ const STRINGS = {
     noTasks: 'لا توجد مهام',
     languageEnglish: 'الإنجليزية',
     languageArabic: 'العربية',
+    languageTurkish: 'التركية',
     invalidCredentials: 'اسم المستخدم أو كلمة المرور غير صحيحة',
     back: 'رجوع',
     edit: 'تعديل',
@@ -125,7 +189,13 @@ const STRINGS = {
 
 function getI18nMiddleware() {
   return (req, res, next) => {
-    const lang = req.session.lang === 'ar' ? 'ar' : 'en';
+    const sessionLang = req.session.lang;
+    let lang = 'en';
+    if (sessionLang === 'ar') {
+      lang = 'ar';
+    } else if (sessionLang === 'tr') {
+      lang = 'tr';
+    }
     req.lang = lang;
     req.dir = lang === 'ar' ? 'rtl' : 'ltr';
     req.t = (key) => STRINGS[lang][key] || key;
