@@ -115,9 +115,9 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: false, // Render'da HTTPS var ama cookie secure false yapıyoruz (test için)
+    secure: process.env.NODE_ENV === 'production', // HTTPS in production
     httpOnly: true,
-    sameSite: false // Cross-site cookie gönderimi için false (Render proxy için)
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : false // Lax in production, false for development
   }
 };
 
@@ -133,6 +133,11 @@ app.use(session(sessionConfig));
 app.use(attachUserToRequest);
 app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
+
+// Handle service worker requests (prevent 404 errors)
+app.get('/sw.js', (req, res) => {
+  res.status(204).end(); // No Content - service worker not implemented
+});
 
 // Route logging middleware (for debugging)
 app.use((req, res, next) => {
@@ -202,15 +207,21 @@ async function startServer() {
     // Database will be retried on first request
     console.log(`🚀 Starting server on port ${PORT}...`);
     
-    // Use 0.0.0.0 for Render (listens on all interfaces)
-    // For localhost, you can use localhost or 127.0.0.1
-    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
+    // Use 0.0.0.0 to listen on all interfaces (works for both localhost and Render)
+    const host = '0.0.0.0';
     
     app.listen(PORT, host, () => {
       console.log(`✅ Task manager app running on http://${host}:${PORT}`);
       console.log(`🌐 Server is ready to accept connections`);
       console.log(`📝 Note: Database connection will be tested on first request`);
       console.log(`🔗 Local access: http://localhost:${PORT}`);
+      console.log(`🔗 Network access: http://127.0.0.1:${PORT}`);
+      
+      // Additional info for troubleshooting
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`⚠️  Development mode - using default SESSION_SECRET`);
+        console.log(`⚠️  Set NODE_ENV=production and SESSION_SECRET for production`);
+      }
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
