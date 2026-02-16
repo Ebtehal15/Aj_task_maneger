@@ -37,13 +37,46 @@
         </form>
         <script>
           // Debug: Form submit kontrolü
-          document.getElementById('loginForm').addEventListener('submit', function(e) {
-            console.log('🔐 Form submitting...');
-            const formData = new FormData(this);
-            console.log('  Username:', formData.get('username'));
-            console.log('  Password:', formData.get('password') ? '***' : 'missing');
-            console.log('  Action:', this.action);
-          });
+          (function() {
+            const form = document.getElementById('loginForm');
+            if (!form) {
+              console.error('❌ Login form not found!');
+              return;
+            }
+            
+            console.log('✅ Login form found');
+            console.log('  Form action:', form.action);
+            console.log('  Form method:', form.method);
+            
+            // Form submit event
+            form.addEventListener('submit', function(e) {
+              console.log('🔐 Form submitting...');
+              const formData = new FormData(this);
+              const username = formData.get('username');
+              const password = formData.get('password');
+              
+              console.log('  Username:', username || 'MISSING');
+              console.log('  Password:', password ? '***' : 'MISSING');
+              console.log('  Action:', this.action);
+              
+              if (!username || !password) {
+                console.error('❌ Username or password is missing!');
+                e.preventDefault();
+                alert('Lütfen kullanıcı adı ve şifre girin!');
+                return false;
+              }
+              
+              console.log('✅ Form data valid, submitting...');
+            });
+            
+            // Button click event (backup)
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+              loginBtn.addEventListener('click', function(e) {
+                console.log('🔘 Login button clicked');
+              });
+            }
+          })();
         </script>
         <% if (!targetRole) { %>
         <p class="mt-3 small text-muted">
