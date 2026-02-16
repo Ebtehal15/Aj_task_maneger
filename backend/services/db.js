@@ -74,11 +74,14 @@ function initDb() {
 
   // Handle pool errors
   pool.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
+    console.error('❌ Unexpected error on idle client', err);
   });
 
-  // Initialize database schema
-  initSchema();
+  // Initialize database schema (async, but don't block)
+  initSchema().catch((err) => {
+    console.error('❌ Failed to initialize database schema:', err);
+    // Don't throw - let the app start and retry on first request
+  });
 
   return pool;
 }

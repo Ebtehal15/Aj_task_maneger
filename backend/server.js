@@ -148,8 +148,46 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Task manager app running on http://localhost:${PORT}`);
+// Test database connection before starting server
+async function startServer() {
+  try {
+    const pool = initDb();
+    
+    // Test database connection
+    console.log('🔍 Testing database connection...');
+    const testClient = await pool.connect();
+    await testClient.query('SELECT NOW()');
+    testClient.release();
+    console.log('✅ Database connection successful');
+    
+    // Start server
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Task manager app running on http://0.0.0.0:${PORT}`);
+      console.log(`🌐 Server is ready to accept connections`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    process.exit(1);
+  }
+}
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Start the server
+startServer();
 
 
