@@ -59,7 +59,10 @@ router.get('/tasks', async (req, res) => {
   const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
 
   const sql = `
-    SELECT t.*, c.username AS created_username, u.username AS assigned_username
+    SELECT t.*, 
+           c.username AS created_username, 
+           u.username AS assigned_username,
+           COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users c ON t.created_by = c.id
     LEFT JOIN users u ON t.assigned_to = u.id

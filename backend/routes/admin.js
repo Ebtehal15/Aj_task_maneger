@@ -80,7 +80,10 @@ router.get('/dashboard', async (req, res) => {
   console.log(`📊 Admin dashboard accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
 
   const sql = `
-    SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    SELECT t.*, 
+           u.username AS assigned_username, 
+           c.username AS created_username,
+           COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
@@ -89,14 +92,56 @@ router.get('/dashboard', async (req, res) => {
 
   try {
     const tasksResult = await pool.query(sql);
-    const totalTasks = tasksResult.rows.length;
+    const tasks = tasksResult.rows;
+    
+    // Calculate statistics
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'done').length;
+    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+    // PostgreSQL boolean values can be true, 't', 'true', or 1
+    const urgentTasks = tasks.filter(t => {
+      const acil = t.acil;
+      return acil === true || acil === 'true' || acil === 't' || acil === 1 || acil === '1';
+    }).length;
+    
+    console.log(`📊 Dashboard stats: Total: ${totalTasks}, Urgent: ${urgentTasks}`);
+    console.log(`   Urgent tasks details:`, tasks.filter(t => {
+      const acil = t.acil;
+      return acil === true || acil === 'true' || acil === 't' || acil === 1 || acil === '1';
+    }).map(t => ({ id: t.id, title: t.title, acil: t.acil, acilType: typeof t.acil })));
+    
+    // Find most assigned user
+    const userTaskCounts = {};
+    tasks.forEach(task => {
+      if (task.assigned_username) {
+        userTaskCounts[task.assigned_username] = (userTaskCounts[task.assigned_username] || 0) + 1;
+      }
+    });
+    
+    const mostAssignedUser = Object.keys(userTaskCounts).length > 0
+      ? Object.entries(userTaskCounts).sort((a, b) => b[1] - a[1])[0]
+      : null;
+    
+    const stats = {
+      totalTasks,
+      completedTasks,
+      pendingTasks,
+      inProgressTasks,
+      urgentTasks,
+      mostAssignedUser: mostAssignedUser ? {
+        username: mostAssignedUser[0],
+        taskCount: mostAssignedUser[1]
+      } : null
+    };
     
     res.render('admin/dashboard', {
       pageTitle: req.t('adminDashboard'),
-      tasks: tasksResult.rows,
+      tasks: tasks,
       users: [],
       filters: {},
-      totalTasks: totalTasks
+      totalTasks: totalTasks,
+      stats: stats
     });
   } catch (err) {
     console.error(err);
@@ -109,7 +154,10 @@ router.get('/tasks', async (req, res) => {
   console.log(`📋 Admin tasks page accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
 
   const sql = `
-    SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    SELECT t.*, 
+           u.username AS assigned_username, 
+           c.username AS created_username,
+           COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
@@ -161,7 +209,10 @@ router.get('/reports', async (req, res) => {
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
   const sql = `
-    SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    SELECT t.*, 
+           u.username AS assigned_username, 
+           c.username AS created_username,
+           COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
@@ -315,6 +366,7 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
     departman,
     arsiv,
     verilen_is_tarihi,
+    acil,
     status
   } = req.body;
   const files = req.files || [];
@@ -327,8 +379,8 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
     const taskResult = await client.query(
       `INSERT INTO tasks (
         title, description, deadline, status, assigned_to, created_by, created_at,
-        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi
-      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
+        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil
+      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
       [
         title, 
         description, 
@@ -345,7 +397,8 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
         belediye || null,
         departman || null,
         arsiv || 'YOK',
-        verilen_is_tarihi || null
+        verilen_is_tarihi || null,
+        acil === 'true' || acil === true
       ]
     );
 
@@ -471,6 +524,7 @@ router.post('/tasks/:id', async (req, res) => {
     departman,
     arsiv,
     verilen_is_tarihi,
+    acil,
     status
   } = req.body;
 
@@ -491,8 +545,9 @@ router.post('/tasks/:id', async (req, res) => {
         departman = $12,
         arsiv = $13,
         verilen_is_tarihi = $14,
-        status = $15
-      WHERE id = $16`,
+        acil = $15,
+        status = $16
+      WHERE id = $17`,
       [
         title, 
         description, 
@@ -508,6 +563,7 @@ router.post('/tasks/:id', async (req, res) => {
         departman || null,
         arsiv || 'YOK',
         verilen_is_tarihi || null,
+        acil === 'true' || acil === true,
         status || 'pending',
         taskId
       ]
