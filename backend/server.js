@@ -129,31 +129,47 @@ console.log('  SESSION_SECRET:', process.env.SESSION_SECRET ? '✅ Set' : '❌ N
 
 app.use(session(sessionConfig));
 
-// Attach user + language handling + notifications
+// Attach user + language handling + notifications (must be before routes)
 app.use(attachUserToRequest);
 app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
 
-// Routes - authRoutes must come first to handle '/' route
-// Add route logging for debugging
+// Route logging middleware (for debugging)
 app.use((req, res, next) => {
-  console.log(`📍 Route accessed: ${req.method} ${req.path}`);
+  console.log(`📍 [${req.method}] ${req.path} - User: ${req.user ? req.user.username : 'anonymous'}`);
   next();
 });
 
+// Public routes (no authentication required)
 app.use('/', authRoutes);
+
+// Protected routes (authentication required)
 app.use('/notifications', ensureAuthenticated, notificationRoutes);
 app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
 app.use('/user', ensureAuthenticated, ensureRole('user'), userRoutes);
 
-// 404
+// 404 handler (must be last, after all routes)
 app.use((req, res) => {
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).render('errors/404', {
     pageTitle: 'Not Found',
     t: req.t,
     lang: req.lang,
     dir: req.dir,
     user: req.user
+  });
+});
+
+// Global error handler (must be last)
+app.use((err, req, res, next) => {
+  console.error('❌ Unhandled error:', err);
+  console.error('Stack:', err.stack);
+  res.status(err.status || 500).render('errors/404', {
+    pageTitle: 'Error',
+    t: req.t || ((key) => key),
+    lang: req.lang || 'ar',
+    dir: req.dir || 'rtl',
+    user: req.user || null
   });
 });
 

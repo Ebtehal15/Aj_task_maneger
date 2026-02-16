@@ -6,43 +6,35 @@ const router = express.Router();
 
 // Home page - redirect to dashboard if logged in, otherwise to login
 router.get('/', (req, res) => {
-  console.log(`🏠 Home page (/) accessed - user: ${req.user ? req.user.username : 'null'}`);
-  console.log(`🏠 Session ID: ${req.sessionID || 'none'}`);
-  
-  if (req.user) {
-    // User is logged in, redirect to their dashboard
-    if (req.user.role === 'admin') {
-      console.log(`🔄 Redirecting admin to /admin/dashboard`);
-      return res.status(302).redirect('/admin/dashboard');
+  try {
+    if (req.user) {
+      // User is logged in, redirect to their dashboard
+      if (req.user.role === 'admin') {
+        return res.redirect('/admin/dashboard');
+      } else {
+        return res.redirect('/user/tasks');
+      }
     } else {
-      console.log(`🔄 Redirecting user to /user/tasks`);
-      return res.status(302).redirect('/user/tasks');
+      // User is not logged in, redirect to login
+      return res.redirect('/login');
     }
-  } else {
-    // User is not logged in, redirect to login
-    console.log(`🔄 Redirecting to /login`);
-    return res.status(302).redirect('/login');
+  } catch (error) {
+    console.error('❌ Error in home route:', error);
+    return res.redirect('/login');
   }
 });
 
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
   try {
-    console.log(`🔐 Login page accessed - user: ${req.user ? req.user.username : 'null'}`);
-    console.log(`🔐 Session ID: ${req.sessionID}`);
-    console.log(`🔐 Session userId: ${req.session?.userId || 'null'}`);
-    
     if (req.user) {
       // User is already logged in, redirect to their dashboard
       if (req.user.role === 'admin') {
-        console.log(`🔄 User already logged in, redirecting admin to /admin/dashboard`);
         return res.redirect('/admin/dashboard');
       } else {
-        console.log(`🔄 User already logged in, redirecting user to /user/tasks`);
         return res.redirect('/user/tasks');
       }
     }
-    console.log(`✅ Rendering login page`);
     res.render('auth/login', {
       pageTitle: req.t('loginTitle'),
       error: null,
@@ -50,7 +42,13 @@ router.get('/login', (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error in /login route:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).render('errors/404', {
+      pageTitle: 'Error',
+      t: req.t,
+      lang: req.lang,
+      dir: req.dir,
+      user: req.user
+    });
   }
 });
 
