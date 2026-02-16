@@ -175,47 +175,66 @@ app.use((err, req, res, next) => {
 
 // Start server with database connection test (non-blocking)
 async function startServer() {
-  // Initialize database pool (non-blocking)
-  const pool = initDb();
-  
-  // Test database connection (non-blocking, don't fail if it fails)
-  pool.connect()
-    .then((testClient) => {
-      return testClient.query('SELECT NOW()')
-        .then(() => {
-          testClient.release();
-          console.log('✅ Database connection test successful');
-        })
-        .catch((err) => {
-          testClient.release();
-          console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
-        });
-    })
-    .catch((err) => {
-      console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
+  try {
+    // Initialize database pool (non-blocking)
+    console.log('🔍 Initializing database...');
+    const pool = initDb();
+    console.log('✅ Database pool initialized');
+    
+    // Test database connection (non-blocking, don't fail if it fails)
+    pool.connect()
+      .then((testClient) => {
+        return testClient.query('SELECT NOW()')
+          .then(() => {
+            testClient.release();
+            console.log('✅ Database connection test successful');
+          })
+          .catch((err) => {
+            testClient.release();
+            console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
+          });
+      })
+      .catch((err) => {
+        console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
+      });
+    
+    // Start server regardless of database connection status
+    // Database will be retried on first request
+    console.log(`🚀 Starting server on port ${PORT}...`);
+    
+    // Use 0.0.0.0 for Render (listens on all interfaces)
+    // For localhost, you can use localhost or 127.0.0.1
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
+    
+    app.listen(PORT, host, () => {
+      console.log(`✅ Task manager app running on http://${host}:${PORT}`);
+      console.log(`🌐 Server is ready to accept connections`);
+      console.log(`📝 Note: Database connection will be tested on first request`);
+      console.log(`🔗 Local access: http://localhost:${PORT}`);
     });
-  
-  // Start server regardless of database connection status
-  // Database will be retried on first request
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Task manager app running on http://0.0.0.0:${PORT}`);
-    console.log(`🌐 Server is ready to accept connections`);
-    console.log(`📝 Note: Database connection will be tested on first request`);
-  });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    // Don't exit - let Render handle it
+    // But log the error so we can see it in logs
+  }
 }
 
 // Handle uncaught errors (log but don't crash immediately)
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
   console.error('Stack:', error.stack);
-  // Don't exit immediately - let Render handle it
-  // process.exit(1);
+  // Log but don't exit - Render will restart if needed
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  // Don't exit immediately - let Render handle it
-  // process.exit(1);
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  // Log but don't exit - Render will restart if needed
 });
 
 // Start the server
