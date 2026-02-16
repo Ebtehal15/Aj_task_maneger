@@ -36,7 +36,8 @@
 <!-- Statistics Cards -->
 <% if (typeof stats !== 'undefined' && stats) { %>
 <div class="row g-3 mb-4">
-  <div class="col-md-3 col-sm-6">
+  <!-- Row 1: Toplam Görev ve Tamamlanan Görevler -->
+  <div class="col-6 col-md-6">
     <div class="card shadow-sm border-0 h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
@@ -51,7 +52,7 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6">
+  <div class="col-6 col-md-6">
     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #28a745 !important;">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
@@ -66,7 +67,9 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6">
+  
+  <!-- Row 2: Beklemede Olan Görevler ve Devam Eden Görevler -->
+  <div class="col-6 col-md-6">
     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #ffc107 !important;">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
@@ -81,7 +84,7 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6">
+  <div class="col-6 col-md-6">
     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #17a2b8 !important;">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
@@ -96,13 +99,28 @@
       </div>
     </div>
   </div>
-</div>
-
-<!-- Most Assigned User Card -->
-<% if (stats.mostAssignedUser) { %>
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="card shadow-sm border-0">
+  
+  <!-- Row 3: Acil Görevler ve En Çok Görev Alan Personel -->
+  <div class="col-6 col-md-6">
+    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #dc3545 !important;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2 small"><%= t('urgentTasks') %></h6>
+            <h3 class="mb-0 text-danger"><%= stats.urgentTasks || 0 %></h3>
+          </div>
+          <div class="text-danger" style="font-size: 2.5rem; opacity: 0.3;">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Row 4: En Çok Görev Alan Personel -->
+  <% if (stats.mostAssignedUser) { %>
+  <div class="col-6 col-md-6">
+    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #6f42c1 !important;">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
           <div>
@@ -113,15 +131,15 @@
               <span class="badge bg-primary ms-2"><%= stats.mostAssignedUser.taskCount %> <%= t('totalTasks') %></span>
             </h5>
           </div>
-          <div class="text-primary" style="font-size: 3rem; opacity: 0.2;">
+          <div class="text-primary" style="font-size: 2.5rem; opacity: 0.3;">
             <i class="bi bi-trophy"></i>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <% } %>
 </div>
-<% } %>
 <% } %>
 
 
@@ -147,7 +165,12 @@
           <% tasks.forEach(task => { %>
           <tr>
             <td><%= task.id %></td>
-            <td><%= task.title %></td>
+            <td>
+              <%= task.title %>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>
+              <% } %>
+            </td>
             <td><%= task.assigned_username %></td>
             <td>
               <span class="badge status-<%= task.status %>">
@@ -181,9 +204,14 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <span class="badge bg-secondary">#<%= task.id %></span>
-            <span class="badge status-<%= task.status %>">
-              <%= t('status_' + task.status) %>
-            </span>
+            <div>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger me-1"><%= t('urgent') %></span>
+              <% } %>
+              <span class="badge status-<%= task.status %>">
+                <%= t('status_' + task.status) %>
+              </span>
+            </div>
           </div>
           <h5 class="card-title mb-3"><%= task.title %></h5>
           <div class="task-card-info">

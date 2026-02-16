@@ -27,7 +27,12 @@
           <% tasks.forEach(task => { %>
           <tr>
             <td><%= task.id %></td>
-            <td><%= task.title %></td>
+            <td>
+              <%= task.title %>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>
+              <% } %>
+            </td>
             <td><%= task.assigned_username || '-' %></td>
             <td>
               <span class="badge status-<%= task.status %>">

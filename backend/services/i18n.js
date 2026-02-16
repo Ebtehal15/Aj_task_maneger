@@ -21,6 +21,7 @@ const STRINGS = {
     completedTasks: 'Completed Tasks',
     pendingTasks: 'Pending Tasks',
     inProgressTasks: 'In Progress Tasks',
+    urgentTasks: 'Urgent Tasks',
     mostAssignedUser: 'Most Assigned User',
     uploadFiles: 'Upload files',
     save: 'Save',
@@ -89,7 +90,10 @@ const STRINGS = {
     statusBitti: 'Completed',
     departmanSaha: 'Field',
     departmanBelediye: 'Municipality',
-    departmanHukuk: 'Legal'
+    departmanHukuk: 'Legal',
+    isUrgent: 'Is Urgent?',
+    urgent: 'Urgent',
+    notUrgent: 'Not Urgent'
   },
   tr: {
     appTitle: 'Görev Yönetimi',
@@ -113,6 +117,7 @@ const STRINGS = {
     completedTasks: 'Tamamlanan Görevler',
     pendingTasks: 'Beklemede Olan Görevler',
     inProgressTasks: 'Devam Eden Görevler',
+    urgentTasks: 'Acil Görevler',
     mostAssignedUser: 'En Çok Görev Alan Personel',
     uploadFiles: 'Dosya Yükle',
     save: 'Kaydet',
@@ -180,7 +185,10 @@ const STRINGS = {
     statusBitti: 'Bitti',
     departmanSaha: 'Saha',
     departmanBelediye: 'Belediye',
-    departmanHukuk: 'Hukuk'
+    departmanHukuk: 'Hukuk',
+    isUrgent: 'Acil mi?',
+    urgent: 'Acil',
+    notUrgent: 'Acil Değil'
   },
   ar: {
     appTitle: 'نظام إدارة المهام',
@@ -249,6 +257,12 @@ const STRINGS = {
     menu: 'القائمة',
     tasks: 'المهام',
     reports: 'التقارير',
+    totalTasks: 'إجمالي المهام',
+    completedTasks: 'المهام المكتملة',
+    pendingTasks: 'المهام المعلقة',
+    inProgressTasks: 'المهام قيد التنفيذ',
+    urgentTasks: 'المهام العاجلة',
+    mostAssignedUser: 'أكثر موظف تم تعيين المهام له',
     tarih: 'التاريخ',
     konuSorumlusu: 'مسؤول الموضوع',
     sorumlu: 'المسؤول',
@@ -268,7 +282,10 @@ const STRINGS = {
     statusBitti: 'انتهى',
     departmanSaha: 'الميدان',
     departmanBelediye: 'البلدية',
-    departmanHukuk: 'القانون'
+    departmanHukuk: 'القانون',
+    isUrgent: 'هل هو عاجل؟',
+    urgent: 'عاجل',
+    notUrgent: 'غير عاجل'
   }
 };
 

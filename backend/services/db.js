@@ -230,6 +230,12 @@ async function initSchema() {
                        WHERE table_name='tasks' AND column_name='verilen_is_tarihi') THEN
           ALTER TABLE tasks ADD COLUMN verilen_is_tarihi DATE;
         END IF;
+        
+        -- Acil (Urgent)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='acil') THEN
+          ALTER TABLE tasks ADD COLUMN acil BOOLEAN DEFAULT false;
+        END IF;
       END $$;
     `);
 

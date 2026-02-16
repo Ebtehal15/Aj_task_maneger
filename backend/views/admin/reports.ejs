@@ -113,7 +113,12 @@
           <% tasks.forEach(task => { %>
           <tr>
             <td><%= task.id %></td>
-            <td><%= task.title %></td>
+            <td>
+              <%= task.title %>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>
+              <% } %>
+            </td>
             <td><%= task.assigned_username %></td>
             <td>
               <span class="badge status-<%= task.status %>">
@@ -148,9 +153,14 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <span class="badge bg-secondary">#<%= task.id %></span>
-            <span class="badge status-<%= task.status %>">
-              <%= t('status_' + task.status) %>
-            </span>
+            <div>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger me-1"><%= t('urgent') %></span>
+              <% } %>
+              <span class="badge status-<%= task.status %>">
+                <%= t('status_' + task.status) %>
+              </span>
+            </div>
           </div>
           <h5 class="card-title mb-3"><%= task.title %></h5>
           <div class="task-card-info">

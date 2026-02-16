@@ -151,9 +151,9 @@
         <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
       </div>
 
-      <!-- Tarihler ve Durum -->
+      <!-- Tarihler, Durum ve Acil -->
       <div class="row">
-        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">
+        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">
           <label class="form-label"><%= t('verilenIsTarihi') %></label>
           <input
             type="date"
@@ -162,7 +162,7 @@
             value="<%= (typeof task !== 'undefined' && task && task.verilen_is_tarihi) ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '' %>"
           />
         </div>
-        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">
+        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">
           <label class="form-label"><%= t('tahminiIsBitistarihi') %></label>
           <input
             type="date"
@@ -171,8 +171,19 @@
             value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"
           />
         </div>
+        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">
+          <label class="form-label"><%= t('isUrgent') %></label>
+          <select name="acil" class="form-select">
+            <option value="false" <%= (typeof task === 'undefined' || !task || !task.acil) ? 'selected' : '' %>>
+              <%= t('notUrgent') %>
+            </option>
+            <option value="true" <%= (typeof task !== 'undefined' && task && task.acil) ? 'selected' : '' %>>
+              <%= t('urgent') %>
+            </option>
+          </select>
+        </div>
         <% if (typeof task !== 'undefined' && task) { %>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
           <label class="form-label"><%= t('status') %></label>
           <select name="status" class="form-select">
             <option value="pending" <%= (task.status === 'pending') ? 'selected' : '' %>><%= t('status_pending') %></option>
