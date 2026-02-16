@@ -32,16 +32,6 @@ app.set('layout', 'layout');
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve service worker and manifest from root for PWA
-app.get('/sw.js', (req, res) => {
-  res.setHeader('Content-Type', 'application/javascript');
-  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
-});
-app.get('/manifest.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
-});
-
 // Body parsing
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -156,22 +146,8 @@ app.use((req, res) => {
   });
 });
 
-// Error handling for uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Task manager app running on http://0.0.0.0:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Database URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Not set'}`);
+app.listen(PORT, () => {
+  console.log(`Task manager app running on http://localhost:${PORT}`);
 });
 
 
