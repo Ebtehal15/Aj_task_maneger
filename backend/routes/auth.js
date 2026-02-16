@@ -12,9 +12,12 @@ router.get('/', (req, res) => {
 
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
+  console.log(`🔐 Login page accessed - user: ${req.user ? req.user.username : 'null'}`);
   if (req.user) {
+    console.log(`🔄 User already logged in, redirecting to /`);
     return res.redirect('/');
   }
+  console.log(`✅ Rendering login page`);
   res.render('auth/login', {
     pageTitle: req.t('loginTitle'),
     error: null,

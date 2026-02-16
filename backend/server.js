@@ -28,9 +28,15 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layout');
 
-// Static assets
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static assets - must come before routes to avoid conflicts
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
+  etag: true
+}));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '1d',
+  etag: true
+}));
 
 // Body parsing
 app.use(express.urlencoded({ extended: true }));
@@ -120,6 +126,12 @@ app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
 
 // Routes - authRoutes must come first to handle '/' route
+// Add route logging for debugging
+app.use((req, res, next) => {
+  console.log(`📍 Route accessed: ${req.method} ${req.path}`);
+  next();
+});
+
 app.use('/', authRoutes);
 app.use('/notifications', ensureAuthenticated, notificationRoutes);
 app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
