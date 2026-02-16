@@ -4,14 +4,25 @@ const { getDb } = require('../services/db');
 
 const router = express.Router();
 
-// Home page - always redirect to login (simple and reliable)
+// Home page - redirect to dashboard if logged in, otherwise to login
 router.get('/', (req, res) => {
-  console.log(`🏠 Home page (/) accessed - redirecting to /login`);
+  console.log(`🏠 Home page (/) accessed - user: ${req.user ? req.user.username : 'null'}`);
   console.log(`🏠 Session ID: ${req.sessionID || 'none'}`);
-  console.log(`🏠 Request URL: ${req.url}`);
-  console.log(`🏠 Request path: ${req.path}`);
-  // Use 302 redirect to ensure it works
-  res.status(302).redirect('/login');
+  
+  if (req.user) {
+    // User is logged in, redirect to their dashboard
+    if (req.user.role === 'admin') {
+      console.log(`🔄 Redirecting admin to /admin/dashboard`);
+      return res.status(302).redirect('/admin/dashboard');
+    } else {
+      console.log(`🔄 Redirecting user to /user/tasks`);
+      return res.status(302).redirect('/user/tasks');
+    }
+  } else {
+    // User is not logged in, redirect to login
+    console.log(`🔄 Redirecting to /login`);
+    return res.status(302).redirect('/login');
+  }
 });
 
 // Shared login form (admin or user)
