@@ -12,13 +12,7 @@
 </script>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-    <h1 class="h4 mb-1"><%= t('adminDashboard') %></h1>
-    <p class="text-muted small mb-0">
-      <i class="bi bi-list-task"></i> 
-      <%= t('totalTasks') %>: <strong><%= typeof totalTasks !== 'undefined' ? totalTasks : tasks.length %></strong>
-    </p>
-  </div>
+  <h1 class="h4"><%= t('reports') %></h1>
   <div class="d-flex gap-2 align-items-center">
     <div class="btn-group" role="group" aria-label="View toggle">
       <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="table" title="Tablo Görünümü">
@@ -30,13 +24,71 @@
         <span class="d-none d-md-inline">Card</span>
       </button>
     </div>
-    <a href="/admin/tasks/new" class="btn btn-success btn-sm">
-      <i class="bi bi-plus-circle"></i>
-      <%= t('createTask') %>
-    </a>
   </div>
 </div>
 
+<form class="card card-body shadow-sm mb-3" method="get" action="/admin/reports" id="filterForm">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label"><%= t('filterByUser') %></label>
+      <select name="userId" class="form-select filter-input">
+        <option value="">--</option>
+        <% users.forEach(u => { %>
+        <option value="<%= u.id %>" <%= filters.userId == u.id ? 'selected' : '' %>>
+          <%= u.username %>
+        </option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label"><%= t('filterByStatus') %></label>
+      <select name="status" class="form-select filter-input">
+        <option value="">--</option>
+        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>
+          <%= t('status_pending') %>
+        </option>
+        <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>
+          <%= t('status_in_progress') %>
+        </option>
+        <option value="done" <%= filters.status === 'done' ? 'selected' : '' %>>
+          <%= t('status_done') %>
+        </option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label"><%= t('filterByDate') %> (from)</label>
+      <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control filter-input" />
+    </div>
+    <div class="col-md-2">
+      <label class="form-label"><%= t('filterByDate') %> (to)</label>
+      <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control filter-input" />
+    </div>
+    <div class="col-md-2 text-end">
+      <button type="button" class="btn btn-primary mt-3" style="display: none;"><%= t('save') %></button>
+    </div>
+  </div>
+</form>
+
+<script>
+  // Filtreleme formunu otomatik submit et
+  (function() {
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+      const filterInputs = filterForm.querySelectorAll('.filter-input');
+      let submitTimeout;
+      
+      filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+          // Debounce: Kullanıcı yazmayı bitirdikten 300ms sonra submit et
+          clearTimeout(submitTimeout);
+          submitTimeout = setTimeout(() => {
+            filterForm.submit();
+          }, 300);
+        });
+      });
+    }
+  })();
+</script>
 
 <!-- Tablo Görünümü -->
 <div class="card shadow-sm task-view-container d-none" id="tableView" data-view="table">
@@ -53,6 +105,7 @@
             <th><%= t('assignedTo') %></th>
             <th><%= t('status') %></th>
             <th><%= t('deadline') %></th>
+            <th><%= t('createdBy') %></th>
             <th></th>
           </tr>
         </thead>
@@ -68,6 +121,7 @@
               </span>
             </td>
             <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
+            <td><%= task.created_username %></td>
             <td class="text-end">
               <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
                 <%= t('viewTask') %>
@@ -103,6 +157,10 @@
             <p class="mb-2 small">
               <i class="bi bi-person"></i> <strong><%= t('assignedTo') %>:</strong> 
               <span class="text-muted"><%= task.assigned_username %></span>
+            </p>
+            <p class="mb-2 small">
+              <i class="bi bi-person-check"></i> <strong><%= t('createdBy') %>:</strong> 
+              <span class="text-muted"><%= task.created_username %></span>
             </p>
             <% if (task.bolge || task.il || task.belediye) { %>
             <p class="mb-2 small">
@@ -223,5 +281,4 @@
     });
   })();
 </script>
-
 

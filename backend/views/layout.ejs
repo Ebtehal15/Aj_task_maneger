@@ -141,6 +141,20 @@
                 <span><%= t('userTasks') %></span>
               </a>
             </li>
+            <% if (currentUser.role === 'admin') { %>
+            <li class="tm-sidebar-item">
+              <a href="/admin/reports" class="tm-sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span><%= t('reports') %></span>
+              </a>
+            </li>
+            <li class="tm-sidebar-item">
+              <a href="/admin/users" class="tm-sidebar-link">
+                <i class="bi bi-people"></i>
+                <span><%= t('usersPageTitle') %></span>
+              </a>
+            </li>
+            <% } %>
             <% } %>
           </ul>
         </nav>

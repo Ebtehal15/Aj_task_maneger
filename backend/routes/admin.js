@@ -75,9 +75,37 @@ const upload = multer({
   }
 });
 
-// Admin dashboard with filters
+// Admin dashboard - no filters (filters moved to reports page)
 router.get('/dashboard', async (req, res) => {
   console.log(`📊 Admin dashboard accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
+
+  const sql = `
+    SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    JOIN users c ON t.created_by = c.id
+    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+  `;
+
+  try {
+    const tasksResult = await pool.query(sql);
+    const totalTasks = tasksResult.rows.length;
+    
+    res.render('admin/dashboard', {
+      pageTitle: req.t('adminDashboard'),
+      tasks: tasksResult.rows,
+      users: [],
+      filters: {},
+      totalTasks: totalTasks
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// Reports page with filters
+router.get('/reports', async (req, res) => {
   const { userId, status, from, to } = req.query;
 
   const params = [];
@@ -120,8 +148,8 @@ router.get('/dashboard', async (req, res) => {
     const usersResult = await pool.query('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['user']);
     const tasksResult = await pool.query(sql, params);
     
-    res.render('admin/dashboard', {
-      pageTitle: req.t('adminDashboard'),
+    res.render('admin/reports', {
+      pageTitle: req.t('reports'),
       tasks: tasksResult.rows,
       users: usersResult.rows,
       filters: { userId, status, from, to }
