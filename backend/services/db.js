@@ -162,6 +162,74 @@ async function initSchema() {
       )
     `);
 
+    // Add new columns to tasks table if they don't exist
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        -- Tarih (Form Date)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='tarih') THEN
+          ALTER TABLE tasks ADD COLUMN tarih DATE;
+        END IF;
+        
+        -- Konu Sorumlusu (Subject Responsible)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='konu_sorumlusu') THEN
+          ALTER TABLE tasks ADD COLUMN konu_sorumlusu VARCHAR(100);
+        END IF;
+        
+        -- Sorumlu 2 (Second Responsible)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='sorumlu_2') THEN
+          ALTER TABLE tasks ADD COLUMN sorumlu_2 INTEGER;
+          ALTER TABLE tasks ADD CONSTRAINT fk_sorumlu_2 FOREIGN KEY (sorumlu_2) REFERENCES users(id) ON DELETE SET NULL;
+        END IF;
+        
+        -- Sorumlu 3 (Third Responsible)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='sorumlu_3') THEN
+          ALTER TABLE tasks ADD COLUMN sorumlu_3 INTEGER;
+          ALTER TABLE tasks ADD CONSTRAINT fk_sorumlu_3 FOREIGN KEY (sorumlu_3) REFERENCES users(id) ON DELETE SET NULL;
+        END IF;
+        
+        -- Bölge (Region)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='bolge') THEN
+          ALTER TABLE tasks ADD COLUMN bolge VARCHAR(100);
+        END IF;
+        
+        -- İl (City)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='il') THEN
+          ALTER TABLE tasks ADD COLUMN il VARCHAR(100);
+        END IF;
+        
+        -- Belediye (Municipality)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='belediye') THEN
+          ALTER TABLE tasks ADD COLUMN belediye VARCHAR(100);
+        END IF;
+        
+        -- Departman (Department)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='departman') THEN
+          ALTER TABLE tasks ADD COLUMN departman VARCHAR(50);
+        END IF;
+        
+        -- Arşiv (Archive)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='arsiv') THEN
+          ALTER TABLE tasks ADD COLUMN arsiv VARCHAR(10) DEFAULT 'YOK';
+        END IF;
+        
+        -- Verilen İş Tarihi (Given Job Date)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='verilen_is_tarihi') THEN
+          ALTER TABLE tasks ADD COLUMN verilen_is_tarihi DATE;
+        END IF;
+      END $$;
+    `);
+
     // Create task_files table
     await client.query(`
       CREATE TABLE IF NOT EXISTS task_files (

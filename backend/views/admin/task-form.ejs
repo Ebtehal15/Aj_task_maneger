@@ -16,33 +16,34 @@
       action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
       <% if (typeof task === 'undefined' || !task) { %>enctype="multipart/form-data"<% } %>
     >
-      <div class="mb-3">
-        <label class="form-label"><%= t('taskTitle') %></label>
-        <input
-          type="text"
-          name="title"
-          class="form-control"
-          value="<%= (typeof task !== 'undefined' && task) ? task.title : '' %>"
-          required
-        />
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><%= t('taskDescription') %></label>
-        <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
-      </div>
+      <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">
-        <div class="col-md-4 mb-3">
-          <label class="form-label"><%= t('deadline') %></label>
+        <div class="col-md-6 mb-3">
+          <label class="form-label"><%= t('tarih') %></label>
           <input
             type="date"
-            name="deadline"
+            name="tarih"
             class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"
+            value="<%= (typeof task !== 'undefined' && task && task.tarih) ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : '' %>"
           />
         </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label"><%= t('konuSorumlusu') %></label>
+          <input
+            type="text"
+            name="konu_sorumlusu"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.konu_sorumlusu) ? task.konu_sorumlusu : '' %>"
+          />
+        </div>
+      </div>
+
+      <!-- Sorumlular (3 kişi) -->
+      <div class="row">
         <div class="col-md-4 mb-3">
-          <label class="form-label"><%= t('assignedTo') %></label>
+          <label class="form-label"><%= t('sorumlu') %> 1</label>
           <select name="assigned_to" class="form-select" required>
+            <option value=""><%= t('assignedTo') %></option>
             <% users.forEach(u => { %>
             <option
               value="<%= u.id %>"
@@ -53,19 +54,149 @@
             <% }) %>
           </select>
         </div>
-        <% if (typeof task === 'undefined' || !task) { %>
         <div class="col-md-4 mb-3">
-          <label class="form-label"><%= t('uploadFiles') %></label>
+          <label class="form-label"><%= t('sorumlu2') %></label>
+          <select name="sorumlu_2" class="form-select">
+            <option value=""><%= t('sorumlu2') %></option>
+            <% users.forEach(u => { %>
+            <option
+              value="<%= u.id %>"
+              <%= (typeof task !== 'undefined' && task && task.sorumlu_2 === u.id) ? 'selected' : '' %>
+            >
+              <%= u.username %>
+            </option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('sorumlu3') %></label>
+          <select name="sorumlu_3" class="form-select">
+            <option value=""><%= t('sorumlu3') %></option>
+            <% users.forEach(u => { %>
+            <option
+              value="<%= u.id %>"
+              <%= (typeof task !== 'undefined' && task && task.sorumlu_3 === u.id) ? 'selected' : '' %>
+            >
+              <%= u.username %>
+            </option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bölge, İl, Belediye -->
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('bolge') %></label>
           <input
-            type="file"
-            name="attachments"
+            type="text"
+            name="bolge"
             class="form-control"
-            multiple
-            accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+            value="<%= (typeof task !== 'undefined' && task && task.bolge) ? task.bolge : '' %>"
           />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('il') %></label>
+          <input
+            type="text"
+            name="il"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.il) ? task.il : '' %>"
+          />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('belediye') %></label>
+          <input
+            type="text"
+            name="belediye"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.belediye) ? task.belediye : '' %>"
+          />
+        </div>
+      </div>
+
+      <!-- Departman ve Arşiv -->
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label"><%= t('departman') %></label>
+          <select name="departman" class="form-select">
+            <option value=""><%= t('departman') %></option>
+            <option value="SAHA" <%= (typeof task !== 'undefined' && task && task.departman === 'SAHA') ? 'selected' : '' %>><%= t('departmanSaha') %></option>
+            <option value="BELEDİYE" <%= (typeof task !== 'undefined' && task && task.departman === 'BELEDİYE') ? 'selected' : '' %>><%= t('departmanBelediye') %></option>
+            <option value="HUKUK" <%= (typeof task !== 'undefined' && task && task.departman === 'HUKUK') ? 'selected' : '' %>><%= t('departmanHukuk') %></option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label"><%= t('arsiv') %></label>
+          <select name="arsiv" class="form-select">
+            <option value="YOK" <%= (typeof task === 'undefined' || !task || !task.arsiv || task.arsiv === 'YOK') ? 'selected' : '' %>><%= t('arsivYok') %></option>
+            <option value="VAR" <%= (typeof task !== 'undefined' && task && task.arsiv === 'VAR') ? 'selected' : '' %>><%= t('arsivVar') %></option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Konu (Title) ve İş Konusu (Description) -->
+      <div class="mb-3">
+        <label class="form-label"><%= t('taskTitle') %> (Konu)</label>
+        <input
+          type="text"
+          name="title"
+          class="form-control"
+          value="<%= (typeof task !== 'undefined' && task) ? task.title : '' %>"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label"><%= t('taskDescription') %> (İş Konusu)</label>
+        <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
+      </div>
+
+      <!-- Tarihler ve Durum -->
+      <div class="row">
+        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">
+          <label class="form-label"><%= t('verilenIsTarihi') %></label>
+          <input
+            type="date"
+            name="verilen_is_tarihi"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.verilen_is_tarihi) ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '' %>"
+          />
+        </div>
+        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">
+          <label class="form-label"><%= t('tahminiIsBitistarihi') %></label>
+          <input
+            type="date"
+            name="deadline"
+            class="form-control"
+            value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"
+          />
+        </div>
+        <% if (typeof task !== 'undefined' && task) { %>
+        <div class="col-md-4 mb-3">
+          <label class="form-label"><%= t('status') %></label>
+          <select name="status" class="form-select">
+            <option value="pending" <%= (task.status === 'pending') ? 'selected' : '' %>><%= t('status_pending') %></option>
+            <option value="in_progress" <%= (task.status === 'in_progress') ? 'selected' : '' %>><%= t('status_in_progress') %></option>
+            <option value="done" <%= (task.status === 'done') ? 'selected' : '' %>><%= t('status_done') %></option>
+            <option value="onemli" <%= (task.status === 'onemli') ? 'selected' : '' %>><%= t('statusOnemli') %></option>
+          </select>
         </div>
         <% } %>
       </div>
+
+      <!-- Dosya Yükleme -->
+      <% if (typeof task === 'undefined' || !task) { %>
+      <div class="mb-3">
+        <label class="form-label"><%= t('uploadFiles') %></label>
+        <input
+          type="file"
+          name="attachments"
+          class="form-control"
+          multiple
+          accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+        />
+      </div>
+      <% } %>
       <button class="btn btn-primary"><%= t('save') %></button>
     </form>
   </div>

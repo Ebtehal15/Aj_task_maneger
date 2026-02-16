@@ -247,17 +247,53 @@ router.get('/tasks/new', async (req, res) => {
 
 // Create task handler
 router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
-  const { title, description, deadline, assigned_to } = req.body;
+  const { 
+    title, 
+    description, 
+    deadline, 
+    assigned_to,
+    tarih,
+    konu_sorumlusu,
+    sorumlu_2,
+    sorumlu_3,
+    bolge,
+    il,
+    belediye,
+    departman,
+    arsiv,
+    verilen_is_tarihi,
+    status
+  } = req.body;
   const files = req.files || [];
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // Insert task
+    // Insert task with all new fields
     const taskResult = await client.query(
-      'INSERT INTO tasks (title, description, deadline, status, assigned_to, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP) RETURNING id',
-      [title, description, deadline || null, 'pending', assigned_to, req.user.id]
+      `INSERT INTO tasks (
+        title, description, deadline, status, assigned_to, created_by, created_at,
+        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi
+      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
+      [
+        title, 
+        description, 
+        deadline || null, 
+        status || 'pending', 
+        assigned_to, 
+        req.user.id,
+        tarih || null,
+        konu_sorumlusu || null,
+        sorumlu_2 || null,
+        sorumlu_3 || null,
+        bolge || null,
+        il || null,
+        belediye || null,
+        departman || null,
+        arsiv || 'YOK',
+        verilen_is_tarihi || null
+      ]
     );
 
     const taskId = taskResult.rows[0].id;
@@ -367,12 +403,61 @@ router.get('/tasks/:id/edit', async (req, res) => {
 // Update task main fields
 router.post('/tasks/:id', async (req, res) => {
   const taskId = req.params.id;
-  const { title, description, deadline, assigned_to } = req.body;
+  const { 
+    title, 
+    description, 
+    deadline, 
+    assigned_to,
+    tarih,
+    konu_sorumlusu,
+    sorumlu_2,
+    sorumlu_3,
+    bolge,
+    il,
+    belediye,
+    departman,
+    arsiv,
+    verilen_is_tarihi,
+    status
+  } = req.body;
 
   try {
     await pool.query(
-      'UPDATE tasks SET title = $1, description = $2, deadline = $3, assigned_to = $4 WHERE id = $5',
-      [title, description, deadline || null, assigned_to, taskId]
+      `UPDATE tasks SET 
+        title = $1, 
+        description = $2, 
+        deadline = $3, 
+        assigned_to = $4,
+        tarih = $5,
+        konu_sorumlusu = $6,
+        sorumlu_2 = $7,
+        sorumlu_3 = $8,
+        bolge = $9,
+        il = $10,
+        belediye = $11,
+        departman = $12,
+        arsiv = $13,
+        verilen_is_tarihi = $14,
+        status = $15
+      WHERE id = $16`,
+      [
+        title, 
+        description, 
+        deadline || null, 
+        assigned_to,
+        tarih || null,
+        konu_sorumlusu || null,
+        sorumlu_2 || null,
+        sorumlu_3 || null,
+        bolge || null,
+        il || null,
+        belediye || null,
+        departman || null,
+        arsiv || 'YOK',
+        verilen_is_tarihi || null,
+        status || 'pending',
+        taskId
+      ]
     );
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
@@ -385,7 +470,7 @@ router.post('/tasks/:id', async (req, res) => {
 router.post('/tasks/:id/status', async (req, res) => {
   const taskId = req.params.id;
   const { status } = req.body;
-  const allowed = ['pending', 'in_progress', 'done'];
+  const allowed = ['pending', 'in_progress', 'done', 'onemli'];
   if (!allowed.includes(status)) {
     return res.redirect(`/admin/tasks/${taskId}`);
   }
