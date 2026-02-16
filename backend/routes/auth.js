@@ -8,7 +8,10 @@ const router = express.Router();
 router.get('/', (req, res) => {
   console.log(`🏠 Home page (/) accessed - redirecting to /login`);
   console.log(`🏠 Session ID: ${req.sessionID || 'none'}`);
-  return res.redirect('/login');
+  console.log(`🏠 Request URL: ${req.url}`);
+  console.log(`🏠 Request path: ${req.path}`);
+  // Use 302 redirect to ensure it works
+  res.status(302).redirect('/login');
 });
 
 // Shared login form (admin or user)
