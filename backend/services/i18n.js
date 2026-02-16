@@ -239,6 +239,7 @@ const STRINGS = {
     home: 'الرئيسية',
     dashboard: 'لوحة التحكم',
     menu: 'القائمة',
+    tasks: 'المهام',
     reports: 'التقارير',
     tarih: 'التاريخ',
     konuSorumlusu: 'مسؤول الموضوع',
