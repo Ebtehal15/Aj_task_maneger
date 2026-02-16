@@ -75,9 +75,26 @@ const upload = multer({
   }
 });
 
-// Admin dashboard - no filters (filters moved to reports page)
+// Admin dashboard - with optional filters from query params
 router.get('/dashboard', async (req, res) => {
   console.log(`📊 Admin dashboard accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
+  
+  const { status, urgent } = req.query;
+  const where = [];
+  const params = [];
+  let paramIndex = 1;
+
+  if (status) {
+    where.push(`t.status = $${paramIndex}`);
+    params.push(status);
+    paramIndex++;
+  }
+
+  if (urgent === 'true') {
+    where.push(`COALESCE(t.acil, false)::boolean = true`);
+  }
+
+  const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
 
   const sql = `
     SELECT t.*, 
@@ -87,33 +104,42 @@ router.get('/dashboard', async (req, res) => {
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
+    ${whereSql}
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
   `;
 
   try {
-    const tasksResult = await pool.query(sql);
+    // Get all tasks for statistics (unfiltered)
+    const allTasksResult = await pool.query(`
+      SELECT t.*, 
+             u.username AS assigned_username, 
+             c.username AS created_username,
+             COALESCE(t.acil, false)::boolean AS acil
+      FROM tasks t
+      JOIN users u ON t.assigned_to = u.id
+      JOIN users c ON t.created_by = c.id
+      ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    `);
+    const allTasks = allTasksResult.rows;
+    
+    // Get filtered tasks for display
+    const tasksResult = await pool.query(sql, params);
     const tasks = tasksResult.rows;
     
-    // Calculate statistics
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'done').length;
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+    // Calculate statistics from all tasks (not filtered)
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(t => t.status === 'done').length;
+    const pendingTasks = allTasks.filter(t => t.status === 'pending').length;
+    const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
     // PostgreSQL boolean values can be true, 't', 'true', or 1
-    const urgentTasks = tasks.filter(t => {
+    const urgentTasks = allTasks.filter(t => {
       const acil = t.acil;
       return acil === true || acil === 'true' || acil === 't' || acil === 1 || acil === '1';
     }).length;
     
-    console.log(`📊 Dashboard stats: Total: ${totalTasks}, Urgent: ${urgentTasks}`);
-    console.log(`   Urgent tasks details:`, tasks.filter(t => {
-      const acil = t.acil;
-      return acil === true || acil === 'true' || acil === 't' || acil === 1 || acil === '1';
-    }).map(t => ({ id: t.id, title: t.title, acil: t.acil, acilType: typeof t.acil })));
-    
     // Find most assigned user
     const userTaskCounts = {};
-    tasks.forEach(task => {
+    allTasks.forEach(task => {
       if (task.assigned_username) {
         userTaskCounts[task.assigned_username] = (userTaskCounts[task.assigned_username] || 0) + 1;
       }
@@ -139,7 +165,7 @@ router.get('/dashboard', async (req, res) => {
       pageTitle: req.t('adminDashboard'),
       tasks: tasks,
       users: [],
-      filters: {},
+      filters: { status, urgent },
       totalTasks: totalTasks,
       stats: stats
     });
