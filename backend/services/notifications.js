@@ -71,11 +71,11 @@ async function markAllReadForUser(userId) {
 }
 
 async function attachNotificationCount(req, res, next) {
-  if (!req.user) {
-    res.locals.unreadNotifications = 0;
-    return next();
-  }
   try {
+    if (!req.user) {
+      res.locals.unreadNotifications = 0;
+      return next();
+    }
     const pool = getDb();
     const result = await pool.query(
       'SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = FALSE',
@@ -83,7 +83,7 @@ async function attachNotificationCount(req, res, next) {
     );
     res.locals.unreadNotifications = parseInt(result.rows[0].count) || 0;
   } catch (err) {
-    console.error('Error loading notification count', err);
+    console.error('⚠️  Error loading notification count (non-fatal):', err.message);
     res.locals.unreadNotifications = 0;
   }
   next();

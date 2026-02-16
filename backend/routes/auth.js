@@ -6,42 +6,58 @@ const router = express.Router();
 
 // Home page - redirect based on authentication status
 router.get('/', (req, res) => {
-  console.log(`🏠 Home page accessed - user: ${req.user ? req.user.username : 'null'}`);
-  if (req.user) {
-    // User is logged in, redirect to their dashboard
-    if (req.user.role === 'admin') {
-      console.log(`🔄 Redirecting admin to /admin/dashboard`);
-      return res.redirect('/admin/dashboard');
+  try {
+    console.log(`🏠 Home page accessed - user: ${req.user ? req.user.username : 'null'}`);
+    console.log(`🏠 Session ID: ${req.sessionID}`);
+    console.log(`🏠 Session userId: ${req.session?.userId || 'null'}`);
+    
+    if (req.user) {
+      // User is logged in, redirect to their dashboard
+      if (req.user.role === 'admin') {
+        console.log(`🔄 Redirecting admin to /admin/dashboard`);
+        return res.redirect('/admin/dashboard');
+      } else {
+        console.log(`🔄 Redirecting user to /user/tasks`);
+        return res.redirect('/user/tasks');
+      }
     } else {
-      console.log(`🔄 Redirecting user to /user/tasks`);
-      return res.redirect('/user/tasks');
+      // User is not logged in, redirect to login
+      console.log(`🔄 Redirecting to /login`);
+      return res.redirect('/login');
     }
-  } else {
-    // User is not logged in, redirect to login
-    console.log(`🔄 Redirecting to /login`);
+  } catch (error) {
+    console.error('❌ Error in / route:', error);
     return res.redirect('/login');
   }
 });
 
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
-  console.log(`🔐 Login page accessed - user: ${req.user ? req.user.username : 'null'}`);
-  if (req.user) {
-    // User is already logged in, redirect to their dashboard
-    if (req.user.role === 'admin') {
-      console.log(`🔄 User already logged in, redirecting admin to /admin/dashboard`);
-      return res.redirect('/admin/dashboard');
-    } else {
-      console.log(`🔄 User already logged in, redirecting user to /user/tasks`);
-      return res.redirect('/user/tasks');
+  try {
+    console.log(`🔐 Login page accessed - user: ${req.user ? req.user.username : 'null'}`);
+    console.log(`🔐 Session ID: ${req.sessionID}`);
+    console.log(`🔐 Session userId: ${req.session?.userId || 'null'}`);
+    
+    if (req.user) {
+      // User is already logged in, redirect to their dashboard
+      if (req.user.role === 'admin') {
+        console.log(`🔄 User already logged in, redirecting admin to /admin/dashboard`);
+        return res.redirect('/admin/dashboard');
+      } else {
+        console.log(`🔄 User already logged in, redirecting user to /user/tasks`);
+        return res.redirect('/user/tasks');
+      }
     }
+    console.log(`✅ Rendering login page`);
+    res.render('auth/login', {
+      pageTitle: req.t('loginTitle'),
+      error: null,
+      targetRole: null
+    });
+  } catch (error) {
+    console.error('❌ Error in /login route:', error);
+    res.status(500).send('Internal Server Error');
   }
-  console.log(`✅ Rendering login page`);
-  res.render('auth/login', {
-    pageTitle: req.t('loginTitle'),
-    error: null,
-    targetRole: null
-  });
 });
 
 // Handle login (admin or user)

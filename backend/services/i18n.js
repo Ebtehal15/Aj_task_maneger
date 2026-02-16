@@ -261,27 +261,40 @@ const STRINGS = {
 
 function getI18nMiddleware() {
   return (req, res, next) => {
-    const sessionLang = req.session.lang;
-    let lang = 'ar'; // Varsayılan dil Arapça
-    if (sessionLang === 'en') {
-      lang = 'en';
-    } else if (sessionLang === 'tr') {
-      lang = 'tr';
-    } else if (sessionLang === 'ar') {
-      lang = 'ar';
+    try {
+      const sessionLang = req.session?.lang;
+      let lang = 'ar'; // Varsayılan dil Arapça
+      if (sessionLang === 'en') {
+        lang = 'en';
+      } else if (sessionLang === 'tr') {
+        lang = 'tr';
+      } else if (sessionLang === 'ar') {
+        lang = 'ar';
+      }
+      // Eğer session'da dil yoksa, varsayılan olarak Arapça ayarla
+      if (!sessionLang && req.session) {
+        req.session.lang = 'ar';
+      }
+      req.lang = lang;
+      req.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      req.t = (key) => STRINGS[lang]?.[key] || key;
+      res.locals.t = req.t;
+      res.locals.lang = lang;
+      res.locals.dir = req.dir;
+      res.locals.currentUser = req.user;
+      next();
+    } catch (error) {
+      console.error('⚠️  Error in i18n middleware (non-fatal):', error.message);
+      // Fallback to default values
+      req.lang = 'ar';
+      req.dir = 'rtl';
+      req.t = (key) => key;
+      res.locals.t = req.t;
+      res.locals.lang = 'ar';
+      res.locals.dir = 'rtl';
+      res.locals.currentUser = req.user;
+      next();
     }
-    // Eğer session'da dil yoksa, varsayılan olarak Arapça ayarla
-    if (!sessionLang) {
-      req.session.lang = 'ar';
-    }
-    req.lang = lang;
-    req.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    req.t = (key) => STRINGS[lang][key] || key;
-    res.locals.t = req.t;
-    res.locals.lang = lang;
-    res.locals.dir = req.dir;
-    res.locals.currentUser = req.user;
-    next();
   };
 }
 
