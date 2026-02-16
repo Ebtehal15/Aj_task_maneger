@@ -128,13 +128,13 @@
         </div>
         <nav class="tm-sidebar-nav">
           <ul class="tm-sidebar-menu">
+            <% if (currentUser) { %>
             <li class="tm-sidebar-item">
-              <a href="/" class="tm-sidebar-link">
-                <i class="bi bi-house-door"></i>
-                <span><%= t('home') %></span>
+              <a href="<%= currentUser.role === 'admin' ? '/admin/dashboard' : '/user/tasks' %>" class="tm-sidebar-link">
+                <i class="bi bi-speedometer2"></i>
+                <span><%= t('dashboard') %></span>
               </a>
             </li>
-            <% if (currentUser) { %>
             <li class="tm-sidebar-item">
               <a href="/user/tasks" class="tm-sidebar-link">
                 <i class="bi bi-person"></i>
