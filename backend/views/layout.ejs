@@ -311,49 +311,284 @@
   </div>
 
   <script>
-    // Excel export linklerine paylaşım modalı ekle
-    document.addEventListener('DOMContentLoaded', function() {
-      const excelLinks = document.querySelectorAll('a[href*="/admin/reports/export"]');
-      let currentExportUrl = '';
+    // Excel export linklerine paylaşım özelliği ekle
+    (function() {
+      let currentDownloadedFile = null;
+      let currentFileName = '';
       
-      excelLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          currentExportUrl = this.href;
-          
-          // Dosyayı indir
-          const downloadLink = document.createElement('a');
-          downloadLink.href = currentExportUrl;
-          downloadLink.download = '';
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          
-          // Paylaşım modalını göster
-          const shareModal = new bootstrap.Modal(document.getElementById('shareFileModal'));
-          shareModal.show();
-        });
-      });
-      
-      // Paylaşım butonları
-      document.querySelectorAll('.btn-share').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const shareType = this.dataset.share;
-          const fullUrl = window.location.origin + currentExportUrl;
-          
-          if (shareType === 'email') {
-            window.location.href = `mailto:?subject=Excel File&body=${encodeURIComponent('Please find the Excel file at: ' + fullUrl)}`;
-          } else if (shareType === 'whatsapp') {
-            window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fullUrl)}`, '_blank');
+      // Global paylaşım fonksiyonu
+      window.shareDownloadedFile = async function() {
+        if (!currentDownloadedFile) return;
+        
+        // Önce Web Share API ile dosyayı doğrudan paylaşmayı dene
+        if (navigator.share) {
+          try {
+            const shareData = {
+              title: 'Excel File - ' + currentFileName,
+              text: 'Task Manager Excel Export',
+              files: [currentDownloadedFile]
+            };
+            
+            // canShare kontrolü
+            if (navigator.canShare && navigator.canShare(shareData)) {
+              await navigator.share(shareData);
+              
+              // Toast'u kapat
+              const toastElement = document.getElementById('downloadToast');
+              if (toastElement) {
+                const toastInstance = bootstrap.Toast.getInstance(toastElement);
+                if (toastInstance) toastInstance.hide();
+              }
+              return;
+            }
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              // Kullanıcı iptal etti
+              return;
+            }
+            // Dosya paylaşımı desteklenmiyorsa, sunucuya yükleyip link paylaş
+            console.log('Direct file share not supported, uploading to server...');
           }
+        }
+        
+        // Dosya paylaşımı desteklenmiyorsa, sunucuya yükle ve link paylaş
+        try {
+          // Dosyayı base64'e çevir
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            const base64Data = e.target.result.split(',')[1]; // data:application/...;base64, kısmını kaldır
+            
+            // Dosyayı sunucuya yükle
+            try {
+              const response = await fetch('/admin/reports/upload-temp', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  fileData: base64Data,
+                  fileName: currentFileName
+                })
+              });
+              
+              if (!response.ok) throw new Error('Upload failed');
+              
+              const result = await response.json();
+              const fileUrl = window.location.origin + result.url;
+              
+              // Modal göster (link ile)
+              showShareModal(currentFileName, fileUrl);
+            } catch (uploadError) {
+              console.error('Upload error:', uploadError);
+              // Hata durumunda modal göster
+              showShareModal(currentFileName, null);
+            }
+          };
           
-          // Modalı kapat
-          const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
-          if (modal) modal.hide();
+          reader.readAsDataURL(currentDownloadedFile);
+        } catch (error) {
+          console.error('Share error:', error);
+          showShareModal(currentFileName, null);
+        }
+      };
+      
+      // Paylaşım modalı göster (fallback)
+      function showShareModal(fileName, fileUrl) {
+        const shareModal = new bootstrap.Modal(document.getElementById('shareFileModal'));
+        shareModal.show();
+        
+        // Paylaşım butonlarını güncelle
+        document.querySelectorAll('.btn-share').forEach(btn => {
+          btn.onclick = async function() {
+            const shareType = this.dataset.share;
+            
+            // Önce dosyayı doğrudan paylaşmayı dene
+            if (currentDownloadedFile && navigator.share) {
+              try {
+                const shareData = {
+                  title: shareType === 'email' ? 'Excel File - ' + fileName : 'Excel File',
+                  text: 'Task Manager Excel Export - ' + fileName,
+                  files: [currentDownloadedFile]
+                };
+                
+                if (navigator.canShare && navigator.canShare(shareData)) {
+                  await navigator.share(shareData);
+                  const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
+                  if (modal) modal.hide();
+                  return;
+                }
+              } catch (error) {
+                if (error.name === 'AbortError') {
+                  return;
+                }
+                // Dosya paylaşımı desteklenmiyorsa, link ile devam et
+                console.log('Direct file share failed, using link...');
+              }
+            }
+            
+            // Dosya paylaşımı desteklenmiyorsa, link ile paylaş
+            const shareUrl = fileUrl || (window.location.origin + window.location.pathname);
+            
+            if (shareType === 'email') {
+              // E-posta için link gönder
+              if (navigator.share && fileUrl) {
+                try {
+                  await navigator.share({
+                    title: 'Excel File - ' + fileName,
+                    text: 'Task Manager Excel Export - Download the file from:',
+                    url: shareUrl
+                  });
+                } catch (error) {
+                  if (error.name !== 'AbortError') {
+                    // Fallback: mailto link
+                    window.location.href = `mailto:?subject=Excel File - ${fileName}&body=${encodeURIComponent('Please download the Excel file from: ' + shareUrl)}`;
+                  }
+                }
+              } else {
+                // Fallback: mailto link
+                window.location.href = `mailto:?subject=Excel File - ${fileName}&body=${encodeURIComponent('Please download the Excel file from: ' + shareUrl)}`;
+              }
+            } else if (shareType === 'whatsapp') {
+              // WhatsApp için link paylaş
+              if (navigator.share && fileUrl) {
+                try {
+                  await navigator.share({
+                    title: 'Excel File',
+                    text: 'Task Manager Excel Export - ' + fileName + ' - Download:',
+                    url: shareUrl
+                  });
+                } catch (error) {
+                  if (error.name !== 'AbortError') {
+                    // Fallback: WhatsApp web link
+                    window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fileName + ' - Download: ' + shareUrl)}`, '_blank');
+                  }
+                }
+              } else {
+                // Fallback: WhatsApp web link
+                window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fileName + ' - Download: ' + shareUrl)}`, '_blank');
+              }
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
+            if (modal) modal.hide();
+          };
+        });
+      }
+      
+      // İndirme bildirimi ve paylaşım ikonu göster
+      function showDownloadNotification(fileName, file) {
+        // Önceki bildirimi kaldır
+        const existingToast = document.getElementById('downloadToast');
+        if (existingToast) {
+          const existingToastInstance = bootstrap.Toast.getInstance(existingToast);
+          if (existingToastInstance) existingToastInstance.hide();
+          setTimeout(() => existingToast.remove(), 300);
+        }
+        
+        const toast = document.createElement('div');
+        toast.id = 'downloadToast';
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.style.minWidth = '300px';
+        toast.style.zIndex = '9999';
+        
+        const fileDownloadedText = '<%= t("fileDownloaded") %>';
+        const shareDownloadedFileText = '<%= t("shareDownloadedFile") %>';
+        toast.innerHTML = `
+          <div class="d-flex align-items-center">
+            <div class="toast-body d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>${fileDownloadedText}: ${fileName}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-light me-2" onclick="shareDownloadedFile()" title="${shareDownloadedFileText}">
+              <i class="bi bi-share-fill"></i>
+            </button>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Toast'u göster
+        const bsToast = new bootstrap.Toast(toast, { delay: 8000 });
+        bsToast.show();
+        
+        // Toast kapanınca kaldır
+        toast.addEventListener('hidden.bs.toast', () => {
+          if (toast.parentElement) {
+            toast.parentElement.removeChild(toast);
+          }
+          currentDownloadedFile = null;
+          currentFileName = '';
+        });
+      }
+      
+      document.addEventListener('DOMContentLoaded', function() {
+        const excelLinks = document.querySelectorAll('a[href*="/admin/reports/export"]');
+        
+        excelLinks.forEach(link => {
+          link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const exportUrl = this.href;
+            
+            try {
+              // Dosyayı fetch ile blob olarak al
+              const response = await fetch(exportUrl);
+              if (!response.ok) throw new Error('Download failed');
+              
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              
+              // Dosya adını oluştur
+              let fileName = '';
+              const contentDisposition = response.headers.get('content-disposition');
+              if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch) {
+                  fileName = fileNameMatch[1].replace(/['"]/g, '');
+                }
+              }
+              if (!fileName) {
+                fileName = `gorevler_${new Date().toISOString().slice(0,10)}.xlsx`;
+              }
+              
+              // Dosyayı indir
+              const downloadLink = document.createElement('a');
+              downloadLink.href = url;
+              downloadLink.download = fileName;
+              downloadLink.style.display = 'none';
+              document.body.appendChild(downloadLink);
+              downloadLink.click();
+              document.body.removeChild(downloadLink);
+              
+              // URL'i temizle
+              setTimeout(() => window.URL.revokeObjectURL(url), 100);
+              
+              // Dosyayı sakla (paylaşım için)
+              currentDownloadedFile = new File([blob], fileName, { 
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+              });
+              currentFileName = fileName;
+              
+              // İndirme bildirimi göster (paylaşım ikonu ile)
+              showDownloadNotification(fileName, currentDownloadedFile);
+              
+            } catch (error) {
+              console.error('Download error:', error);
+              // Hata durumunda normal indirme
+              const downloadLink = document.createElement('a');
+              downloadLink.href = exportUrl;
+              downloadLink.download = '';
+              downloadLink.style.display = 'none';
+              document.body.appendChild(downloadLink);
+              downloadLink.click();
+              document.body.removeChild(downloadLink);
+            }
+          });
         });
       });
-    });
+    })();
   </script>
   </body>
 </html>

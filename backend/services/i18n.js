@@ -110,7 +110,9 @@ const STRINGS = {
     shareViaWhatsApp: 'Share via WhatsApp',
     shareViaLink: 'Copy Link',
     linkCopied: 'Link copied to clipboard!',
-    shareFileTitle: 'Share Excel File'
+    shareFileTitle: 'Share Excel File',
+    fileDownloaded: 'File downloaded',
+    shareDownloadedFile: 'Share downloaded file'
   },
   tr: {
     appTitle: 'Görev Yönetimi',
@@ -212,7 +214,9 @@ const STRINGS = {
     shareViaWhatsApp: 'WhatsApp ile Paylaş',
     shareViaLink: 'Linki Kopyala',
     linkCopied: 'Link panoya kopyalandı!',
-    shareFileTitle: 'Excel Dosyasını Paylaş'
+    shareFileTitle: 'Excel Dosyasını Paylaş',
+    fileDownloaded: 'Dosya indirildi',
+    shareDownloadedFile: 'İndirilen dosyayı paylaş'
   },
   ar: {
     appTitle: 'نظام إدارة المهام',
@@ -316,7 +320,9 @@ const STRINGS = {
     shareViaWhatsApp: 'مشاركة عبر واتساب',
     shareViaLink: 'نسخ الرابط',
     linkCopied: 'تم نسخ الرابط إلى الحافظة!',
-    shareFileTitle: 'مشاركة ملف Excel'
+    shareFileTitle: 'مشاركة ملف Excel',
+    fileDownloaded: 'تم تنزيل الملف',
+    shareDownloadedFile: 'مشاركة الملف الذي تم تنزيله'
   }
 };
 

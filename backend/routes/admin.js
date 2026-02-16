@@ -263,6 +263,41 @@ router.get('/reports', async (req, res) => {
   }
 });
 
+// Upload temporary Excel file for sharing
+router.post('/reports/upload-temp', async (req, res) => {
+  try {
+    const { fileData, fileName } = req.body;
+    
+    if (!fileData || !fileName) {
+      return res.status(400).json({ error: 'Missing file data or filename' });
+    }
+    
+    // Base64'ten buffer'a çevir
+    const buffer = Buffer.from(fileData, 'base64');
+    
+    // Geçici dosya adı oluştur
+    const tempFileName = 'temp_' + Date.now() + '_' + Math.round(Math.random() * 1e9) + '_' + fileName;
+    const tempFilePath = path.join(uploadDir, tempFileName);
+    
+    // Dosyayı kaydet
+    fs.writeFileSync(tempFilePath, buffer);
+    
+    // 1 saat sonra silmek için zamanlayıcı
+    setTimeout(() => {
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+      }
+    }, 60 * 60 * 1000); // 1 saat
+    
+    // Dosya linkini döndür
+    const fileUrl = `/uploads/${tempFileName}`;
+    res.json({ url: fileUrl, fileName: fileName });
+  } catch (error) {
+    console.error('Temp upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
   const { userId, status, from, to } = req.query;
@@ -413,7 +448,7 @@ router.get('/reports/export', async (req, res) => {
         };
         durumCell.font = { color: { argb: 'FFFFFFFF' } };
       }
-    });
+      });
 
     // Set response headers
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -469,7 +504,7 @@ router.post('/users', avatarUpload.single('avatar'), async (req, res) => {
     return res.redirect('/admin/users');
   }
   try {
-    const passwordHash = bcrypt.hashSync(password, 10);
+  const passwordHash = bcrypt.hashSync(password, 10);
     const avatarPath = req.file ? `uploads/avatars/${req.file.filename}` : null;
     await pool.query(
       'INSERT INTO users (username, email, password_hash, role, avatar) VALUES ($1, $2, $3, $4, $5)',
@@ -477,9 +512,9 @@ router.post('/users', avatarUpload.single('avatar'), async (req, res) => {
     );
     res.redirect('/admin/users');
   } catch (err) {
-    console.error(err);
-    res.redirect('/admin/users');
-  }
+        console.error(err);
+      res.redirect('/admin/users');
+    }
 });
 
 // Edit user form
@@ -542,8 +577,8 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
     }
     res.redirect('/admin/users');
   } catch (err) {
-    console.error(err);
-    res.redirect('/admin/users');
+        console.error(err);
+      res.redirect('/admin/users');
   }
 });
 
@@ -615,7 +650,7 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
     acil,
     status
   } = req.body;
-  const files = req.files || [];
+      const files = req.files || [];
 
   const client = await pool.connect();
   try {
@@ -658,23 +693,23 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
       );
     }
 
-    // Notification for assigned user
-    const actor = req.user && req.user.username ? req.user.username : 'Admin';
+      // Notification for assigned user
+      const actor = req.user && req.user.username ? req.user.username : 'Admin';
     await addNotification(
-      Number(assigned_to),
-      `Yeni görev atandı (by ${actor}): ${title}`,
-      'task_assigned',
-      taskId
-    );
+        Number(assigned_to),
+        `Yeni görev atandı (by ${actor}): ${title}`,
+        'task_assigned',
+        taskId
+      );
 
       // Try to send email if user has email address
       const userResult = await client.query('SELECT email FROM users WHERE id = $1', [assigned_to]);
       if (userResult.rows.length > 0 && userResult.rows[0].email) {
         sendTaskAssignedEmail(userResult.rows[0].email, title, deadline || null, taskId);
-      }
+        }
 
     await client.query('COMMIT');
-    res.redirect('/admin/dashboard');
+      res.redirect('/admin/dashboard');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -690,17 +725,17 @@ router.get('/tasks/:id', async (req, res) => {
 
   try {
     const taskResult = await pool.query(
-      `SELECT t.*, u.username AS assigned_username, c.username AS created_username
-       FROM tasks t
-       JOIN users u ON t.assigned_to = u.id
-       JOIN users c ON t.created_by = c.id
+    `SELECT t.*, u.username AS assigned_username, c.username AS created_username
+     FROM tasks t
+     JOIN users u ON t.assigned_to = u.id
+     JOIN users c ON t.created_by = c.id
        WHERE t.id = $1`,
       [taskId]
     );
 
     if (taskResult.rows.length === 0) {
-      return res.sendStatus(404);
-    }
+        return res.sendStatus(404);
+      }
 
     const task = taskResult.rows[0];
     const filesResult = await pool.query(
@@ -709,24 +744,24 @@ router.get('/tasks/:id', async (req, res) => {
     );
 
     const updatesResult = await pool.query(
-      `SELECT tu.*, u.username
-       FROM task_updates tu
-       JOIN users u ON tu.user_id = u.id
+            `SELECT tu.*, u.username
+             FROM task_updates tu
+             JOIN users u ON tu.user_id = u.id
        WHERE tu.task_id = $1
-       ORDER BY tu.created_at DESC`,
+             ORDER BY tu.created_at DESC`,
       [taskId]
     );
 
-    res.render('admin/task-detail', {
-      pageTitle: task.title,
-      task,
+              res.render('admin/task-detail', {
+                pageTitle: task.title,
+                task,
       files: filesResult.rows,
       updates: updatesResult.rows
-    });
+              });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
-  }
+    }
 });
 
 // Edit task form
@@ -736,20 +771,20 @@ router.get('/tasks/:id/edit', async (req, res) => {
   try {
     const taskResult = await pool.query('SELECT * FROM tasks WHERE id = $1', [taskId]);
     if (taskResult.rows.length === 0) {
-      return res.sendStatus(404);
-    }
+        return res.sendStatus(404);
+      }
 
     const usersResult = await pool.query('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['user']);
     
-    res.render('admin/task-form', {
-      pageTitle: 'Edit Task',
+        res.render('admin/task-form', {
+          pageTitle: 'Edit Task',
       users: usersResult.rows,
       task: taskResult.rows[0]
-    });
+        });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
-  }
+    }
 });
 
 // Update task main fields
@@ -816,9 +851,9 @@ router.post('/tasks/:id', async (req, res) => {
     );
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
-    console.error(err);
+        console.error(err);
     res.sendStatus(500);
-  }
+    }
 });
 
 // Update task status (admin)
@@ -842,8 +877,8 @@ router.post('/tasks/:id/status', async (req, res) => {
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
     console.error('Error updating task status', err);
-    res.redirect(`/admin/tasks/${taskId}`);
-  }
+        res.redirect(`/admin/tasks/${taskId}`);
+      }
 });
 
 // Delete task (admin only)
@@ -864,11 +899,11 @@ router.post('/tasks/:id/delete', async (req, res) => {
     res.redirect('/admin/dashboard');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Error deleting task', err);
+        console.error('Error deleting task', err);
     res.redirect('/admin/dashboard');
   } finally {
     client.release();
-  }
+      }
 });
 
 module.exports = router;

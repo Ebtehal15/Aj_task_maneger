@@ -50,6 +50,7 @@ build/
 tmp/
 temp/
 *.tmp
+backend/uploads/temp_*.xlsx
 
 # Session files
 sessions/
