@@ -26,12 +26,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// List tasks for current user
+// List tasks for current user (or all tasks if admin)
 router.get('/tasks', async (req, res) => {
   const { status, from, to } = req.query;
-  const params = [req.user.id];
-  const where = ['t.assigned_to = $1'];
-  let paramIndex = 2;
+  const params = [];
+  const where = [];
+  let paramIndex = 1;
+
+  // Admin ise tüm görevleri göster, değilse sadece kendisine atanan görevleri
+  if (req.user.role !== 'admin') {
+    where.push(`t.assigned_to = $${paramIndex}`);
+    params.push(req.user.id);
+    paramIndex++;
+  }
 
   if (status) {
     where.push(`t.status = $${paramIndex}`);
@@ -49,12 +56,13 @@ router.get('/tasks', async (req, res) => {
     paramIndex++;
   }
 
-  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
 
   const sql = `
-    SELECT t.*, c.username AS created_username
+    SELECT t.*, c.username AS created_username, u.username AS assigned_username
     FROM tasks t
     JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u ON t.assigned_to = u.id
     ${whereSql}
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
   `;
@@ -64,7 +72,8 @@ router.get('/tasks', async (req, res) => {
     res.render('user/tasks', {
       pageTitle: req.t('userTasks'),
       tasks: result.rows,
-      filters: { status, from, to }
+      filters: { status, from, to },
+      isAdmin: req.user.role === 'admin'
     });
   } catch (err) {
     console.error(err);
@@ -76,13 +85,27 @@ router.get('/tasks', async (req, res) => {
 router.get('/tasks/:id', async (req, res) => {
   const taskId = req.params.id;
   try {
-    const taskResult = await pool.query(
-      `SELECT t.*, c.username AS created_username
-       FROM tasks t
-       JOIN users c ON t.created_by = c.id
-       WHERE t.id = $1 AND t.assigned_to = $2`,
-      [taskId, req.user.id]
-    );
+    // Admin ise tüm görevleri görebilir, değilse sadece kendisine atanan görevleri
+    let taskResult;
+    if (req.user.role === 'admin') {
+      taskResult = await pool.query(
+        `SELECT t.*, c.username AS created_username, u.username AS assigned_username
+         FROM tasks t
+         JOIN users c ON t.created_by = c.id
+         LEFT JOIN users u ON t.assigned_to = u.id
+         WHERE t.id = $1`,
+        [taskId]
+      );
+    } else {
+      taskResult = await pool.query(
+        `SELECT t.*, c.username AS created_username, u.username AS assigned_username
+         FROM tasks t
+         JOIN users c ON t.created_by = c.id
+         LEFT JOIN users u ON t.assigned_to = u.id
+         WHERE t.id = $1 AND t.assigned_to = $2`,
+        [taskId, req.user.id]
+      );
+    }
 
     if (taskResult.rows.length === 0) {
       return res.sendStatus(404);

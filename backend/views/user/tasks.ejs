@@ -65,6 +65,9 @@
           <tr>
             <th>ID</th>
             <th><%= t('taskTitle') %></th>
+            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <th><%= t('assignedTo') %></th>
+            <% } %>
             <th><%= t('status') %></th>
             <th><%= t('deadline') %></th>
             <th></th>
@@ -75,6 +78,9 @@
           <tr>
             <td><%= task.id %></td>
             <td><%= task.title %></td>
+            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <td><%= task.assigned_username || '-' %></td>
+            <% } %>
             <td>
               <span class="badge status-<%= task.status %>">
                 <%= t('status_' + task.status) %>
