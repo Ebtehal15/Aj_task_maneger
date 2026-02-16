@@ -108,16 +108,19 @@ const sessionPool = new Pool(sessionPoolConfig);
 const sessionConfig = {
   store: new pgSession({
     pool: sessionPool,
-    tableName: 'session'
+    tableName: 'session',
+    createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET || 'super-secret-demo-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  name: 'connect.sid', // Explicit session cookie name
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: process.env.NODE_ENV === 'production', // HTTPS in production
+    secure: false, // Render proxy handles HTTPS, but we need false for cookies to work
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : false // Lax in production, false for development
+    sameSite: 'lax', // Lax for cross-site compatibility
+    path: '/' // Ensure cookie is sent for all paths
   }
 };
 

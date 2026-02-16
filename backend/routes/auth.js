@@ -115,10 +115,12 @@ router.post('/login', async (req, res) => {
 
     console.log(`✅ Password match successful for user: ${username}`);
     console.log(`💾 Setting session userId: ${user.id}, sessionId: ${req.sessionID}`);
+    console.log(`  Current cookies: ${req.headers.cookie || 'none'}`);
     
+    // Set session data
     req.session.userId = user.id;
     
-    // Session'ı kaydet ve redirect yap
+    // Save session and redirect
     req.session.save((err) => {
       if (err) {
         console.error('❌ Error saving session:', err);
@@ -133,8 +135,11 @@ router.post('/login', async (req, res) => {
           targetRole: null
         });
       }
-      console.log(`✅ Session saved successfully for user: ${username}, sessionId: ${req.sessionID}`);
-      console.log(`  Session userId check: ${req.session.userId}`);
+      
+      console.log(`✅ Session saved successfully for user: ${username}`);
+      console.log(`  Session ID: ${req.sessionID}`);
+      console.log(`  Session userId: ${req.session.userId}`);
+      console.log(`  Response will include Set-Cookie header`);
       
       // Redirect based on user role
       if (user.role === 'admin') {
