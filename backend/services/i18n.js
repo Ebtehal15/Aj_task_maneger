@@ -59,7 +59,9 @@ const STRINGS = {
     status_in_progress_text: 'In Progress',
     status_pending_text: 'Pending',
     unread: 'Unread',
-    read: 'Read'
+    read: 'Read',
+    home: 'Home',
+    menu: 'Menu'
   },
   tr: {
     appTitle: 'Görev Yönetimi',
@@ -121,7 +123,9 @@ const STRINGS = {
     status_in_progress_text: 'Devam Ediyor',
     status_pending_text: 'Beklemede',
     unread: 'Okunmamış',
-    read: 'Okundu'
+    read: 'Okundu',
+    home: 'Ana Sayfa',
+    menu: 'Menü'
   },
   ar: {
     appTitle: 'نظام إدارة المهام',
@@ -183,7 +187,9 @@ const STRINGS = {
     status_in_progress_text: 'قيد التنفيذ',
     status_pending_text: 'قيد الانتظار',
     unread: 'غير مقروء',
-    read: 'مقروء'
+    read: 'مقروء',
+    home: 'الرئيسية',
+    menu: 'القائمة'
   }
 };
 

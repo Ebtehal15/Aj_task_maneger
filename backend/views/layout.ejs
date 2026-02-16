@@ -18,110 +18,101 @@
   </head>
   <body class="tm-body">
     <div class="tm-app-shell">
-      <nav class="navbar navbar-expand-lg tm-navbar shadow-sm">
-        <div class="container-fluid">
-          <button
-            class="navbar-toggler order-0"
-            type="button"
-            id="sidebarToggle"
-            aria-label="Toggle sidebar"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-
-          <a class="navbar-brand d-flex align-items-center gap-2 order-1 order-lg-1 tm-navbar-brand" href="/">
-            <span class="tm-logo-icon d-inline-flex align-items-center justify-content-center overflow-hidden">
-              <!-- If you place logo.jpg under backend/public/img/logo.jpg it will be used here -->
-              <img
-                src="/public/img/logo.jpg"
-                alt="Logo"
-                class="tm-logo-img"
-                onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
-              />
-              <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
-            </span>
-            <span class="fw-semibold"><%= t('appTitle') %></span>
-          </a>
-
-        <div class="d-flex align-items-center gap-2 order-2">
-          <% if (currentUser) { %>
-          <div class="d-lg-none tm-user-avatar-mobile">
-            <% if (currentUser.avatar) { %>
-            <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-img-mobile" />
-            <% } else { %>
-            <div class="tm-avatar-placeholder-mobile">
-              <%= currentUser.username.charAt(0).toUpperCase() %>
-            </div>
-            <% } %>
-          </div>
-          <a
-            href="/notifications"
-            class="position-relative text-decoration-none d-lg-none"
-          >
-            <i class="bi bi-bell-fill"></i>
-            <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
-            <span class="badge rounded-pill bg-danger tm-bell-badge">
-              <%= unreadNotifications %>
-            </span>
-            <% } %>
-          </a>
-          <% } %>
-          <div class="dropdown d-lg-none">
-            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdownMobile" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
-              <%= lang === 'en' ? t('languageEnglish') : lang === 'ar' ? t('languageArabic') : t('languageTurkish') %>
+      <!-- Modern Navbar -->
+      <nav class="tm-navbar-new">
+        <div class="tm-navbar-container">
+          <!-- Sol taraf: Menu ve Logo -->
+          <div class="tm-navbar-left">
+            <button class="tm-menu-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+              <i class="bi bi-list"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdownMobile">
-              <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
-              <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
-              <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
-            </ul>
-          </div>
-          <% if (currentUser) { %>
-          <form action="/logout" method="post" class="d-lg-none">
-            <button type="submit" class="btn btn-sm btn-outline-light tm-logout-icon-btn" aria-label="<%= t('logout') %>">
-              <i class="bi bi-box-arrow-right"></i>
-            </button>
-          </form>
-          <% } %>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 order-3 order-lg-3 ms-auto">
-            <% if (currentUser) { %>
-            <div class="d-none d-lg-block tm-user-avatar">
-              <% if (currentUser.avatar) { %>
-              <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-img" />
-              <% } else { %>
-              <div class="tm-avatar-placeholder">
-                <%= currentUser.username.charAt(0).toUpperCase() %>
+            <a href="/" class="tm-navbar-brand">
+              <div class="tm-logo-wrapper">
+                <img
+                  src="/public/img/logo.jpg"
+                  alt="Logo"
+                  class="tm-logo-image"
+                  onerror="this.style.display='none'; this.parentElement.classList.add('tm-logo-fallback');"
+                />
+                <i class="bi bi-check2-circle tm-logo-fallback-icon"></i>
               </div>
-              <% } %>
-            </div>
-            <a
-              href="/notifications"
-              class="position-relative text-decoration-none d-none d-lg-inline-block"
-            >
-              <i class="bi bi-bell-fill"></i>
-              <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
-              <span class="badge rounded-pill bg-danger tm-bell-badge">
-                <%= unreadNotifications %>
-              </span>
-              <% } %>
+              <span class="tm-brand-text"><%= t('appTitle') %></span>
             </a>
-            <% } %>
-            <div class="dropdown d-none d-lg-block">
-              <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="langDropdown" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
-                <%= lang === 'en' ? t('languageEnglish') : lang === 'ar' ? t('languageArabic') : t('languageTurkish') %>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
-                <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
-                <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
-                <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
-              </ul>
-            </div>
+          </div>
+
+          <!-- Sağ taraf: Kullanıcı öğeleri -->
+          <div class="tm-navbar-right">
             <% if (currentUser) { %>
-            <form action="/logout" method="post" class="d-none d-lg-block">
-              <button class="btn btn-sm btn-outline-light"><%= t('logout') %></button>
-            </form>
+              <!-- Desktop: Avatar, Bildirim, Dil, Logout -->
+              <div class="tm-navbar-items-desktop">
+                <div class="tm-user-avatar-new">
+                  <% if (currentUser.avatar) { %>
+                    <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-image" />
+                  <% } else { %>
+                    <div class="tm-avatar-initials">
+                      <%= currentUser.username.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                </div>
+                <a href="/notifications" class="tm-notification-btn">
+                  <i class="bi bi-bell"></i>
+                  <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
+                    <span class="tm-notification-badge"><%= unreadNotifications %></span>
+                  <% } %>
+                </a>
+                <div class="tm-dropdown-new">
+                  <button class="tm-lang-btn" type="button" id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-globe"></i>
+                    <span><%= lang === 'en' ? t('languageEnglish') : lang === 'ar' ? t('languageArabic') : t('languageTurkish') %></span>
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                    <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
+                    <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
+                    <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
+                  </ul>
+                </div>
+                <form action="/logout" method="post" class="tm-logout-form">
+                  <button type="submit" class="tm-logout-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span><%= t('logout') %></span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- Mobile: Avatar, Bildirim, Dil, Logout -->
+              <div class="tm-navbar-items-mobile">
+                <div class="tm-user-avatar-new-mobile">
+                  <% if (currentUser.avatar) { %>
+                    <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-image-mobile" />
+                  <% } else { %>
+                    <div class="tm-avatar-initials-mobile">
+                      <%= currentUser.username.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                </div>
+                <a href="/notifications" class="tm-notification-btn-mobile">
+                  <i class="bi bi-bell"></i>
+                  <% if (typeof unreadNotifications !== 'undefined' && unreadNotifications > 0) { %>
+                    <span class="tm-notification-badge-mobile"><%= unreadNotifications %></span>
+                  <% } %>
+                </a>
+                <div class="tm-dropdown-new">
+                  <button class="tm-lang-btn-mobile" type="button" id="langDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-globe"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdownMobile">
+                    <li><a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>" href="/lang/en"><%= t('languageEnglish') %></a></li>
+                    <li><a class="dropdown-item <%= lang === 'ar' ? 'active' : '' %>" href="/lang/ar"><%= t('languageArabic') %></a></li>
+                    <li><a class="dropdown-item <%= lang === 'tr' ? 'active' : '' %>" href="/lang/tr"><%= t('languageTurkish') %></a></li>
+                  </ul>
+                </div>
+                <form action="/logout" method="post" class="tm-logout-form-mobile">
+                  <button type="submit" class="tm-logout-btn-mobile" aria-label="<%= t('logout') %>">
+                    <i class="bi bi-box-arrow-right"></i>
+                  </button>
+                </form>
+              </div>
             <% } %>
           </div>
         </div>
@@ -130,7 +121,7 @@
       <!-- Yeni Sidebar -->
       <div class="tm-sidebar" id="tmSidebar">
         <div class="tm-sidebar-header">
-          <h3 class="tm-sidebar-title">Menu</h3>
+          <h3 class="tm-sidebar-title"><%= t('menu') %></h3>
           <button type="button" class="tm-sidebar-close-btn" id="tmSidebarClose" aria-label="Close sidebar">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -140,14 +131,14 @@
             <li class="tm-sidebar-item">
               <a href="/" class="tm-sidebar-link">
                 <i class="bi bi-house-door"></i>
-                <span>Home</span>
+                <span><%= t('home') %></span>
               </a>
             </li>
             <% if (currentUser) { %>
             <li class="tm-sidebar-item">
               <a href="/user/tasks" class="tm-sidebar-link">
                 <i class="bi bi-person"></i>
-                <span>User</span>
+                <span><%= t('userTasks') %></span>
               </a>
             </li>
             <% } %>
@@ -173,7 +164,7 @@
     <script>
       // Navbar yüksekliğini hesapla ve CSS variable olarak ayarla
       function updateNavbarHeight() {
-        const navbar = document.querySelector('.tm-navbar');
+        const navbar = document.querySelector('.tm-navbar-new');
         if (navbar) {
           const height = navbar.offsetHeight;
           document.documentElement.style.setProperty('--navbar-height', height + 'px');
