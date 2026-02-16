@@ -104,6 +104,31 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
+// Tasks page - shows all tasks (similar to dashboard but dedicated page)
+router.get('/tasks', async (req, res) => {
+  console.log(`📋 Admin tasks page accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
+
+  const sql = `
+    SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    JOIN users c ON t.created_by = c.id
+    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+  `;
+
+  try {
+    const tasksResult = await pool.query(sql);
+    
+    res.render('admin/tasks', {
+      pageTitle: req.t('tasks'),
+      tasks: tasksResult.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
 // Reports page with filters
 router.get('/reports', async (req, res) => {
   const { userId, status, from, to } = req.query;

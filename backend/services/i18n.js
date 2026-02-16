@@ -64,6 +64,7 @@ const STRINGS = {
     home: 'Home',
     dashboard: 'Dashboard',
     menu: 'Menu',
+    tasks: 'Tasks',
     reports: 'Reports',
     tarih: 'Date',
     konuSorumlusu: 'Subject Responsible',

@@ -1,0 +1,51 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('tasks') %></h1>
+  <a href="/admin/tasks/new" class="btn btn-success btn-sm">
+    <i class="bi bi-plus-circle"></i>
+    <%= t('createTask') %>
+  </a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <% if (!tasks.length) { %>
+    <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th><%= t('taskTitle') %></th>
+            <th><%= t('assignedTo') %></th>
+            <th><%= t('status') %></th>
+            <th><%= t('deadline') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% tasks.forEach(task => { %>
+          <tr>
+            <td><%= task.id %></td>
+            <td><%= task.title %></td>
+            <td><%= task.assigned_username || '-' %></td>
+            <td>
+              <span class="badge status-<%= task.status %>">
+                <%= t('status_' + task.status) %>
+              </span>
+            </td>
+            <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
+            <td class="text-end">
+              <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
+                <%= t('view') %>
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+

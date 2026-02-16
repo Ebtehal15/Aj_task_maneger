@@ -135,13 +135,13 @@
                 <span><%= t('dashboard') %></span>
               </a>
             </li>
+            <% if (currentUser.role === 'admin') { %>
             <li class="tm-sidebar-item">
-              <a href="/user/tasks" class="tm-sidebar-link">
-                <i class="bi bi-person"></i>
-                <span><%= t('userTasks') %></span>
+              <a href="/admin/tasks" class="tm-sidebar-link">
+                <i class="bi bi-list-task"></i>
+                <span><%= t('tasks') %></span>
               </a>
             </li>
-            <% if (currentUser.role === 'admin') { %>
             <li class="tm-sidebar-item">
               <a href="/admin/reports" class="tm-sidebar-link">
                 <i class="bi bi-file-earmark-text"></i>
