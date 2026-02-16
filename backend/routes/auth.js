@@ -4,20 +4,9 @@ const { getDb } = require('../services/db');
 
 const router = express.Router();
 
-// Home page - redirect based on role
+// Home page - always redirect to login
 router.get('/', (req, res) => {
-  if (!req.user) {
-    return res.redirect('/login');
-  }
-  // Herkesi role göre ilgili anasayfaya yönlendir
-  if (req.user.role === 'admin') {
-    return res.redirect('/admin/dashboard');
-  }
-  // Normal user veya role belirtilmemiş kullanıcılar için görevler sayfasına yönlendir
-  if (req.user.role === 'user' || !req.user.role) {
-    return res.redirect('/user/tasks');
-  }
-  // Diğer durumlar için login'e yönlendir
+  console.log(`🏠 Home page accessed - redirecting to /login`);
   return res.redirect('/login');
 });
 
@@ -135,6 +124,16 @@ router.post('/user-login', async (req, res) => {
 });
 
 // Logout
+// Language switcher
+router.get('/lang/:code', (req, res) => {
+  const { code } = req.params;
+  if (code === 'en' || code === 'ar' || code === 'tr') {
+    req.session.lang = code;
+  }
+  const back = req.get('Referer') || '/';
+  res.redirect(back);
+});
+
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/login');

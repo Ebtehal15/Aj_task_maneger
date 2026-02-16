@@ -119,17 +119,7 @@ app.use(attachUserToRequest);
 app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
 
-// Language switcher
-app.get('/lang/:code', (req, res) => {
-  const { code } = req.params;
-  if (code === 'en' || code === 'ar' || code === 'tr') {
-    req.session.lang = code;
-  }
-  const back = req.get('Referer') || '/';
-  res.redirect(back);
-});
-
-// Routes
+// Routes - authRoutes must come first to handle '/' route
 app.use('/', authRoutes);
 app.use('/notifications', ensureAuthenticated, notificationRoutes);
 app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
