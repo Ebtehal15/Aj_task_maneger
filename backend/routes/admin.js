@@ -3,6 +3,7 @@ const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
+const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
 const { sendTaskAssignedEmail } = require('../services/email');
@@ -259,6 +260,171 @@ router.get('/reports', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
+  }
+});
+
+// Export tasks to Excel
+router.get('/reports/export', async (req, res) => {
+  const { userId, status, from, to } = req.query;
+
+  const params = [];
+  const where = [];
+  let paramIndex = 1;
+
+  // Only add filters if they are valid (not undefined, null, or empty string)
+  if (userId && userId !== 'undefined' && userId !== 'null') {
+    where.push(`t.assigned_to = $${paramIndex}`);
+    params.push(parseInt(userId));
+    paramIndex++;
+  }
+  if (status && status !== 'undefined' && status !== 'null') {
+    where.push(`t.status = $${paramIndex}`);
+    params.push(status);
+    paramIndex++;
+  }
+  if (from && from !== 'undefined' && from !== 'null') {
+    where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
+    params.push(from);
+    paramIndex++;
+  }
+  if (to && to !== 'undefined' && to !== 'null') {
+    where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
+    params.push(to);
+    paramIndex++;
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+  const sql = `
+    SELECT t.*, 
+           u.username AS assigned_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
+           c.username AS created_username,
+           COALESCE(t.acil, false)::boolean AS acil
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    LEFT JOIN users u2 ON t.sorumlu_2::text = u2.id::text
+    LEFT JOIN users u3 ON t.sorumlu_3::text = u3.id::text
+    LEFT JOIN users ks ON t.konu_sorumlusu::text = ks.id::text
+    JOIN users c ON t.created_by = c.id
+    ${whereSql}
+    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+  `;
+
+  try {
+    const tasksResult = await pool.query(sql, params);
+    const tasks = tasksResult.rows;
+
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Görevler');
+
+    // Define columns
+    worksheet.columns = [
+      { header: 'TARİH', key: 'tarih', width: 12 },
+      { header: 'KONU SORUMLUSU', key: 'konu_sorumlusu', width: 15 },
+      { header: 'SORUMLU 1', key: 'sorumlu_1', width: 15 },
+      { header: 'SORUMLU 2', key: 'sorumlu_2', width: 15 },
+      { header: 'SORUMLU 3', key: 'sorumlu_3', width: 15 },
+      { header: 'BÖLGE', key: 'bolge', width: 15 },
+      { header: 'İL', key: 'il', width: 15 },
+      { header: 'BELEDİYE', key: 'belediye', width: 15 },
+      { header: 'DEPARTMAN', key: 'departman', width: 15 },
+      { header: 'KONU', key: 'konu', width: 20 },
+      { header: 'İŞ KONUSU', key: 'is_konusu', width: 30 },
+      { header: 'VERİLEN İŞ TARİHİ', key: 'verilen_is_tarihi', width: 18 },
+      { header: 'TAHMİNİ İŞ BİTİŞ TARİHİ', key: 'tahmini_is_bitis_tarihi', width: 22 },
+      { header: 'ARŞİV', key: 'arsiv', width: 10 },
+      { header: 'DURUM', key: 'durum', width: 15 }
+    ];
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, size: 11 };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFC000' }
+    };
+    worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // Add data rows
+    tasks.forEach(task => {
+      const row = worksheet.addRow({
+        tarih: task.tarih ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : '',
+        konu_sorumlusu: task.konu_sorumlusu_username || '',
+        sorumlu_1: task.assigned_username || '',
+        sorumlu_2: task.sorumlu_2_username || '',
+        sorumlu_3: task.sorumlu_3_username || '',
+        bolge: task.bolge || '',
+        il: task.il || '',
+        belediye: task.belediye || '',
+        departman: task.departman || '',
+        konu: task.title || '',
+        is_konusu: task.description || '',
+        verilen_is_tarihi: task.verilen_is_tarihi ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '',
+        tahmini_is_bitis_tarihi: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '',
+        arsiv: task.arsiv || 'YOK',
+        durum: task.status === 'done' ? 'BİTTİ' : task.status === 'in_progress' ? 'DEVAM EDİYOR' : task.status === 'onemli' ? 'ÖNEMLİ' : 'BEKLEMEDE'
+      });
+
+      // Color code departman column
+      const departmanCell = row.getCell('departman');
+      if (task.departman === 'SAHA') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF92D050' }
+        };
+      } else if (task.departman === 'BELEDİYE') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4472C4' }
+        };
+      } else if (task.departman === 'HUKUK') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFC000' }
+        };
+      }
+
+      // Color code durum column
+      const durumCell = row.getCell('durum');
+      if (task.status === 'done') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF92D050' }
+        };
+      } else if (task.status === 'in_progress') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFEB9C' }
+        };
+      } else if (task.status === 'onemli') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF0000' }
+        };
+        durumCell.font = { color: { argb: 'FFFFFFFF' } };
+      }
+    });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=gorevler_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Excel export error:', err);
+    res.status(500).send('Excel export failed: ' + err.message);
   }
 });
 

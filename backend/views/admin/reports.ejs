@@ -14,6 +14,18 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4"><%= t('reports') %></h1>
   <div class="d-flex gap-2 align-items-center">
+    <a href="/admin/reports/export<%
+      const validFilters = {};
+      Object.keys(filters || {}).forEach(key => {
+        if (filters[key] && filters[key] !== 'undefined' && filters[key] !== 'null' && filters[key] !== '') {
+          validFilters[key] = filters[key];
+        }
+      });
+      const queryString = Object.keys(validFilters).length > 0 ? '?' + new URLSearchParams(validFilters).toString() : '';
+    %><%= queryString %>" class="btn btn-success btn-sm">
+      <i class="bi bi-file-earmark-excel"></i>
+      <%= t('exportExcel') %>
+    </a>
     <div class="btn-group" role="group" aria-label="View toggle">
       <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="table" title="Tablo Görünümü">
         <i class="bi bi-table"></i>

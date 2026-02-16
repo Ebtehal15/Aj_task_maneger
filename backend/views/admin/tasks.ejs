@@ -1,9 +1,15 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4"><%= t('tasks') %></h1>
-  <a href="/admin/tasks/new" class="btn btn-success btn-sm">
-    <i class="bi bi-plus-circle"></i>
-    <%= t('createTask') %>
-  </a>
+  <div class="d-flex gap-2">
+    <a href="/admin/reports/export" class="btn btn-success btn-sm">
+      <i class="bi bi-file-earmark-excel"></i>
+      <%= t('exportExcel') %>
+    </a>
+    <a href="/admin/tasks/new" class="btn btn-success btn-sm">
+      <i class="bi bi-plus-circle"></i>
+      <%= t('createTask') %>
+    </a>
+  </div>
 </div>
 
 <div class="card shadow-sm">

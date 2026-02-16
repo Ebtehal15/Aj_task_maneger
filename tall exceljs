@@ -1,0 +1,340 @@
+warning: in the working copy of 'backend/services/db.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/i18n.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/views/admin/dashboard.ejs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/views/admin/reports.ejs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/views/admin/task-form.ejs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/views/user/tasks.ejs', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/services/db.js b/backend/services/db.js[m
+[1mindex d9787c0..e5b9bcc 100644[m
+[1m--- a/backend/services/db.js[m
+[1m+++ b/backend/services/db.js[m
+[36m@@ -230,6 +230,12 @@[m [masync function initSchema() {[m
+                        WHERE table_name='tasks' AND column_name='verilen_is_tarihi') THEN[m
+           ALTER TABLE tasks ADD COLUMN verilen_is_tarihi DATE;[m
+         END IF;[m
+[32m+[m[41m        [m
+[32m+[m[32m        -- Acil (Urgent)[m
+[32m+[m[32m        IF NOT EXISTS (SELECT 1 FROM information_schema.columns[m[41m [m
+[32m+[m[32m                       WHERE table_name='tasks' AND column_name='acil') THEN[m
+[32m+[m[32m          ALTER TABLE tasks ADD COLUMN acil BOOLEAN DEFAULT false;[m
+[32m+[m[32m        END IF;[m
+       END $$;[m
+     `);[m
+ [m
+[1mdiff --git a/backend/services/i18n.js b/backend/services/i18n.js[m
+[1mindex 6b40b7f..bc730ae 100644[m
+[1m--- a/backend/services/i18n.js[m
+[1m+++ b/backend/services/i18n.js[m
+[36m@@ -21,6 +21,7 @@[m [mconst STRINGS = {[m
+     completedTasks: 'Completed Tasks',[m
+     pendingTasks: 'Pending Tasks',[m
+     inProgressTasks: 'In Progress Tasks',[m
+[32m+[m[32m    urgentTasks: 'Urgent Tasks',[m
+     mostAssignedUser: 'Most Assigned User',[m
+     uploadFiles: 'Upload files',[m
+     save: 'Save',[m
+[36m@@ -89,7 +90,10 @@[m [mconst STRINGS = {[m
+     statusBitti: 'Completed',[m
+     departmanSaha: 'Field',[m
+     departmanBelediye: 'Municipality',[m
+[31m-    departmanHukuk: 'Legal'[m
+[32m+[m[32m    departmanHukuk: 'Legal',[m
+[32m+[m[32m    isUrgent: 'Is Urgent?',[m
+[32m+[m[32m    urgent: 'Urgent',[m
+[32m+[m[32m    notUrgent: 'Not Urgent'[m
+   },[m
+   tr: {[m
+     appTitle: 'Görev Yönetimi',[m
+[36m@@ -113,6 +117,7 @@[m [mconst STRINGS = {[m
+     completedTasks: 'Tamamlanan Görevler',[m
+     pendingTasks: 'Beklemede Olan Görevler',[m
+     inProgressTasks: 'Devam Eden Görevler',[m
+[32m+[m[32m    urgentTasks: 'Acil Görevler',[m
+     mostAssignedUser: 'En Çok Görev Alan Personel',[m
+     uploadFiles: 'Dosya Yükle',[m
+     save: 'Kaydet',[m
+[36m@@ -180,7 +185,10 @@[m [mconst STRINGS = {[m
+     statusBitti: 'Bitti',[m
+     departmanSaha: 'Saha',[m
+     departmanBelediye: 'Belediye',[m
+[31m-    departmanHukuk: 'Hukuk'[m
+[32m+[m[32m    departmanHukuk: 'Hukuk',[m
+[32m+[m[32m    isUrgent: 'Acil mi?',[m
+[32m+[m[32m    urgent: 'Acil',[m
+[32m+[m[32m    notUrgent: 'Acil Değil'[m
+   },[m
+   ar: {[m
+     appTitle: 'نظام إدارة المهام',[m
+[36m@@ -249,6 +257,12 @@[m [mconst STRINGS = {[m
+     menu: 'القائمة',[m
+     tasks: 'المهام',[m
+     reports: 'التقارير',[m
+[32m+[m[32m    totalTasks: 'إجمالي المهام',[m
+[32m+[m[32m    completedTasks: 'المهام المكتملة',[m
+[32m+[m[32m    pendingTasks: 'المهام المعلقة',[m
+[32m+[m[32m    inProgressTasks: 'المهام قيد التنفيذ',[m
+[32m+[m[32m    urgentTasks: 'المهام العاجلة',[m
+[32m+[m[32m    mostAssignedUser: 'أكثر موظف تم تعيين المهام له',[m
+     tarih: 'التاريخ',[m
+     konuSorumlusu: 'مسؤول الموضوع',[m
+     sorumlu: 'المسؤول',[m
+[36m@@ -268,7 +282,10 @@[m [mconst STRINGS = {[m
+     statusBitti: 'انتهى',[m
+     departmanSaha: 'الميدان',[m
+     departmanBelediye: 'البلدية',[m
+[31m-    departmanHukuk: 'القانون'[m
+[32m+[m[32m    departmanHukuk: 'القانون',[m
+[32m+[m[32m    isUrgent: 'هل هو عاجل؟',[m
+[32m+[m[32m    urgent: 'عاجل',[m
+[32m+[m[32m    notUrgent: 'غير عاجل'[m
+   }[m
+ };[m
+ [m
+[1mdiff --git a/backend/views/admin/dashboard.ejs b/backend/views/admin/dashboard.ejs[m
+[1mindex e39c41c..83e004d 100644[m
+[1m--- a/backend/views/admin/dashboard.ejs[m
+[1m+++ b/backend/views/admin/dashboard.ejs[m
+[36m@@ -36,7 +36,8 @@[m
+ <!-- Statistics Cards -->[m
+ <% if (typeof stats !== 'undefined' && stats) { %>[m
+ <div class="row g-3 mb-4">[m
+[31m-  <div class="col-md-3 col-sm-6">[m
+[32m+[m[32m  <!-- Row 1: Toplam Görev ve Tamamlanan Görevler -->[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+     <div class="card shadow-sm border-0 h-100">[m
+       <div class="card-body">[m
+         <div class="d-flex justify-content-between align-items-center">[m
+[36m@@ -51,7 +52,7 @@[m
+       </div>[m
+     </div>[m
+   </div>[m
+[31m-  <div class="col-md-3 col-sm-6">[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #28a745 !important;">[m
+       <div class="card-body">[m
+         <div class="d-flex justify-content-between align-items-center">[m
+[36m@@ -66,7 +67,9 @@[m
+       </div>[m
+     </div>[m
+   </div>[m
+[31m-  <div class="col-md-3 col-sm-6">[m
+[32m+[m[41m  [m
+[32m+[m[32m  <!-- Row 2: Beklemede Olan Görevler ve Devam Eden Görevler -->[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #ffc107 !important;">[m
+       <div class="card-body">[m
+         <div class="d-flex justify-content-between align-items-center">[m
+[36m@@ -81,7 +84,7 @@[m
+       </div>[m
+     </div>[m
+   </div>[m
+[31m-  <div class="col-md-3 col-sm-6">[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+     <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #17a2b8 !important;">[m
+       <div class="card-body">[m
+         <div class="d-flex justify-content-between align-items-center">[m
+[36m@@ -96,13 +99,28 @@[m
+       </div>[m
+     </div>[m
+   </div>[m
+[31m-</div>[m
+[31m-[m
+[31m-<!-- Most Assigned User Card -->[m
+[31m-<% if (stats.mostAssignedUser) { %>[m
+[31m-<div class="row mb-4">[m
+[31m-  <div class="col-12">[m
+[31m-    <div class="card shadow-sm border-0">[m
+[32m+[m[41m  [m
+[32m+[m[32m  <!-- Row 3: Acil Görevler ve En Çok Görev Alan Personel -->[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+[32m+[m[32m    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #dc3545 !important;">[m
+[32m+[m[32m      <div class="card-body">[m
+[32m+[m[32m        <div class="d-flex justify-content-between align-items-center">[m
+[32m+[m[32m          <div>[m
+[32m+[m[32m            <h6 class="text-muted mb-2 small"><%= t('urgentTasks') %></h6>[m
+[32m+[m[32m            <h3 class="mb-0 text-danger"><%= stats.urgentTasks || 0 %></h3>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m          <div class="text-danger" style="font-size: 2.5rem; opacity: 0.3;">[m
+[32m+[m[32m            <i class="bi bi-exclamation-triangle"></i>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  </div>[m
+[32m+[m[41m  [m
+[32m+[m[32m  <!-- Row 4: En Çok Görev Alan Personel -->[m
+[32m+[m[32m  <% if (stats.mostAssignedUser) { %>[m
+[32m+[m[32m  <div class="col-6 col-md-6">[m
+[32m+[m[32m    <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #6f42c1 !important;">[m
+       <div class="card-body">[m
+         <div class="d-flex justify-content-between align-items-center">[m
+           <div>[m
+[36m@@ -113,16 +131,16 @@[m
+               <span class="badge bg-primary ms-2"><%= stats.mostAssignedUser.taskCount %> <%= t('totalTasks') %></span>[m
+             </h5>[m
+           </div>[m
+[31m-          <div class="text-primary" style="font-size: 3rem; opacity: 0.2;">[m
+[32m+[m[32m          <div class="text-primary" style="font-size: 2.5rem; opacity: 0.3;">[m
+             <i class="bi bi-trophy"></i>[m
+           </div>[m
+         </div>[m
+       </div>[m
+     </div>[m
+   </div>[m
+[32m+[m[32m  <% } %>[m
+ </div>[m
+ <% } %>[m
+[31m-<% } %>[m
+ [m
+ [m
+ <!-- Tablo Görünümü -->[m
+[36m@@ -147,7 +165,12 @@[m
+           <% tasks.forEach(task => { %>[m
+           <tr>[m
+             <td><%= task.id %></td>[m
+[31m-            <td><%= task.title %></td>[m
+[32m+[m[32m            <td>[m
+[32m+[m[32m              <%= task.title %>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m            </td>[m
+             <td><%= task.assigned_username %></td>[m
+             <td>[m
+               <span class="badge status-<%= task.status %>">[m
+[36m@@ -181,9 +204,14 @@[m
+         <div class="card-body">[m
+           <div class="d-flex justify-content-between align-items-start mb-3">[m
+             <span class="badge bg-secondary">#<%= task.id %></span>[m
+[31m-            <span class="badge status-<%= task.status %>">[m
+[31m-              <%= t('status_' + task.status) %>[m
+[31m-            </span>[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger me-1"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m              <span class="badge status-<%= task.status %>">[m
+[32m+[m[32m                <%= t('status_' + task.status) %>[m
+[32m+[m[32m              </span>[m
+[32m+[m[32m            </div>[m
+           </div>[m
+           <h5 class="card-title mb-3"><%= task.title %></h5>[m
+           <div class="task-card-info">[m
+[1mdiff --git a/backend/views/admin/reports.ejs b/backend/views/admin/reports.ejs[m
+[1mindex 6056263..72c2df2 100644[m
+[1m--- a/backend/views/admin/reports.ejs[m
+[1m+++ b/backend/views/admin/reports.ejs[m
+[36m@@ -113,7 +113,12 @@[m
+           <% tasks.forEach(task => { %>[m
+           <tr>[m
+             <td><%= task.id %></td>[m
+[31m-            <td><%= task.title %></td>[m
+[32m+[m[32m            <td>[m
+[32m+[m[32m              <%= task.title %>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m            </td>[m
+             <td><%= task.assigned_username %></td>[m
+             <td>[m
+               <span class="badge status-<%= task.status %>">[m
+[36m@@ -148,9 +153,14 @@[m
+         <div class="card-body">[m
+           <div class="d-flex justify-content-between align-items-start mb-3">[m
+             <span class="badge bg-secondary">#<%= task.id %></span>[m
+[31m-            <span class="badge status-<%= task.status %>">[m
+[31m-              <%= t('status_' + task.status) %>[m
+[31m-            </span>[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger me-1"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m              <span class="badge status-<%= task.status %>">[m
+[32m+[m[32m                <%= t('status_' + task.status) %>[m
+[32m+[m[32m              </span>[m
+[32m+[m[32m            </div>[m
+           </div>[m
+           <h5 class="card-title mb-3"><%= task.title %></h5>[m
+           <div class="task-card-info">[m
+[1mdiff --git a/backend/views/admin/task-form.ejs b/backend/views/admin/task-form.ejs[m
+[1mindex d41a09e..e47e400 100644[m
+[1m--- a/backend/views/admin/task-form.ejs[m
+[1m+++ b/backend/views/admin/task-form.ejs[m
+[36m@@ -151,9 +151,9 @@[m
+         <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>[m
+       </div>[m
+ [m
+[31m-      <!-- Tarihler ve Durum -->[m
+[32m+[m[32m      <!-- Tarihler, Durum ve Acil -->[m
+       <div class="row">[m
+[31m-        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">[m
+[32m+[m[32m        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">[m
+           <label class="form-label"><%= t('verilenIsTarihi') %></label>[m
+           <input[m
+             type="date"[m
+[36m@@ -162,7 +162,7 @@[m
+             value="<%= (typeof task !== 'undefined' && task && task.verilen_is_tarihi) ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '' %>"[m
+           />[m
+         </div>[m
+[31m-        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-4' : 'col-md-6' %> mb-3">[m
+[32m+[m[32m        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">[m
+           <label class="form-label"><%= t('tahminiIsBitistarihi') %></label>[m
+           <input[m
+             type="date"[m
+[36m@@ -171,8 +171,19 @@[m
+             value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"[m
+           />[m
+         </div>[m
+[32m+[m[32m        <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">[m
+[32m+[m[32m          <label class="form-label"><%= t('isUrgent') %></label>[m
+[32m+[m[32m          <select name="acil" class="form-select">[m
+[32m+[m[32m            <option value="false" <%= (typeof task === 'undefined' || !task || !task.acil) ? 'selected' : '' %>>[m
+[32m+[m[32m              <%= t('notUrgent') %>[m
+[32m+[m[32m            </option>[m
+[32m+[m[32m            <option value="true" <%= (typeof task !== 'undefined' && task && task.acil) ? 'selected' : '' %>>[m
+[32m+[m[32m              <%= t('urgent') %>[m
+[32m+[m[32m            </option>[m
+[32m+[m[32m          </select>[m
+[32m+[m[32m        </div>[m
+         <% if (typeof task !== 'undefined' && task) { %>[m
+[31m-        <div class="col-md-4 mb-3">[m
+[32m+[m[32m        <div class="col-md-3 mb-3">[m
+           <label class="form-label"><%= t('status') %></label>[m
+           <select name="status" class="form-select">[m
+             <option value="pending" <%= (task.status === 'pending') ? 'selected' : '' %>><%= t('status_pending') %></option>[m
+[1mdiff --git a/backend/views/admin/tasks.ejs b/backend/views/admin/tasks.ejs[m
+[1mindex 0934af1..74d41d5 100644[m
+[1m--- a/backend/views/admin/tasks.ejs[m
+[1m+++ b/backend/views/admin/tasks.ejs[m
+[36m@@ -27,7 +27,12 @@[m
+           <% tasks.forEach(task => { %>[m
+           <tr>[m
+             <td><%= task.id %></td>[m
+[31m-            <td><%= task.title %></td>[m
+[32m+[m[32m            <td>[m
+[32m+[m[32m              <%= task.title %>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m            </td>[m
+             <td><%= task.assigned_username || '-' %></td>[m
+             <td>[m
+               <span class="badge status-<%= task.status %>">[m
+[1mdiff --git a/backend/views/user/tasks.ejs b/backend/views/user/tasks.ejs[m
+[1mindex 9cb077c..9abdc05 100644[m
+[1m--- a/backend/views/user/tasks.ejs[m
+[1m+++ b/backend/views/user/tasks.ejs[m
+[36m@@ -77,7 +77,12 @@[m
+           <% tasks.forEach(task => { %>[m
+           <tr>[m
+             <td><%= task.id %></td>[m
+[31m-            <td><%= task.title %></td>[m
+[32m+[m[32m            <td>[m
+[32m+[m[32m              <%= task.title %>[m
+[32m+[m[32m              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>[m
+[32m+[m[32m                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>[m
+[32m+[m[32m              <% } %>[m
+[32m+[m[32m            </td>[m
+             <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>[m
+             <td><%= task.assigned_username || '-' %></td>[m
+             <% } %>[m

@@ -38,6 +38,7 @@ const STRINGS = {
     filterByUser: 'Filter by user',
     filterByStatus: 'Filter by status',
     filterByDate: 'Filter by date',
+    exportExcel: 'Export to Excel',
     noTasks: 'No tasks found',
     languageEnglish: 'English',
     languageArabic: 'Arabic',
@@ -103,7 +104,13 @@ const STRINGS = {
     departmanHukuk: 'Legal',
     isUrgent: 'Is Urgent?',
     urgent: 'Urgent',
-    notUrgent: 'Not Urgent'
+    notUrgent: 'Not Urgent',
+    shareFile: 'Share File',
+    shareViaEmail: 'Share via Email',
+    shareViaWhatsApp: 'Share via WhatsApp',
+    shareViaLink: 'Copy Link',
+    linkCopied: 'Link copied to clipboard!',
+    shareFileTitle: 'Share Excel File'
   },
   tr: {
     appTitle: 'Görev Yönetimi',
@@ -134,6 +141,7 @@ const STRINGS = {
     filterByUser: 'Kullanıcıya göre filtrele',
     filterByStatus: 'Duruma göre filtrele',
     filterByDate: 'Tarihe göre filtrele',
+    exportExcel: 'Excel\'e Aktar',
     noTasks: 'Görev bulunamadı',
     languageEnglish: 'İngilizce',
     languageArabic: 'Arapça',
@@ -198,7 +206,13 @@ const STRINGS = {
     departmanHukuk: 'Hukuk',
     isUrgent: 'Acil mi?',
     urgent: 'Acil',
-    notUrgent: 'Acil Değil'
+    notUrgent: 'Acil Değil',
+    shareFile: 'Dosyayı Paylaş',
+    shareViaEmail: 'E-posta ile Paylaş',
+    shareViaWhatsApp: 'WhatsApp ile Paylaş',
+    shareViaLink: 'Linki Kopyala',
+    linkCopied: 'Link panoya kopyalandı!',
+    shareFileTitle: 'Excel Dosyasını Paylaş'
   },
   ar: {
     appTitle: 'نظام إدارة المهام',
@@ -224,6 +238,7 @@ const STRINGS = {
     filterByUser: 'تصفية حسب الموظف',
     filterByStatus: 'تصفية حسب الحالة',
     filterByDate: 'تصفية حسب التاريخ',
+    exportExcel: 'تصدير إلى Excel',
     noTasks: 'لا توجد مهام',
     languageEnglish: 'الإنجليزية',
     languageArabic: 'العربية',
@@ -295,7 +310,13 @@ const STRINGS = {
     departmanHukuk: 'القانون',
     isUrgent: 'هل هو عاجل؟',
     urgent: 'عاجل',
-    notUrgent: 'غير عاجل'
+    notUrgent: 'غير عاجل',
+    shareFile: 'مشاركة الملف',
+    shareViaEmail: 'مشاركة عبر البريد الإلكتروني',
+    shareViaWhatsApp: 'مشاركة عبر واتساب',
+    shareViaLink: 'نسخ الرابط',
+    linkCopied: 'تم نسخ الرابط إلى الحافظة!',
+    shareFileTitle: 'مشاركة ملف Excel'
   }
 };
 

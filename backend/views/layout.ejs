@@ -288,6 +288,73 @@
         });
       });
     </script>
+  <!-- Share File Modal -->
+  <div class="modal fade" id="shareFileModal" tabindex="-1" aria-labelledby="shareFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareFileModalLabel"><%= t('shareFileTitle') %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-grid gap-2">
+            <button type="button" class="btn btn-outline-primary btn-share" data-share="email">
+              <i class="bi bi-envelope"></i> <%= t('shareViaEmail') %>
+            </button>
+            <button type="button" class="btn btn-outline-success btn-share" data-share="whatsapp">
+              <i class="bi bi-whatsapp"></i> <%= t('shareViaWhatsApp') %>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Excel export linklerine paylaşım modalı ekle
+    document.addEventListener('DOMContentLoaded', function() {
+      const excelLinks = document.querySelectorAll('a[href*="/admin/reports/export"]');
+      let currentExportUrl = '';
+      
+      excelLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          currentExportUrl = this.href;
+          
+          // Dosyayı indir
+          const downloadLink = document.createElement('a');
+          downloadLink.href = currentExportUrl;
+          downloadLink.download = '';
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          
+          // Paylaşım modalını göster
+          const shareModal = new bootstrap.Modal(document.getElementById('shareFileModal'));
+          shareModal.show();
+        });
+      });
+      
+      // Paylaşım butonları
+      document.querySelectorAll('.btn-share').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const shareType = this.dataset.share;
+          const fullUrl = window.location.origin + currentExportUrl;
+          
+          if (shareType === 'email') {
+            window.location.href = `mailto:?subject=Excel File&body=${encodeURIComponent('Please find the Excel file at: ' + fullUrl)}`;
+          } else if (shareType === 'whatsapp') {
+            window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fullUrl)}`, '_blank');
+          }
+          
+          // Modalı kapat
+          const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
+          if (modal) modal.hide();
+        });
+      });
+    });
+  </script>
   </body>
 </html>
 
