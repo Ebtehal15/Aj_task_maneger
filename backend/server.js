@@ -129,18 +129,6 @@ app.get('/lang/:code', (req, res) => {
   res.redirect(back);
 });
 
-// Home page - must be before other routes
-app.get('/', (req, res) => {
-  if (!req.user) {
-    return res.redirect('/login');
-  }
-  // Herkesi role göre ilgili anasayfaya yönlendir
-  if (req.user.role === 'admin') {
-    return res.redirect('/admin/dashboard');
-  }
-  return res.redirect('/user/tasks');
-});
-
 // Routes
 app.use('/', authRoutes);
 app.use('/notifications', ensureAuthenticated, notificationRoutes);

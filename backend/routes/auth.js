@@ -4,11 +4,22 @@ const { getDb } = require('../services/db');
 
 const router = express.Router();
 
+// Home page - redirect based on role
+router.get('/', (req, res) => {
+  if (!req.user) {
+    return res.redirect('/login');
+  }
+  // Herkesi role göre ilgili anasayfaya yönlendir
+  if (req.user.role === 'admin') {
+    return res.redirect('/admin/dashboard');
+  }
+  return res.redirect('/user/tasks');
+});
+
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
   if (req.user) {
-    if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
-    return res.redirect('/user/tasks');
+    return res.redirect('/');
   }
   res.render('auth/login', {
     pageTitle: req.t('loginTitle'),
