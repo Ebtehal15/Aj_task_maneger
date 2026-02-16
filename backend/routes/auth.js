@@ -65,12 +65,8 @@ router.post('/login', async (req, res) => {
       
       // Redirect yapmadan önce response'u commit et
       // Bu, cookie'nin tarayıcıya gönderilmesini garanti eder
-    if (user.role === 'admin') {
-        console.log(`🔄 Redirecting to /admin/dashboard with sessionId: ${req.sessionID}`);
-        return res.redirect(302, '/admin/dashboard');
-    }
-      console.log(`🔄 Redirecting to /user/tasks with sessionId: ${req.sessionID}`);
-      return res.redirect(302, '/user/tasks');
+      console.log(`🔄 Redirecting to home page (/) with sessionId: ${req.sessionID}`);
+      return res.redirect(302, '/');
   });
   } catch (err) {
     console.error('❌ Login error', err);
@@ -85,8 +81,7 @@ router.post('/login', async (req, res) => {
 // Dedicated user login URL – only allows logging in as normal user
 router.get('/user-login', (req, res) => {
   if (req.user) {
-    if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
-    return res.redirect('/user/tasks');
+    return res.redirect('/');
   }
   res.render('auth/login', {
     pageTitle: req.t('loginTitle'),
@@ -112,7 +107,7 @@ router.post('/user-login', async (req, res) => {
     }
 
     req.session.userId = user.id;
-    return res.redirect('/user/tasks');
+    return res.redirect('/');
   } catch (err) {
     console.error('User login error', err);
     return res.render('auth/login', {

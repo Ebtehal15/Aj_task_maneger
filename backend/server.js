@@ -129,11 +129,12 @@ app.get('/lang/:code', (req, res) => {
   res.redirect(back);
 });
 
-// Home redirect - must be before other routes
+// Home page - must be before other routes
 app.get('/', (req, res) => {
   if (!req.user) {
     return res.redirect('/login');
   }
+  // Herkesi role göre ilgili anasayfaya yönlendir
   if (req.user.role === 'admin') {
     return res.redirect('/admin/dashboard');
   }
