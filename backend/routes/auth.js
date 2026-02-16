@@ -4,18 +4,37 @@ const { getDb } = require('../services/db');
 
 const router = express.Router();
 
-// Home page - always redirect to login
+// Home page - redirect based on authentication status
 router.get('/', (req, res) => {
-  console.log(`🏠 Home page accessed - redirecting to /login`);
-  return res.redirect('/login');
+  console.log(`🏠 Home page accessed - user: ${req.user ? req.user.username : 'null'}`);
+  if (req.user) {
+    // User is logged in, redirect to their dashboard
+    if (req.user.role === 'admin') {
+      console.log(`🔄 Redirecting admin to /admin/dashboard`);
+      return res.redirect('/admin/dashboard');
+    } else {
+      console.log(`🔄 Redirecting user to /user/tasks`);
+      return res.redirect('/user/tasks');
+    }
+  } else {
+    // User is not logged in, redirect to login
+    console.log(`🔄 Redirecting to /login`);
+    return res.redirect('/login');
+  }
 });
 
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
   console.log(`🔐 Login page accessed - user: ${req.user ? req.user.username : 'null'}`);
   if (req.user) {
-    console.log(`🔄 User already logged in, redirecting to /`);
-    return res.redirect('/');
+    // User is already logged in, redirect to their dashboard
+    if (req.user.role === 'admin') {
+      console.log(`🔄 User already logged in, redirecting admin to /admin/dashboard`);
+      return res.redirect('/admin/dashboard');
+    } else {
+      console.log(`🔄 User already logged in, redirecting user to /user/tasks`);
+      return res.redirect('/user/tasks');
+    }
   }
   console.log(`✅ Rendering login page`);
   res.render('auth/login', {
@@ -71,10 +90,14 @@ router.post('/login', async (req, res) => {
       }
       console.log(`✅ Session saved successfully for user: ${username}, sessionId: ${req.sessionID}`);
       
-      // Redirect yapmadan önce response'u commit et
-      // Bu, cookie'nin tarayıcıya gönderilmesini garanti eder
-      console.log(`🔄 Redirecting to home page (/) with sessionId: ${req.sessionID}`);
-      return res.redirect(302, '/');
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        console.log(`🔄 Redirecting admin to /admin/dashboard with sessionId: ${req.sessionID}`);
+        return res.redirect('/admin/dashboard');
+      } else {
+        console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
+        return res.redirect('/user/tasks');
+      }
   });
   } catch (err) {
     console.error('❌ Login error', err);
@@ -89,7 +112,11 @@ router.post('/login', async (req, res) => {
 // Dedicated user login URL – only allows logging in as normal user
 router.get('/user-login', (req, res) => {
   if (req.user) {
-    return res.redirect('/');
+    if (req.user.role === 'admin') {
+      return res.redirect('/admin/dashboard');
+    } else {
+      return res.redirect('/user/tasks');
+    }
   }
   res.render('auth/login', {
     pageTitle: req.t('loginTitle'),
@@ -115,7 +142,7 @@ router.post('/user-login', async (req, res) => {
     }
 
     req.session.userId = user.id;
-    return res.redirect('/');
+    return res.redirect('/user/tasks');
   } catch (err) {
     console.error('User login error', err);
     return res.render('auth/login', {
