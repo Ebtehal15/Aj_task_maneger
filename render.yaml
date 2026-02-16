@@ -1,11 +1,4 @@
 services:
-  # PostgreSQL Database Service
-  - type: pg
-    name: task-manager-db
-    plan: free
-    databaseName: task_manager
-    user: task_manager_user
-
   # Web Service
   - type: web
     name: task-manager
@@ -13,18 +6,15 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    # PostgreSQL database'e bağlan
     envVars:
-      # Render otomatik olarak DATABASE_URL'i PostgreSQL servisinden alır
-      - key: DATABASE_URL
-        fromDatabase:
-          name: task-manager-db
-          property: connectionString
       - key: NODE_ENV
         value: production
-      # PORT Render tarafından otomatik ayarlanır, manuel belirtmeye gerek yok
+      # PORT Render tarafından otomatik ayarlanır
       - key: SESSION_SECRET
         generateValue: true
+      # Database bağlantısı - Manuel olarak Render dashboard'dan ekleyin
+      - key: DATABASE_URL
+        sync: false
       - key: DB_SSL
         value: "true"
       # Bu değişkenler opsiyonel - Render dashboard'dan eklenebilir
