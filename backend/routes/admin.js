@@ -243,11 +243,31 @@ router.get('/users', async (req, res) => {
     res.render('admin/users', {
       pageTitle: 'Users',
       users: result.rows,
-      error: null
+      error: null,
+      currentUser: req.user
     });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
+  }
+});
+
+// Quick add user (AJAX endpoint)
+router.post('/users/quick-add', async (req, res) => {
+  const { username, email, password, role } = req.body;
+  if (!username || !password || !role) {
+    return res.json({ success: false, error: 'Username, password and role are required' });
+  }
+  try {
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username',
+      [username, email || null, passwordHash, role]
+    );
+    res.json({ success: true, userId: result.rows[0].id, username: result.rows[0].username });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message || 'Error adding user' });
   }
 });
 
@@ -332,6 +352,40 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
   } catch (err) {
     console.error(err);
     res.redirect('/admin/users');
+  }
+});
+
+// Delete user
+router.post('/users/:id/delete', async (req, res) => {
+  const userId = req.params.id;
+  
+  // Prevent deleting yourself
+  if (req.user.id == userId) {
+    return res.json({ success: false, error: 'You cannot delete your own account' });
+  }
+  
+  try {
+    // Check if user has assigned tasks
+    const tasksResult = await pool.query('SELECT COUNT(*) as count FROM tasks WHERE assigned_to = $1', [userId]);
+    if (tasksResult.rows[0].count > 0) {
+      return res.json({ success: false, error: 'Cannot delete user with assigned tasks' });
+    }
+    
+    // Delete user's avatar if exists
+    const userResult = await pool.query('SELECT avatar FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length > 0 && userResult.rows[0].avatar) {
+      const avatarPath = path.join(__dirname, '..', userResult.rows[0].avatar);
+      if (fs.existsSync(avatarPath)) {
+        fs.unlinkSync(avatarPath);
+      }
+    }
+    
+    // Delete user
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message || 'Error deleting user' });
   }
 });
 

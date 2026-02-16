@@ -29,12 +29,20 @@
         </div>
         <div class="col-md-6 mb-3">
           <label class="form-label"><%= t('konuSorumlusu') %></label>
-          <input
-            type="text"
-            name="konu_sorumlusu"
-            class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.konu_sorumlusu) ? task.konu_sorumlusu : '' %>"
-          />
+          <select name="konu_sorumlusu" id="konuSorumlusuSelect" class="form-select">
+            <option value=""><%= t('konuSorumlusu') %></option>
+            <% users.forEach(u => { %>
+            <option
+              value="<%= u.id %>"
+              <%= (typeof task !== 'undefined' && task && task.konu_sorumlusu == u.id) ? 'selected' : '' %>
+            >
+              <%= u.username %>
+            </option>
+            <% }) %>
+          </select>
+          <button type="button" class="btn btn-link btn-sm p-0 mt-1" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-plus-circle"></i> <%= t('addUser') %>
+          </button>
         </div>
       </div>
 
@@ -212,4 +220,106 @@
     </form>
   </div>
 </div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserModalLabel"><%= t('addUser') %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="quickAddUserForm">
+          <div class="mb-3">
+            <label class="form-label"><%= t('username') %></label>
+            <input type="text" name="username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('email') %> (<%= t('optional') %>)</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('password') %></label>
+            <input type="password" name="password" class="form-control" required minlength="6">
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><%= t('role') %></label>
+            <select name="role" class="form-select" required>
+              <option value="user"><%= t('role_user') %></option>
+              <option value="admin"><%= t('role_admin') %></option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-primary" id="saveQuickUserBtn"><%= t('save') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const quickAddUserForm = document.getElementById('quickAddUserForm');
+  const saveQuickUserBtn = document.getElementById('saveQuickUserBtn');
+  const konuSorumlusuSelect = document.getElementById('konuSorumlusuSelect');
+  const addUserModalElement = document.getElementById('addUserModal');
+  
+  if (!addUserModalElement) return;
+  
+  const addUserModal = new bootstrap.Modal(addUserModalElement);
+
+  if (saveQuickUserBtn) {
+    saveQuickUserBtn.addEventListener('click', async function() {
+      const formData = new FormData(quickAddUserForm);
+      
+      // Validate
+      if (!formData.get('username') || !formData.get('password')) {
+        alert('<%= t("pleaseFillRequiredFields") %>');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/users/quick-add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Add new user to all user dropdowns
+          const allUserSelects = document.querySelectorAll('select[name="konu_sorumlusu"], select[name="assigned_to"], select[name="sorumlu_2"], select[name="sorumlu_3"]');
+          
+          allUserSelects.forEach(select => {
+            const option = document.createElement('option');
+            option.value = result.userId;
+            option.textContent = result.username;
+            select.appendChild(option);
+          });
+          
+          // Select the new user in konu_sorumlusu dropdown
+          konuSorumlusuSelect.value = result.userId;
+          
+          // Close modal and reset form
+          addUserModal.hide();
+          quickAddUserForm.reset();
+          
+          alert('<%= t("userAddedSuccessfully") %>');
+        } else {
+          alert(result.error || '<%= t("errorAddingUser") %>');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('<%= t("errorAddingUser") %>');
+      }
+    });
+  }
+});
+</script>
 

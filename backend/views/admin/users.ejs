@@ -54,21 +54,97 @@
                 <%= u.username.charAt(0).toUpperCase() %>
               </div>
               <% } %>
-              <div>
-                <div><strong><%= u.username %></strong></div>
-                <div class="small text-muted"><%= u.email || '-' %></div>
-                <div class="small text-muted text-uppercase"><%= u.role %></div>
-              </div>
+            <div>
+              <div><strong><%= u.username %></strong></div>
+              <div class="small text-muted"><%= u.email || '-' %></div>
+              <div class="small text-muted text-uppercase"><%= u.role %></div>
             </div>
+          </div>
+          <div class="d-flex gap-2">
             <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-primary">
               <%= t('edit') %>
             </a>
-          </li>
+            <% if (u.id != currentUser.id) { %>
+            <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="<%= u.id %>" data-username="<%= u.username %>">
+              <%= t('delete') %>
+            </button>
+            <% } %>
+          </div>
+        </li>
           <% }) %>
         </ul>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteUserModalLabel"><%= t('deleteUser') %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t('confirmDeleteUser') %> <strong id="deleteUserName"></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn"><%= t('delete') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteUserBtns = document.querySelectorAll('.delete-user-btn');
+  const deleteUserModalElement = document.getElementById('deleteUserModal');
+  
+  if (!deleteUserModalElement) return;
+  
+  const deleteUserModal = new bootstrap.Modal(deleteUserModalElement);
+  const deleteUserName = document.getElementById('deleteUserName');
+  const confirmDeleteUserBtn = document.getElementById('confirmDeleteUserBtn');
+  let userIdToDelete = null;
+
+  deleteUserBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      userIdToDelete = this.getAttribute('data-user-id');
+      const username = this.getAttribute('data-username');
+      deleteUserName.textContent = username;
+      deleteUserModal.show();
+    });
+  });
+
+  if (confirmDeleteUserBtn) {
+    confirmDeleteUserBtn.addEventListener('click', async function() {
+      if (!userIdToDelete) return;
+
+      try {
+        const response = await fetch(`/admin/users/${userIdToDelete}/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          deleteUserModal.hide();
+          location.reload();
+        } else {
+          alert(result.error || '<%= t("errorDeletingUser") %>');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('<%= t("errorDeletingUser") %>');
+      }
+    });
+  }
+});
+</script>
 
 
