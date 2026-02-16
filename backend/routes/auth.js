@@ -7,19 +7,27 @@ const router = express.Router();
 // Home page - redirect to dashboard if logged in, otherwise to login
 router.get('/', (req, res) => {
   try {
+    console.log('📍 Root route accessed');
+    console.log('  req.user:', req.user ? `${req.user.username} (${req.user.role})` : 'null');
+    console.log('  sessionId:', req.sessionID);
+    
     if (req.user) {
       // User is logged in, redirect to their dashboard
       if (req.user.role === 'admin') {
+        console.log('  → Redirecting to /admin/dashboard');
         return res.redirect('/admin/dashboard');
       } else {
+        console.log('  → Redirecting to /user/tasks');
         return res.redirect('/user/tasks');
       }
     } else {
       // User is not logged in, redirect to login
+      console.log('  → Redirecting to /login');
       return res.redirect('/login');
     }
   } catch (error) {
     console.error('❌ Error in home route:', error);
+    console.error('  Stack:', error.stack);
     return res.redirect('/login');
   }
 });
@@ -27,14 +35,19 @@ router.get('/', (req, res) => {
 // Shared login form (admin or user)
 router.get('/login', (req, res) => {
   try {
+    console.log('📍 /login route accessed');
+    console.log('  req.user:', req.user ? `${req.user.username} (${req.user.role})` : 'null');
+    
     if (req.user) {
       // User is already logged in, redirect to their dashboard
+      console.log('  → User already logged in, redirecting to dashboard');
       if (req.user.role === 'admin') {
         return res.redirect('/admin/dashboard');
       } else {
         return res.redirect('/user/tasks');
       }
     }
+    console.log('  → Rendering login page');
     res.render('auth/login', {
       pageTitle: req.t('loginTitle'),
       error: null,
@@ -42,6 +55,7 @@ router.get('/login', (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error in /login route:', error);
+    console.error('  Stack:', error.stack);
     res.status(500).render('errors/404', {
       pageTitle: 'Error',
       t: req.t,
