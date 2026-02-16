@@ -9,15 +9,51 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/public/img/logo.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
+      "src": "/public/img/site_ikon.png",
+      "sizes": "72x72",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/public/img/logo.jpg",
+      "src": "/public/img/site_ikon.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
@@ -29,14 +65,14 @@
       "short_name": "Dashboard",
       "description": "Go to admin dashboard",
       "url": "/admin/dashboard",
-      "icons": [{ "src": "/public/img/logo.jpg", "sizes": "96x96" }]
+      "icons": [{ "src": "/public/img/site_ikon.png", "sizes": "96x96" }]
     },
     {
       "name": "My Tasks",
       "short_name": "Tasks",
       "description": "View my tasks",
       "url": "/user/tasks",
-      "icons": [{ "src": "/public/img/logo.jpg", "sizes": "96x96" }]
+      "icons": [{ "src": "/public/img/site_ikon.png", "sizes": "96x96" }]
     }
   ]
 }
