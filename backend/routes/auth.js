@@ -68,7 +68,22 @@ router.get('/login', (req, res) => {
 
 // Handle login (admin or user)
 router.post('/login', async (req, res) => {
+  console.log('🔐 POST /login route accessed');
+  console.log('  Request body:', { username: req.body.username, password: req.body.password ? '***' : 'missing' });
+  console.log('  Session ID:', req.sessionID);
+  
   const { username, password } = req.body;
+  
+  // Validate input
+  if (!username || !password) {
+    console.log('❌ Missing username or password');
+    return res.render('auth/login', {
+      pageTitle: req.t('loginTitle'),
+      error: req.t('invalidCredentials'),
+      targetRole: null
+    });
+  }
+  
   const pool = getDb();
 
   console.log(`🔐 Login attempt for username: ${username}`);
@@ -86,6 +101,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log(`✅ User found: ${user.username} (role: ${user.role})`);
+    
     const passwordMatch = bcrypt.compareSync(password, user.password_hash);
     if (!passwordMatch) {
       console.log(`❌ Invalid password for user: ${username}`);
@@ -96,21 +113,28 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    console.log(`✅ Login successful for user: ${username} (role: ${user.role})`);
-    req.session.userId = user.id;
+    console.log(`✅ Password match successful for user: ${username}`);
     console.log(`💾 Setting session userId: ${user.id}, sessionId: ${req.sessionID}`);
+    
+    req.session.userId = user.id;
     
     // Session'ı kaydet ve redirect yap
     req.session.save((err) => {
       if (err) {
         console.error('❌ Error saving session:', err);
+        console.error('  Error details:', {
+          message: err.message,
+          code: err.code,
+          stack: err.stack
+        });
         return res.render('auth/login', {
           pageTitle: req.t('loginTitle'),
-          error: 'Session error',
+          error: 'Session error - please try again',
           targetRole: null
         });
       }
       console.log(`✅ Session saved successfully for user: ${username}, sessionId: ${req.sessionID}`);
+      console.log(`  Session userId check: ${req.session.userId}`);
       
       // Redirect based on user role
       if (user.role === 'admin') {
@@ -120,12 +144,17 @@ router.post('/login', async (req, res) => {
         console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
         return res.redirect('/user/tasks');
       }
-  });
+    });
   } catch (err) {
-    console.error('❌ Login error', err);
+    console.error('❌ Login error:', err);
+    console.error('  Error details:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    });
     return res.render('auth/login', {
       pageTitle: req.t('loginTitle'),
-      error: 'Server error',
+      error: 'Server error - please try again',
       targetRole: null
     });
   }

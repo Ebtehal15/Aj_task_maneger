@@ -16,10 +16,10 @@
           <%= error %>
         </div>
         <% } %>
-        <form method="post" action="<%= (typeof targetRole !== 'undefined' && targetRole === 'user') ? '/user-login' : '/login' %>">
+        <form method="post" action="<%= (typeof targetRole !== 'undefined' && targetRole === 'user') ? '/user-login' : '/login' %>" id="loginForm">
           <div class="mb-3">
             <label class="form-label"><%= t('username') %></label>
-            <input type="text" name="username" class="form-control" required />
+            <input type="text" name="username" class="form-control" required autocomplete="username" />
           </div>
           <div class="mb-3">
             <label class="form-label"><%= t('password') %></label>
@@ -31,10 +31,20 @@
               required
             />
           </div>
-          <button type="submit" class="btn btn-primary w-100">
+          <button type="submit" class="btn btn-primary w-100" id="loginBtn">
             <%= t('loginButton') %>
           </button>
         </form>
+        <script>
+          // Debug: Form submit kontrolü
+          document.getElementById('loginForm').addEventListener('submit', function(e) {
+            console.log('🔐 Form submitting...');
+            const formData = new FormData(this);
+            console.log('  Username:', formData.get('username'));
+            console.log('  Password:', formData.get('password') ? '***' : 'missing');
+            console.log('  Action:', this.action);
+          });
+        </script>
         <% if (!targetRole) { %>
         <p class="mt-3 small text-muted">
           Demo admin: <code>admin / admin123</code>
