@@ -19,6 +19,15 @@ const notificationRoutes = require('./routes/notifications');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Debug: Log environment info
+console.log('🚀 Starting application...');
+console.log('📋 Environment Info:');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('  PORT:', PORT);
+console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set (masked)' : '❌ Not set');
+console.log('  DB_SSL:', process.env.DB_SSL || 'not set');
+console.log('  SESSION_SECRET:', process.env.SESSION_SECRET ? '✅ Set' : '❌ Not set (using default)');
+
 // Initialize database (SQLite)
 initDb();
 
@@ -148,43 +157,49 @@ app.use((req, res) => {
   });
 });
 
-// Test database connection before starting server
+// Start server with database connection test (non-blocking)
 async function startServer() {
-  try {
-    const pool = initDb();
-    
-    // Test database connection
-    console.log('🔍 Testing database connection...');
-    const testClient = await pool.connect();
-    await testClient.query('SELECT NOW()');
-    testClient.release();
-    console.log('✅ Database connection successful');
-    
-    // Start server
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ Task manager app running on http://0.0.0.0:${PORT}`);
-      console.log(`🌐 Server is ready to accept connections`);
+  // Initialize database pool (non-blocking)
+  const pool = initDb();
+  
+  // Test database connection (non-blocking, don't fail if it fails)
+  pool.connect()
+    .then((testClient) => {
+      return testClient.query('SELECT NOW()')
+        .then(() => {
+          testClient.release();
+          console.log('✅ Database connection test successful');
+        })
+        .catch((err) => {
+          testClient.release();
+          console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
+        });
+    })
+    .catch((err) => {
+      console.error('⚠️  Database connection test failed (will retry on first request):', err.message);
     });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
-    process.exit(1);
-  }
+  
+  // Start server regardless of database connection status
+  // Database will be retried on first request
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Task manager app running on http://0.0.0.0:${PORT}`);
+    console.log(`🌐 Server is ready to accept connections`);
+    console.log(`📝 Note: Database connection will be tested on first request`);
+  });
 }
 
-// Handle uncaught errors
+// Handle uncaught errors (log but don't crash immediately)
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
+  console.error('Stack:', error.stack);
+  // Don't exit immediately - let Render handle it
+  // process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  // Don't exit immediately - let Render handle it
+  // process.exit(1);
 });
 
 // Start the server
