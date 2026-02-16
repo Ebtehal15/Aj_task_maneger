@@ -256,11 +256,17 @@ const STRINGS = {
 function getI18nMiddleware() {
   return (req, res, next) => {
     const sessionLang = req.session.lang;
-    let lang = 'en';
-    if (sessionLang === 'ar') {
-      lang = 'ar';
+    let lang = 'ar'; // Varsayılan dil Arapça
+    if (sessionLang === 'en') {
+      lang = 'en';
     } else if (sessionLang === 'tr') {
       lang = 'tr';
+    } else if (sessionLang === 'ar') {
+      lang = 'ar';
+    }
+    // Eğer session'da dil yoksa, varsayılan olarak Arapça ayarla
+    if (!sessionLang) {
+      req.session.lang = 'ar';
     }
     req.lang = lang;
     req.dir = lang === 'ar' ? 'rtl' : 'ltr';

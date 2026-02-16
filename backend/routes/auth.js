@@ -13,7 +13,12 @@ router.get('/', (req, res) => {
   if (req.user.role === 'admin') {
     return res.redirect('/admin/dashboard');
   }
-  return res.redirect('/user/tasks');
+  // Normal user veya role belirtilmemiş kullanıcılar için görevler sayfasına yönlendir
+  if (req.user.role === 'user' || !req.user.role) {
+    return res.redirect('/user/tasks');
+  }
+  // Diğer durumlar için login'e yönlendir
+  return res.redirect('/login');
 });
 
 // Shared login form (admin or user)

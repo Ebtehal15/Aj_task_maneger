@@ -41,7 +41,15 @@ function ensureAuthenticated(req, res, next) {
 
 function ensureRole(role) {
   return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
+    if (!req.user) {
+      return res.redirect('/login');
+    }
+    // Eğer role 'user' ise ve kullanıcının role'ü 'user' veya undefined/null ise izin ver
+    if (role === 'user' && (!req.user.role || req.user.role === 'user')) {
+      return next();
+    }
+    // Diğer durumlarda role kontrolü yap
+    if (req.user.role !== role) {
       return res.status(403).render('errors/403', {
         pageTitle: 'Forbidden',
         t: req.t,

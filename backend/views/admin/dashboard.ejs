@@ -1,6 +1,14 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4"><%= t('adminDashboard') %></h1>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 align-items-center">
+    <div class="btn-group" role="group" aria-label="View toggle">
+      <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn active" data-view="table" title="Tablo Görünümü">
+        <i class="bi bi-table"></i>
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="card" title="Kart Görünümü">
+        <i class="bi bi-grid-3x3-gap"></i>
+      </button>
+    </div>
     <a href="/admin/tasks/new" class="btn btn-success btn-sm">
       <%= t('createTask') %>
     </a>
@@ -71,7 +79,8 @@
   })();
 </script>
 
-<div class="card shadow-sm">
+<!-- Tablo Görünümü -->
+<div class="card shadow-sm task-view-container" id="tableView" data-view="table">
   <div class="card-body p-0">
     <% if (!tasks.length) { %>
     <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
@@ -113,5 +122,99 @@
     <% } %>
   </div>
 </div>
+
+<!-- Card Görünümü -->
+<div class="task-view-container d-none" id="cardView" data-view="card">
+  <% if (!tasks.length) { %>
+  <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
+  <% } else { %>
+  <div class="row g-3">
+    <% tasks.forEach(task => { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm h-100 task-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <span class="badge bg-secondary">#<%= task.id %></span>
+            <span class="badge status-<%= task.status %>">
+              <%= t('status_' + task.status) %>
+            </span>
+          </div>
+          <h5 class="card-title mb-3"><%= task.title %></h5>
+          <div class="task-card-info">
+            <p class="mb-2 small">
+              <i class="bi bi-person"></i> <strong><%= t('assignedTo') %>:</strong> 
+              <span class="text-muted"><%= task.assigned_username %></span>
+            </p>
+            <% if (task.bolge || task.il || task.belediye) { %>
+            <p class="mb-2 small">
+              <i class="bi bi-geo-alt"></i> 
+              <% if (task.bolge) { %><span class="text-muted"><%= task.bolge %></span><% } %>
+              <% if (task.il) { %> - <span class="text-muted"><%= task.il %></span><% } %>
+              <% if (task.belediye) { %> - <span class="text-muted"><%= task.belediye %></span><% } %>
+            </p>
+            <% } %>
+            <% if (task.departman) { %>
+            <p class="mb-2 small">
+              <i class="bi bi-building"></i> <strong><%= t('departman') %>:</strong> 
+              <span class="text-muted"><%= task.departman %></span>
+            </p>
+            <% } %>
+            <p class="mb-0 small">
+              <i class="bi bi-calendar"></i> <strong><%= t('deadline') %>:</strong> 
+              <span class="text-muted">
+                <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent border-top-0 pt-0">
+          <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary w-100">
+            <i class="bi bi-eye"></i> <%= t('viewTask') %>
+          </a>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<script>
+  // Görünüm değiştirme
+  (function() {
+    const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+    const tableView = document.getElementById('tableView');
+    const cardView = document.getElementById('cardView');
+    
+    // LocalStorage'dan kaydedilmiş görünüm tercihini yükle
+    const savedView = localStorage.getItem('taskViewPreference') || 'table';
+    
+    function switchView(view) {
+      if (view === 'table') {
+        tableView.classList.remove('d-none');
+        cardView.classList.add('d-none');
+        viewToggleBtns[0].classList.add('active');
+        viewToggleBtns[1].classList.remove('active');
+      } else {
+        tableView.classList.add('d-none');
+        cardView.classList.remove('d-none');
+        viewToggleBtns[0].classList.remove('active');
+        viewToggleBtns[1].classList.add('active');
+      }
+      localStorage.setItem('taskViewPreference', view);
+    }
+    
+    // Başlangıç görünümünü ayarla
+    switchView(savedView);
+    
+    // Butonlara event listener ekle
+    viewToggleBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const view = this.getAttribute('data-view');
+        switchView(view);
+      });
+    });
+  })();
+</script>
 
 
