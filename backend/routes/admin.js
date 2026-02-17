@@ -600,9 +600,38 @@ router.get('/reports/export', async (req, res) => {
       }
       });
 
+    // Build dynamic file name based on active filters so each filter result has its own Excel file
+    const datePart = new Date().toISOString().slice(0, 10);
+    const nameParts = ['gorevler'];
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      nameParts.push(`kullanici_${userId}`);
+    }
+    if (status && status !== 'undefined' && status !== 'null') {
+      nameParts.push(`durum_${status}`);
+    }
+    if (city && city !== 'undefined' && city !== 'null') {
+      nameParts.push(`il_${city}`);
+    }
+    if (municipality && municipality !== 'undefined' && municipality !== 'null') {
+      nameParts.push(`belediye_${municipality}`);
+    }
+    if (region && region !== 'undefined' && region !== 'null') {
+      nameParts.push(`bolge_${region}`);
+    }
+    if ((from && from !== 'undefined' && from !== 'null') || (to && to !== 'undefined' && to !== 'null')) {
+      const fromPart = from && from !== 'undefined' && from !== 'null' ? from : 'any';
+      const toPart = to && to !== 'undefined' && to !== 'null' ? to : 'any';
+      nameParts.push(`tarih_${fromPart}_${toPart}`);
+    }
+    nameParts.push(datePart);
+
+    // Basit slug - boşlukları ve özel karakterleri alt çizgiyle değiştir
+    const rawFileName = nameParts.join('_');
+    const safeFileName = rawFileName.replace(/[^\w\-]+/g, '_');
+
     // Set response headers
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=gorevler_${new Date().toISOString().slice(0,10)}.xlsx`);
+    res.setHeader('Content-Disposition', `attachment; filename=${safeFileName}.xlsx`);
 
     // Write to response
     await workbook.xlsx.write(res);
