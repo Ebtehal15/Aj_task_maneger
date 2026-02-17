@@ -1,5 +1,10 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4"><%= task.title %></h1>
+  <div class="d-flex align-items-center gap-2">
+    <h1 class="h4 mb-0" id="task-title-display"><%= task.title %></h1>
+    <button type="button" class="btn btn-sm btn-link p-0 translate-btn" data-text="<%= task.title || '' %>" data-display-id="task-title-display" title="<%= t('translate') %>">
+      <i class="bi bi-translate"></i>
+    </button>
+  </div>
   <div class="d-flex gap-2">
     <a href="/admin/tasks/<%= task.id %>/edit" class="btn btn-sm btn-outline-primary">
       <%= t('edit') %>
