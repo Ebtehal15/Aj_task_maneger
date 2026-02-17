@@ -4,13 +4,16 @@
   <div class="col-md-4">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h1 class="h4 mb-3 text-center">
-          <% if (typeof targetRole !== 'undefined' && targetRole === 'user') { %>
-          <%= t('userTasks') %> - <%= t('loginTitle') %>
-          <% } else { %>
-          <%= t('adminDashboard') %> / <%= t('userTasks') %> - <%= t('loginTitle') %>
-          <% } %>
-        </h1>
+        <div class="text-center mb-3">
+          <img
+            src="/public/img/site_ikon.png"
+            alt="AJ İş Takip"
+            class="mb-2"
+            style="max-width: 140px; height: auto;"
+          />
+          <div class="fw-bold" style="font-size: 1.3rem;">AJ İş Takip</div>
+          <div class="text-muted small"><%= t('loginTitle') %></div>
+        </div>
         <% if (error) { %>
         <div class="alert alert-danger py-2">
           <%= error %>
