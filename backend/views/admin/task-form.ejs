@@ -179,9 +179,9 @@
         </div>
       </div>
 
-      <!-- Konu (Title) ve İş Konusu (Description) -->
+      <!-- Görev Başlığı, İş Konusu ve Açıklama -->
       <div class="mb-3">
-        <label class="form-label"><%= t('taskTitle') %> (Konu)</label>
+        <label class="form-label"><%= t('taskTitle') %></label>
         <input
           type="text"
           name="title"
@@ -191,8 +191,17 @@
         />
       </div>
       <div class="mb-3">
+        <label class="form-label"><%= t('taskSubject') %></label>
+        <input
+          type="text"
+          name="task_subject"
+          class="form-control"
+          value="<%= (typeof task !== 'undefined' && task && task.task_subject) ? task.task_subject : '' %>"
+        />
+      </div>
+      <div class="mb-3">
         <label class="form-label">
-          <%= t('taskDescription') %> (İş Konusu)
+          <%= t('taskDescription') %>
           <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text-id="description" title="<%= t('translate') %>">
             <i class="bi bi-translate"></i>
           </button>
