@@ -277,7 +277,38 @@ router.get('/tasks', async (req, res) => {
 
 // Reports page with filters
 router.get('/reports', async (req, res) => {
-  const { userId, status, from, to } = req.query;
+  const {
+    userId,
+    status,
+    from,
+    to,
+    city,
+    municipality,
+    region,
+    filterTypes: filterTypesRaw,
+    // Backward-compat: older UI used a single filterType
+    filterType
+  } = req.query;
+
+  let filterTypes = [];
+  if (typeof filterTypesRaw === 'string' && filterTypesRaw.trim()) {
+    filterTypes = filterTypesRaw
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+  } else if (typeof filterType === 'string' && filterType.trim()) {
+    filterTypes = [filterType.trim()];
+  }
+
+  // If filterTypes not provided but filters exist (e.g. shared link), infer so UI shows the relevant inputs.
+  if (filterTypes.length === 0) {
+    if (userId) filterTypes.push('user');
+    if (status) filterTypes.push('status');
+    if (city) filterTypes.push('city');
+    if (municipality) filterTypes.push('municipality');
+    if (region) filterTypes.push('region');
+    if (from || to) filterTypes.push('date');
+  }
 
   const params = [];
   const where = [];
@@ -297,6 +328,21 @@ router.get('/reports', async (req, res) => {
   if (status) {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
+    paramIndex++;
+  }
+  if (city) {
+    where.push(`t.il = $${paramIndex}`);
+    params.push(city);
+    paramIndex++;
+  }
+  if (municipality) {
+    where.push(`t.belediye = $${paramIndex}`);
+    params.push(municipality);
+    paramIndex++;
+  }
+  if (region) {
+    where.push(`t.bolge = $${paramIndex}`);
+    params.push(region);
     paramIndex++;
   }
   if (from) {
@@ -332,13 +378,19 @@ router.get('/reports', async (req, res) => {
 
   try {
     const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
     const tasksResult = await pool.query(sql, params);
     
     res.render('admin/reports', {
       pageTitle: req.t('reports'),
       tasks: tasksResult.rows,
       users: usersResult.rows,
-      filters: { userId, status, from, to }
+      cities: citiesResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      filters: { userId, status, from, to, city, municipality, region, filterTypes }
     });
   } catch (err) {
     console.error(err);
@@ -383,7 +435,7 @@ router.post('/reports/upload-temp', async (req, res) => {
 
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, from, to } = req.query;
+  const { userId, status, from, to, city, municipality, region } = req.query;
 
   const params = [];
   const where = [];
@@ -398,6 +450,21 @@ router.get('/reports/export', async (req, res) => {
   if (status && status !== 'undefined' && status !== 'null') {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
+    paramIndex++;
+  }
+  if (city && city !== 'undefined' && city !== 'null') {
+    where.push(`t.il = $${paramIndex}`);
+    params.push(city);
+    paramIndex++;
+  }
+  if (municipality && municipality !== 'undefined' && municipality !== 'null') {
+    where.push(`t.belediye = $${paramIndex}`);
+    params.push(municipality);
+    paramIndex++;
+  }
+  if (region && region !== 'undefined' && region !== 'null') {
+    where.push(`t.bolge = $${paramIndex}`);
+    params.push(region);
     paramIndex++;
   }
   if (from && from !== 'undefined' && from !== 'null') {

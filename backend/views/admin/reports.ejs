@@ -41,7 +41,71 @@
 
 <form class="card card-body shadow-sm mb-3" method="get" action="/admin/reports" id="filterForm">
   <div class="row g-2 align-items-end">
+    <% const selectedFilterTypes = (filters && Array.isArray(filters.filterTypes)) ? filters.filterTypes : []; %>
     <div class="col-md-3">
+      <label class="form-label"><%= t('filters') %></label>
+      <div class="dropdown w-100">
+        <button
+          class="btn btn-outline-secondary w-100 dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false"
+          id="filtersDropdownBtn"
+          data-base-label="<%= t('filters') %>"
+        >
+          <i class="bi bi-funnel"></i>
+          <span id="filtersDropdownLabel"><%= t('filters') %></span>
+        </button>
+        <div class="dropdown-menu p-3 shadow-sm" style="min-width: 320px;">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="user" id="ft-user" <%= selectedFilterTypes.includes('user') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-user"><%= t('personnel') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="municipality" id="ft-municipality" <%= selectedFilterTypes.includes('municipality') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-municipality"><%= t('municipality') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="city" id="ft-city" <%= selectedFilterTypes.includes('city') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-city"><%= t('city') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="region" id="ft-region" <%= selectedFilterTypes.includes('region') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-region"><%= t('region') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="status" id="ft-status" <%= selectedFilterTypes.includes('status') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-status"><%= t('status') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="date" id="ft-date" <%= selectedFilterTypes.includes('date') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-date"><%= t('date') %></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-muted small mt-2">
+            <span><%= t('optional') %></span>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="filterTypes" id="filterTypesInput" value="<%= selectedFilterTypes.join(',') %>" />
+    </div>
+    
+    <!-- User Filter -->
+    <div class="col-md-3 filter-option" id="filter-user" data-filter-type="user" style="display: <%= selectedFilterTypes.includes('user') ? 'block' : 'none' %>;">
       <label class="form-label"><%= t('filterByUser') %></label>
       <select name="userId" class="form-select filter-input">
         <option value="">--</option>
@@ -52,7 +116,9 @@
         <% }) %>
       </select>
     </div>
-    <div class="col-md-3">
+    
+    <!-- Status Filter -->
+    <div class="col-md-3 filter-option" id="filter-status" data-filter-type="status" style="display: <%= selectedFilterTypes.includes('status') ? 'block' : 'none' %>;">
       <label class="form-label"><%= t('filterByStatus') %></label>
       <select name="status" class="form-select filter-input">
         <option value="">--</option>
@@ -67,21 +133,174 @@
         </option>
       </select>
     </div>
-    <div class="col-md-2">
-      <label class="form-label"><%= t('filterByDate') %> (from)</label>
-      <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control filter-input" />
+    
+    <!-- City Filter -->
+    <div class="col-md-3 filter-option" id="filter-city" data-filter-type="city" style="display: <%= selectedFilterTypes.includes('city') ? 'block' : 'none' %>;">
+      <label class="form-label"><%= t('filterByCity') %></label>
+      <select name="city" class="form-select filter-input">
+        <option value="">--</option>
+        <% if (typeof cities !== 'undefined' && cities) { %>
+          <% cities.forEach(c => { %>
+            <option value="<%= c.name %>" <%= filters.city === c.name ? 'selected' : '' %>>
+              <%= c.name %>
+            </option>
+          <% }) %>
+        <% } %>
+      </select>
     </div>
-    <div class="col-md-2">
-      <label class="form-label"><%= t('filterByDate') %> (to)</label>
-      <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control filter-input" />
+    
+    <!-- Municipality Filter -->
+    <div class="col-md-3 filter-option" id="filter-municipality" data-filter-type="municipality" style="display: <%= selectedFilterTypes.includes('municipality') ? 'block' : 'none' %>;">
+      <label class="form-label"><%= t('filterByMunicipality') %></label>
+      <select name="municipality" class="form-select filter-input">
+        <option value="">--</option>
+        <% if (typeof municipalities !== 'undefined' && municipalities) { %>
+          <% municipalities.forEach(m => { %>
+            <option value="<%= m.name %>" <%= filters.municipality === m.name ? 'selected' : '' %>>
+              <%= m.name %>
+            </option>
+          <% }) %>
+        <% } %>
+      </select>
     </div>
-    <div class="col-md-2 text-end">
-      <button type="button" class="btn btn-primary mt-3" style="display: none;"><%= t('save') %></button>
+    
+    <!-- Region Filter -->
+    <div class="col-md-3 filter-option" id="filter-region" data-filter-type="region" style="display: <%= selectedFilterTypes.includes('region') ? 'block' : 'none' %>;">
+      <label class="form-label"><%= t('filterByRegion') %></label>
+      <select name="region" class="form-select filter-input">
+        <option value="">--</option>
+        <% if (typeof regions !== 'undefined' && regions) { %>
+          <% regions.forEach(r => { %>
+            <option value="<%= r.name %>" <%= filters.region === r.name ? 'selected' : '' %>>
+              <%= r.name %>
+            </option>
+          <% }) %>
+        <% } %>
+      </select>
+    </div>
+    
+    <!-- Date Filter -->
+    <div class="col-md-6 filter-option" id="filter-date" data-filter-type="date" style="display: <%= selectedFilterTypes.includes('date') ? 'block' : 'none' %>;">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByDate') %> (from)</label>
+          <input type="date" name="from" value="<%= filters.from || '' %>" class="form-control filter-input" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByDate') %> (to)</label>
+          <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control filter-input" />
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="resetFiltersBtn" title="<%= t('resetFilters') %>">
+        <i class="bi bi-arrow-counterclockwise"></i> <%= t('resetFilters') %>
+      </button>
     </div>
   </div>
 </form>
 
 <script>
+  // Çoklu filtre seçimi (checkbox dropdown)
+  (function() {
+    const filterForm = document.getElementById('filterForm');
+    const checkboxes = document.querySelectorAll('.filter-type-checkbox');
+    const filterTypesInput = document.getElementById('filterTypesInput');
+    const filterOptions = document.querySelectorAll('.filter-option');
+    const dropdownBtn = document.getElementById('filtersDropdownBtn');
+    const dropdownLabel = document.getElementById('filtersDropdownLabel');
+    const STORAGE_KEY = 'reportsSelectedFilterTypes';
+
+    function getSelectedTypes() {
+      return Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    }
+
+    function setSelectedTypes(types) {
+      const set = new Set(types || []);
+      checkboxes.forEach(cb => {
+        cb.checked = set.has(cb.value);
+      });
+    }
+
+    function updateDropdownLabel(selected) {
+      if (!dropdownBtn || !dropdownLabel) return;
+      const base = dropdownBtn.getAttribute('data-base-label') || 'Filters';
+      dropdownLabel.textContent = selected.length ? `${base} (${selected.length})` : base;
+    }
+
+    function setVisibility(selected) {
+      filterOptions.forEach(opt => {
+        const type = opt.getAttribute('data-filter-type');
+        opt.style.display = selected.includes(type) ? 'block' : 'none';
+      });
+    }
+
+    function saveToStorage(selected) {
+      try {
+        localStorage.setItem(STORAGE_KEY, (selected || []).join(','));
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        return raw.split(',').map(s => s.trim()).filter(Boolean);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function clearInputsWithin(sectionEl) {
+      if (!sectionEl) return;
+      const inputs = sectionEl.querySelectorAll('select, input');
+      inputs.forEach(el => {
+        if (el.tagName === 'SELECT') el.value = '';
+        if (el.tagName === 'INPUT') el.value = '';
+      });
+    }
+
+    // Init (page load)
+    // If server rendered filterTypes (from query or inferred), prefer them; otherwise use localStorage.
+    const serverInitialRaw = (filterTypesInput && typeof filterTypesInput.value === 'string') ? filterTypesInput.value : '';
+    const serverInitial = serverInitialRaw.split(',').map(s => s.trim()).filter(Boolean);
+    const storageInitial = loadFromStorage();
+
+    const initial = serverInitial.length ? serverInitial : storageInitial;
+    if (initial.length) {
+      setSelectedTypes(initial);
+    }
+    const actualInitial = getSelectedTypes();
+    if (filterTypesInput) filterTypesInput.value = actualInitial.join(',');
+    updateDropdownLabel(actualInitial);
+    setVisibility(actualInitial);
+    // persist initial so refresh keeps it even if query didn't include filterTypes
+    saveToStorage(actualInitial);
+
+    // On checkbox toggle
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const selected = getSelectedTypes();
+        if (filterTypesInput) filterTypesInput.value = selected.join(',');
+        updateDropdownLabel(selected);
+        setVisibility(selected);
+        saveToStorage(selected);
+
+        // If user disabled a filter type, clear its inputs and submit to update list immediately
+        if (!this.checked && filterForm) {
+          const section = document.querySelector(`.filter-option[data-filter-type="${this.value}"]`);
+          clearInputsWithin(section);
+          filterForm.submit();
+        }
+      });
+    });
+  })();
+
   // Filtreleme formunu otomatik submit et
   (function() {
     const filterForm = document.getElementById('filterForm');
@@ -97,6 +316,21 @@
             filterForm.submit();
           }, 300);
         });
+      });
+    }
+  })();
+
+  // Filtreleri sıfırlama
+  (function() {
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', function() {
+        try {
+          localStorage.removeItem('reportsSelectedFilterTypes');
+        } catch (e) {
+          // ignore
+        }
+        window.location.href = '/admin/reports';
       });
     }
   })();

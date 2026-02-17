@@ -16,8 +16,9 @@ yarn-error.log*
 backend/data/*.db
 backend/data/*.sqlite
 
-# Uploads (optional - uncomment if you don't want to track uploads)
-# backend/uploads/*
+# Uploads (do not track user-uploaded files)
+backend/uploads/**
+!backend/uploads/.gitkeep
 
 # OS files
 .DS_Store
