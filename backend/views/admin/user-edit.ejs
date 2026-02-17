@@ -33,8 +33,15 @@
               name="email"
               class="form-control"
               value="<%= user.email || '' %>"
+              placeholder="<%= user.email || t('email') %>"
             />
+            <% if (user.email) { %>
+            <div class="form-text text-success">
+              <i class="bi bi-check-circle"></i> Mevcut e-posta: <strong><%= user.email %></strong>
+            </div>
+            <% } else { %>
             <div class="form-text"><%= t('emailHelpText') %></div>
+            <% } %>
           </div>
           <div class="mb-3">
             <label class="form-label"><%= t('password') %> (optional)</label>

@@ -1654,13 +1654,13 @@ body .card.shadow-sm {
   
   .tm-main.container {
     max-width: 100%;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
   .tm-page-wrapper {
     border-radius: 14px;
-    padding: 1.25rem;
+    padding: 1rem;
   }
 
   .card {
@@ -1671,6 +1671,72 @@ body .card.shadow-sm {
     padding-inline: 0.5rem;
   }
 
+}
+
+/* Tablo fontlarını küçült */
+.table {
+  font-size: 0.875rem;
+}
+
+.table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.table td {
+  font-size: 0.875rem;
+}
+
+.table .badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.table .btn-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* En Çok Görev Alan Personel Kartı - Şık Tasarım */
+.most-assigned-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.most-assigned-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(250, 204, 21, 0.15) !important;
+  border-left-width: 5px !important;
+}
+
+.most-assigned-card:hover .most-assigned-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(250, 204, 21, 0.4);
+}
+
+.most-assigned-card:hover .most-assigned-icon {
+  opacity: 0.25;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.most-assigned-avatar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.most-assigned-icon {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobil için daha geniş container */
+@media (max-width: 576px) {
+  .tm-main.container {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  .tm-page-wrapper {
+    padding: 0.75rem;
+  }
 }
 
 /* Yeni Sidebar */
