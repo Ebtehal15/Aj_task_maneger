@@ -62,11 +62,13 @@
           </div>
           <div class="d-flex gap-2">
             <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-primary">
-              <%= t('edit') %>
+              <i class="bi bi-pencil"></i>
+              <span class="d-none d-md-inline ms-1"><%= t('edit') %></span>
             </a>
             <% if (u.id != currentUser.id) { %>
             <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="<%= u.id %>" data-username="<%= u.username %>">
-              <%= t('delete') %>
+              <i class="bi bi-trash"></i>
+              <span class="d-none d-md-inline ms-1"><%= t('delete') %></span>
             </button>
             <% } %>
           </div>

@@ -102,8 +102,8 @@ router.get('/tasks/:id', async (req, res) => {
     } else {
       taskResult = await pool.query(
         `SELECT t.*, c.username AS created_username, u.username AS assigned_username
-         FROM tasks t
-         JOIN users c ON t.created_by = c.id
+     FROM tasks t
+     JOIN users c ON t.created_by = c.id
          LEFT JOIN users u ON t.assigned_to = u.id
          WHERE t.id = $1 AND t.assigned_to = $2`,
         [taskId, req.user.id]
@@ -111,8 +111,8 @@ router.get('/tasks/:id', async (req, res) => {
     }
 
     if (taskResult.rows.length === 0) {
-      return res.sendStatus(404);
-    }
+        return res.sendStatus(404);
+      }
 
     const task = taskResult.rows[0];
     const filesResult = await pool.query(
@@ -120,15 +120,15 @@ router.get('/tasks/:id', async (req, res) => {
       [taskId]
     );
 
-    res.render('user/task-detail', {
-      pageTitle: task.title,
-      task,
+          res.render('user/task-detail', {
+            pageTitle: task.title,
+            task,
       files: filesResult.rows
-    });
+          });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
-  }
+    }
 });
 
 // Update status + upload evidence + optional note to admin
@@ -158,24 +158,24 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
 
     const updateId = updateResult.rows[0]?.id;
 
-    // Build optional message for admins
-    const statusText =
-      status === 'done'
-        ? 'Tamamlandı'
-        : status === 'in_progress'
-        ? 'Devam ediyor'
-        : 'Beklemede';
-    const actor = req.user && req.user.username ? req.user.username : 'Personel';
-    const baseMessage = `Personel (${actor}) görev durumunu güncelledi (ID: ${taskId}) - Durum: ${statusText}`;
-    let fullMessage =
-      note && note.trim().length ? `${baseMessage} - Not: ${note.trim()}` : baseMessage;
+          // Build optional message for admins
+          const statusText =
+            status === 'done'
+              ? 'Tamamlandı'
+              : status === 'in_progress'
+              ? 'Devam ediyor'
+              : 'Beklemede';
+          const actor = req.user && req.user.username ? req.user.username : 'Personel';
+          const baseMessage = `Personel (${actor}) görev durumunu güncelledi (ID: ${taskId}) - Durum: ${statusText}`;
+          let fullMessage =
+            note && note.trim().length ? `${baseMessage} - Not: ${note.trim()}` : baseMessage;
 
     const files = req.files || [];
-    if (files.length) {
-      fullMessage += ` - Ek: ${files.length} dosya yüklendi`;
-    }
+          if (files.length) {
+            fullMessage += ` - Ek: ${files.length} dosya yüklendi`;
+          }
 
-    // Notify all admins on any status change
+          // Notify all admins on any status change
     const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['admin']);
     for (const admin of adminsResult.rows) {
       await addNotification(admin.id, fullMessage, 'task_update', taskId);
@@ -187,12 +187,12 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
         await client.query(
           'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at, update_id) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)',
           [taskId, req.user.id, file.filename, file.originalname, file.mimetype, updateId || null]
-        );
+            );
       }
     }
 
     await client.query('COMMIT');
-    res.redirect(`/user/tasks/${taskId}`);
+          res.redirect(`/user/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error updating task', err);

@@ -149,3 +149,5 @@ Deploy sonrası log'larda:
 3. `DB_SSL=true` ekleyin
 4. Deploy edin
 
+
+

@@ -38,21 +38,21 @@ router.get('/login', (req, res) => {
     console.log('📍 /login route accessed');
     console.log('  req.user:', req.user ? `${req.user.username} (${req.user.role})` : 'null');
     
-    if (req.user) {
+  if (req.user) {
       // User is already logged in, redirect to their dashboard
       console.log('  → User already logged in, redirecting to dashboard');
       if (req.user.role === 'admin') {
         return res.redirect('/admin/dashboard');
       } else {
-        return res.redirect('/user/tasks');
-      }
+    return res.redirect('/user/tasks');
+  }
     }
     console.log('  → Rendering login page');
-    res.render('auth/login', {
-      pageTitle: req.t('loginTitle'),
-      error: null,
-      targetRole: null
-    });
+  res.render('auth/login', {
+    pageTitle: req.t('loginTitle'),
+    error: null,
+    targetRole: null
+  });
   } catch (error) {
     console.error('❌ Error in /login route:', error);
     console.error('  Stack:', error.stack);
@@ -142,12 +142,12 @@ router.post('/login', async (req, res) => {
       console.log(`  Response will include Set-Cookie header`);
       
       // Redirect based on user role
-      if (user.role === 'admin') {
+    if (user.role === 'admin') {
         console.log(`🔄 Redirecting admin to /admin/dashboard with sessionId: ${req.sessionID}`);
-        return res.redirect('/admin/dashboard');
+      return res.redirect('/admin/dashboard');
       } else {
         console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
-        return res.redirect('/user/tasks');
+    return res.redirect('/user/tasks');
       }
     });
   } catch (err) {
@@ -161,7 +161,7 @@ router.post('/login', async (req, res) => {
       pageTitle: req.t('loginTitle'),
       error: 'Server error - please try again',
       targetRole: null
-    });
+  });
   }
 });
 
@@ -171,7 +171,7 @@ router.get('/user-login', (req, res) => {
     if (req.user.role === 'admin') {
       return res.redirect('/admin/dashboard');
     } else {
-      return res.redirect('/user/tasks');
+    return res.redirect('/user/tasks');
     }
   }
   res.render('auth/login', {

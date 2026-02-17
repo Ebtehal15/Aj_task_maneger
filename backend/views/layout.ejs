@@ -320,80 +320,72 @@
       window.shareDownloadedFile = async function() {
         if (!currentDownloadedFile) return;
         
-        // Önce Web Share API ile dosyayı doğrudan paylaşmayı dene
+        // Web Share API ile dosyayı doğrudan paylaşmayı dene
         if (navigator.share) {
           try {
+            // Sadece files ile paylaş (title ve text olmadan)
             const shareData = {
-              title: 'Excel File - ' + currentFileName,
-              text: 'Task Manager Excel Export',
               files: [currentDownloadedFile]
             };
             
-            // canShare kontrolü
-            if (navigator.canShare && navigator.canShare(shareData)) {
-              await navigator.share(shareData);
-              
-              // Toast'u kapat
-              const toastElement = document.getElementById('downloadToast');
-              if (toastElement) {
-                const toastInstance = bootstrap.Toast.getInstance(toastElement);
-                if (toastInstance) toastInstance.hide();
+            // canShare kontrolü - sadece files ile
+            if (navigator.canShare) {
+              if (navigator.canShare(shareData)) {
+                // Dosyayı doğrudan paylaş
+                await navigator.share(shareData);
+                
+                // Toast'u kapat
+                const toastElement = document.getElementById('downloadToast');
+                if (toastElement) {
+                  const toastInstance = bootstrap.Toast.getInstance(toastElement);
+                  if (toastInstance) toastInstance.hide();
+                }
+                return;
+              } else {
+                // canShare false dönerse, files desteklenmiyor demektir
+                console.log('File sharing not supported by this platform');
+                // Modal göster - dosyayı doğrudan paylaş
+                showShareModal(currentFileName);
+                return;
               }
-              return;
+            } else {
+              // canShare yoksa, direkt share'i dene
+              try {
+                await navigator.share(shareData);
+                const toastElement = document.getElementById('downloadToast');
+                if (toastElement) {
+                  const toastInstance = bootstrap.Toast.getInstance(toastElement);
+                  if (toastInstance) toastInstance.hide();
+                }
+                return;
+              } catch (shareError) {
+                if (shareError.name === 'AbortError') {
+                  return;
+                }
+                // Hata varsa modal göster
+                console.log('Share failed:', shareError);
+                showShareModal(currentFileName);
+                return;
+              }
             }
           } catch (error) {
             if (error.name === 'AbortError') {
               // Kullanıcı iptal etti
               return;
             }
-            // Dosya paylaşımı desteklenmiyorsa, sunucuya yükleyip link paylaş
-            console.log('Direct file share not supported, uploading to server...');
+            console.log('Share error:', error);
+            // Hata durumunda modal göster
+            showShareModal(currentFileName);
+            return;
           }
         }
         
-        // Dosya paylaşımı desteklenmiyorsa, sunucuya yükle ve link paylaş
-        try {
-          // Dosyayı base64'e çevir
-          const reader = new FileReader();
-          reader.onload = async function(e) {
-            const base64Data = e.target.result.split(',')[1]; // data:application/...;base64, kısmını kaldır
-            
-            // Dosyayı sunucuya yükle
-            try {
-              const response = await fetch('/admin/reports/upload-temp', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  fileData: base64Data,
-                  fileName: currentFileName
-                })
-              });
-              
-              if (!response.ok) throw new Error('Upload failed');
-              
-              const result = await response.json();
-              const fileUrl = window.location.origin + result.url;
-              
-              // Modal göster (link ile)
-              showShareModal(currentFileName, fileUrl);
-            } catch (uploadError) {
-              console.error('Upload error:', uploadError);
-              // Hata durumunda modal göster
-              showShareModal(currentFileName, null);
-            }
-          };
-          
-          reader.readAsDataURL(currentDownloadedFile);
-        } catch (error) {
-          console.error('Share error:', error);
-          showShareModal(currentFileName, null);
-        }
+        // Web Share API desteklenmiyorsa modal göster
+        showShareModal(currentFileName);
       };
       
       // Paylaşım modalı göster (fallback)
-      function showShareModal(fileName, fileUrl) {
+      function showShareModal(fileName) {
         const shareModal = new bootstrap.Modal(document.getElementById('shareFileModal'));
         shareModal.show();
         
@@ -402,72 +394,46 @@
           btn.onclick = async function() {
             const shareType = this.dataset.share;
             
-            // Önce dosyayı doğrudan paylaşmayı dene
+            // Dosyayı doğrudan paylaşmayı dene (sadece files ile)
             if (currentDownloadedFile && navigator.share) {
               try {
+                // Sadece files ile paylaş - title ve text olmadan
                 const shareData = {
-                  title: shareType === 'email' ? 'Excel File - ' + fileName : 'Excel File',
-                  text: 'Task Manager Excel Export - ' + fileName,
                   files: [currentDownloadedFile]
                 };
                 
-                if (navigator.canShare && navigator.canShare(shareData)) {
-                  await navigator.share(shareData);
-                  const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
-                  if (modal) modal.hide();
-                  return;
+                // canShare kontrolü
+                if (navigator.canShare) {
+                  if (navigator.canShare(shareData)) {
+                    await navigator.share(shareData);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
+                    if (modal) modal.hide();
+                    return;
+                  }
+                } else {
+                  // canShare yoksa direkt dene
+                  try {
+                    await navigator.share(shareData);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
+                    if (modal) modal.hide();
+                    return;
+                  } catch (shareError) {
+                    if (shareError.name === 'AbortError') {
+                      return;
+                    }
+                    console.log('File share failed:', shareError);
+                  }
                 }
               } catch (error) {
                 if (error.name === 'AbortError') {
                   return;
                 }
-                // Dosya paylaşımı desteklenmiyorsa, link ile devam et
-                console.log('Direct file share failed, using link...');
+                console.log('Share error:', error);
               }
             }
             
-            // Dosya paylaşımı desteklenmiyorsa, link ile paylaş
-            const shareUrl = fileUrl || (window.location.origin + window.location.pathname);
-            
-            if (shareType === 'email') {
-              // E-posta için link gönder
-              if (navigator.share && fileUrl) {
-                try {
-                  await navigator.share({
-                    title: 'Excel File - ' + fileName,
-                    text: 'Task Manager Excel Export - Download the file from:',
-                    url: shareUrl
-                  });
-                } catch (error) {
-                  if (error.name !== 'AbortError') {
-                    // Fallback: mailto link
-                    window.location.href = `mailto:?subject=Excel File - ${fileName}&body=${encodeURIComponent('Please download the Excel file from: ' + shareUrl)}`;
-                  }
-                }
-              } else {
-                // Fallback: mailto link
-                window.location.href = `mailto:?subject=Excel File - ${fileName}&body=${encodeURIComponent('Please download the Excel file from: ' + shareUrl)}`;
-              }
-            } else if (shareType === 'whatsapp') {
-              // WhatsApp için link paylaş
-              if (navigator.share && fileUrl) {
-                try {
-                  await navigator.share({
-                    title: 'Excel File',
-                    text: 'Task Manager Excel Export - ' + fileName + ' - Download:',
-                    url: shareUrl
-                  });
-                } catch (error) {
-                  if (error.name !== 'AbortError') {
-                    // Fallback: WhatsApp web link
-                    window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fileName + ' - Download: ' + shareUrl)}`, '_blank');
-                  }
-                }
-              } else {
-                // Fallback: WhatsApp web link
-                window.open(`https://wa.me/?text=${encodeURIComponent('Excel File: ' + fileName + ' - Download: ' + shareUrl)}`, '_blank');
-              }
-            }
+            // Dosya paylaşımı desteklenmiyorsa, kullanıcıya bilgi ver
+            alert('Bu platform dosya paylaşımını desteklemiyor. Lütfen dosyayı manuel olarak paylaşın.');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('shareFileModal'));
             if (modal) modal.hide();

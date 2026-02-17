@@ -106,3 +106,5 @@ SELECT * FROM session;
 Bu tablo `connect-pg-simple` paketi tarafından otomatik oluşturulmaz. İlk kurulumda manuel olarak oluşturmanız gerekir.
 
 
+
+
