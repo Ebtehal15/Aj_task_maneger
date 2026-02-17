@@ -145,9 +145,9 @@ app.use(attachUserToRequest);
 app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
 
-// Handle service worker requests (prevent 404 errors)
+// Service worker file for PWA (must be at root scope)
 app.get('/sw.js', (req, res) => {
-  res.status(204).end(); // No Content - service worker not implemented
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
 });
 
 // Route logging middleware (for debugging)
