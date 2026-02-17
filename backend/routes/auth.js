@@ -114,41 +114,53 @@ router.post('/login', async (req, res) => {
     }
 
     console.log(`✅ Password match successful for user: ${username}`);
-    console.log(`💾 Setting session userId: ${user.id}, sessionId: ${req.sessionID}`);
+    console.log(`🔄 Regenerating session to prevent session fixation. Old sessionId: ${req.sessionID}`);
     console.log(`  Current cookies: ${req.headers.cookie || 'none'}`);
-    
-    // Set session data
-    req.session.userId = user.id;
-    
-    // Save session and redirect
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Error saving session:', err);
-        console.error('  Error details:', {
-          message: err.message,
-          code: err.code,
-          stack: err.stack
-        });
+
+    // Regenerate session id on login (prevents session fixation / stale session crossover)
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        console.error('❌ Error regenerating session:', regenErr);
         return res.render('auth/login', {
           pageTitle: req.t('loginTitle'),
           error: 'Session error - please try again',
           targetRole: null
         });
       }
-      
-      console.log(`✅ Session saved successfully for user: ${username}`);
-      console.log(`  Session ID: ${req.sessionID}`);
-      console.log(`  Session userId: ${req.session.userId}`);
-      console.log(`  Response will include Set-Cookie header`);
-      
-      // Redirect based on user role
-    if (user.role === 'admin') {
-        console.log(`🔄 Redirecting admin to /admin/dashboard with sessionId: ${req.sessionID}`);
-      return res.redirect('/admin/dashboard');
-      } else {
-        console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
-    return res.redirect('/user/tasks');
-      }
+
+      // Set session data
+      req.session.userId = user.id;
+
+      // Save session and redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('❌ Error saving session:', err);
+          console.error('  Error details:', {
+            message: err.message,
+            code: err.code,
+            stack: err.stack
+          });
+          return res.render('auth/login', {
+            pageTitle: req.t('loginTitle'),
+            error: 'Session error - please try again',
+            targetRole: null
+          });
+        }
+
+        console.log(`✅ Session saved successfully for user: ${username}`);
+        console.log(`  New Session ID: ${req.sessionID}`);
+        console.log(`  Session userId: ${req.session.userId}`);
+        console.log(`  Response will include Set-Cookie header`);
+
+        // Redirect based on user role
+        if (user.role === 'admin') {
+          console.log(`🔄 Redirecting admin to /admin/dashboard with sessionId: ${req.sessionID}`);
+          return res.redirect('/admin/dashboard');
+        } else {
+          console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
+          return res.redirect('/user/tasks');
+        }
+      });
     });
   } catch (err) {
     console.error('❌ Login error:', err);
@@ -197,8 +209,28 @@ router.post('/user-login', async (req, res) => {
       });
     }
 
-    req.session.userId = user.id;
-    return res.redirect('/user/tasks');
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        console.error('User login session regenerate error', regenErr);
+        return res.render('auth/login', {
+          pageTitle: req.t('loginTitle'),
+          error: 'Session error',
+          targetRole: 'user'
+        });
+      }
+      req.session.userId = user.id;
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('User login session save error', saveErr);
+          return res.render('auth/login', {
+            pageTitle: req.t('loginTitle'),
+            error: 'Session error',
+            targetRole: 'user'
+          });
+        }
+        return res.redirect('/user/tasks');
+      });
+    });
   } catch (err) {
     console.error('User login error', err);
     return res.render('auth/login', {

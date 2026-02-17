@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 // Debug: Log environment info
 console.log('🚀 Starting application...');
@@ -36,6 +37,11 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layout');
+
+// Trust proxy (Render/NGINX) so secure cookies work correctly in production
+if (IS_PROD) {
+  app.set('trust proxy', 1);
+}
 
 // Static assets - must come before routes to avoid conflicts
 app.use('/public', express.static(path.join(__dirname, 'public'), {
@@ -115,9 +121,11 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   name: 'connect.sid', // Explicit session cookie name
+  proxy: IS_PROD,
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: false, // Render proxy handles HTTPS, but we need false for cookies to work
+    // In production use secure cookies (requires trust proxy). In local dev allow HTTP.
+    secure: IS_PROD,
     httpOnly: true,
     sameSite: 'lax', // Lax for cross-site compatibility
     path: '/' // Ensure cookie is sent for all paths
