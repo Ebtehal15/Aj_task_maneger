@@ -19,8 +19,13 @@
   <div class="col-md-7">
     <div class="card shadow-sm mb-3">
       <div class="card-body">
-        <p class="mb-1 text-muted"><strong><%= t('taskDescription') %>:</strong></p>
-        <p><%= task.description || '-' %></p>
+        <p class="mb-1 text-muted">
+          <strong><%= t('taskDescription') %>:</strong>
+          <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text="<%= task.description || '' %>" title="<%= t('translate') %>">
+            <i class="bi bi-translate"></i>
+          </button>
+        </p>
+        <p id="description-display"><%= task.description || '-' %></p>
 
         <p class="mb-1"><strong><%= t('assignedTo') %>:</strong> <%= task.assigned_username %></p>
         <p class="mb-1">
@@ -39,22 +44,77 @@
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="h6 mb-3"><%= t('status') %> (<%= t('adminLabel') %>)</h2>
-        <form method="post" action="/admin/tasks/<%= task.id %>/status" class="d-flex gap-2">
-          <select name="status" class="form-select">
-            <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>
-              <%= t('status_pending') %>
-            </option>
-            <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>
-              <%= t('status_in_progress') %>
-            </option>
-            <option value="done" <%= task.status === 'done' ? 'selected' : '' %>>
-              <%= t('status_done') %>
-            </option>
-          </select>
-          <button class="btn btn-primary"><%= t('save') %></button>
+    <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, rgba(250, 204, 21, 0.03) 0%, rgba(255, 255, 255, 1) 100%); border-left: 3px solid #facc15 !important;">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center mb-3">
+          <div class="me-2" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #facc15, #eab308); display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-pencil-square text-dark" style="font-size: 1rem;"></i>
+          </div>
+          <div>
+            <h2 class="h6 mb-0 fw-bold" style="font-size: 0.95rem;"><%= t('recentUpdates') %></h2>
+            <small class="text-muted" style="font-size: 0.75rem;">Görev durumunu güncelleyin ve not ekleyin</small>
+          </div>
+        </div>
+        
+        <form method="post" action="/admin/tasks/<%= task.id %>/update" enctype="multipart/form-data">
+          <div class="row g-2">
+            <div class="col-md-12">
+              <label class="form-label fw-semibold" style="font-size: 0.875rem;">
+                <i class="bi bi-flag me-1"></i><%= t('status') %>
+              </label>
+              <select name="status" class="form-select" style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;">
+                <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>
+                  <%= t('status_pending') %>
+                </option>
+                <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>
+                  <%= t('status_in_progress') %>
+                </option>
+                <option value="done" <%= task.status === 'done' ? 'selected' : '' %>>
+                  <%= t('status_done') %>
+                </option>
+              </select>
+            </div>
+            
+            <div class="col-md-12">
+              <label class="form-label fw-semibold" style="font-size: 0.875rem;">
+                <i class="bi bi-chat-left-text me-1"></i>Not / Açıklama
+                <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text-id="note" title="<%= t('translate') %>">
+                  <i class="bi bi-translate"></i>
+                </button>
+              </label>
+              <textarea
+                name="note"
+                id="note"
+                rows="3"
+                class="form-control"
+                placeholder="<%= t('notePlaceholder') %>"
+                style="border-radius: 8px; border: 2px solid #e5e7eb; resize: vertical; font-size: 0.875rem;"
+              ></textarea>
+            </div>
+            
+            <div class="col-md-12">
+              <label class="form-label fw-semibold" style="font-size: 0.875rem;">
+                <i class="bi bi-paperclip me-1"></i><%= t('uploadFiles') %>
+              </label>
+              <input
+                type="file"
+                name="attachments"
+                class="form-control"
+                multiple
+                accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+                style="border-radius: 8px; border: 2px dashed #d1d5db; padding: 0.5rem; font-size: 0.875rem;"
+              />
+              <div class="form-text mt-1" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i>PDF, Excel, JPG, PNG dosyaları yükleyebilirsiniz (Max 5 dosya)
+              </div>
+            </div>
+            
+            <div class="col-md-12">
+              <button type="submit" class="btn btn-primary w-100" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; font-size: 0.875rem; background: linear-gradient(135deg, #facc15, #eab308); border: none; color: #020617; box-shadow: 0 2px 8px rgba(250, 204, 21, 0.3);">
+                <i class="bi bi-check-circle me-2"></i><%= t('save') %>
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
@@ -96,7 +156,27 @@
             <div class="d-flex justify-content-between">
               <strong><%= update.username %></strong>
               <span class="small text-muted">
-                <%= update.created_at ? (typeof update.created_at === 'string' ? update.created_at.slice(0,19).replace('T',' ') : new Date(update.created_at).toISOString().slice(0,19).replace('T',' ')) : '-' %>
+                <% 
+                  const formatDateForTurkey = (date) => {
+                    if (!date) return '-';
+                    try {
+                      const dateObj = typeof date === 'string' ? new Date(date) : date;
+                      const turkeyOffset = 3 * 60;
+                      const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+                      const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+                      const year = turkeyTime.getFullYear();
+                      const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+                      const day = String(turkeyTime.getDate()).padStart(2, '0');
+                      const hours = String(turkeyTime.getHours()).padStart(2, '0');
+                      const minutes = String(turkeyTime.getMinutes()).padStart(2, '0');
+                      const seconds = String(turkeyTime.getSeconds()).padStart(2, '0');
+                      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                    } catch (err) {
+                      return typeof date === 'string' ? date.slice(0, 19).replace('T', ' ') : date.toISOString().slice(0, 19).replace('T', ' ');
+                    }
+                  };
+                %>
+                <%= formatDateForTurkey(update.created_at) %>
               </span>
             </div>
             <div class="small text-muted mt-1">
@@ -109,7 +189,10 @@
             </div>
             <% if (update.note) { %>
             <div class="mt-1">
-              <em><%= update.note %></em>
+              <em id="note-<%= update.id %>"><%= update.note %></em>
+              <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text="<%= update.note %>" data-display-id="note-<%= update.id %>" title="<%= t('translate') %>">
+                <i class="bi bi-translate"></i>
+              </button>
             </div>
             <% } %>
           </li>
@@ -120,5 +203,80 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const translateBtns = document.querySelectorAll('.translate-btn');
+  const currentLang = '<%= typeof lang !== "undefined" ? lang : "tr" %>';
+  
+  translateBtns.forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const textId = this.getAttribute('data-text-id');
+      const text = this.getAttribute('data-text');
+      
+      let textToTranslate = '';
+      let targetElement = null;
+      
+      if (textId) {
+        targetElement = document.getElementById(textId);
+        if (targetElement) {
+          textToTranslate = targetElement.value || targetElement.textContent;
+        }
+      } else if (text) {
+        textToTranslate = text;
+        const textIdAttr = this.getAttribute('data-display-id');
+        if (textIdAttr) {
+          targetElement = document.getElementById(textIdAttr);
+        } else {
+          targetElement = document.getElementById('description-display');
+        }
+      }
+      
+      if (!textToTranslate || !textToTranslate.trim()) {
+        alert('Çevrilecek metin bulunamadı');
+        return;
+      }
+      
+      const originalIcon = this.querySelector('i');
+      const originalClass = originalIcon.className;
+      originalIcon.className = 'bi bi-hourglass-split';
+      this.disabled = true;
+      
+      try {
+        const response = await fetch('/admin/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: textToTranslate,
+            targetLang: currentLang
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.translated) {
+          if (targetElement) {
+            if (targetElement.tagName === 'TEXTAREA' || targetElement.tagName === 'INPUT') {
+              targetElement.value = result.translated;
+            } else {
+              targetElement.textContent = result.translated;
+            }
+          }
+        } else {
+          alert('Çeviri başarısız oldu');
+        }
+      } catch (error) {
+        console.error('Translate error:', error);
+        alert('Çeviri sırasında hata oluştu');
+      } finally {
+        originalIcon.className = originalClass;
+        this.disabled = false;
+      }
+    });
+  });
+});
+</script>
 
 

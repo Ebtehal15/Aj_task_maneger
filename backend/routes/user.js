@@ -84,11 +84,12 @@ router.get('/tasks', async (req, res) => {
   }
 });
 
-// Task detail
+// Task detail - accessible to all involved users (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
 router.get('/tasks/:id', async (req, res) => {
   const taskId = req.params.id;
+  const userId = req.user.id;
   try {
-    // Admin ise tüm görevleri görebilir, değilse sadece kendisine atanan görevleri
+    // Admin ise tüm görevleri görebilir, değilse tüm sorumlular görebilir (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
     let taskResult;
     if (req.user.role === 'admin') {
       taskResult = await pool.query(
@@ -100,13 +101,18 @@ router.get('/tasks/:id', async (req, res) => {
         [taskId]
       );
     } else {
+      // Tüm sorumlular görebilir: assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu
       taskResult = await pool.query(
         `SELECT t.*, c.username AS created_username, u.username AS assigned_username
-     FROM tasks t
-     JOIN users c ON t.created_by = c.id
+         FROM tasks t
+         JOIN users c ON t.created_by = c.id
          LEFT JOIN users u ON t.assigned_to = u.id
-         WHERE t.id = $1 AND t.assigned_to = $2`,
-        [taskId, req.user.id]
+         WHERE t.id = $1 
+           AND (t.assigned_to = $2 
+                OR t.sorumlu_2 = $2 
+                OR t.sorumlu_3 = $2 
+                OR t.konu_sorumlusu::text = $2::text)`,
+        [taskId, userId]
       );
     }
 
@@ -144,11 +150,30 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
   try {
     await client.query('BEGIN');
 
-    // Update task status
-    await client.query(
-      'UPDATE tasks SET status = $1 WHERE id = $2 AND assigned_to = $3',
-      [status, taskId, req.user.id]
+    // Check if user is involved in the task (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+    const taskCheckResult = await client.query(
+      `SELECT id, assigned_to FROM tasks 
+       WHERE id = $1 
+         AND (assigned_to = $2 
+              OR sorumlu_2 = $2 
+              OR sorumlu_3 = $2 
+              OR konu_sorumlusu::text = $2::text)`,
+      [taskId, req.user.id]
     );
+
+    if (taskCheckResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(403).send('Bu görev için yetkiniz yok.');
+    }
+
+    // Update task status (only if user is assigned_to, otherwise just add update record)
+    const task = taskCheckResult.rows[0];
+    if (task.assigned_to === req.user.id) {
+      await client.query(
+        'UPDATE tasks SET status = $1 WHERE id = $2',
+        [status, taskId]
+      );
+    }
 
     // Save update history
     const updateResult = await client.query(
@@ -175,11 +200,39 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
             fullMessage += ` - Ek: ${files.length} dosya yüklendi`;
           }
 
-          // Notify all admins on any status change
-    const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['admin']);
-    for (const admin of adminsResult.rows) {
-      await addNotification(admin.id, fullMessage, 'task_update', taskId);
-    }
+          // Get task details to notify all involved users
+          const taskDetailsResult = await client.query(`
+            SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu 
+            FROM tasks 
+            WHERE id = $1
+          `, [taskId]);
+          
+          const taskDetails = taskDetailsResult.rows[0];
+          const userIdsToNotify = new Set();
+          
+          // Add all involved users
+          if (taskDetails) {
+            if (taskDetails.assigned_to) userIdsToNotify.add(Number(taskDetails.assigned_to));
+            if (taskDetails.sorumlu_2) userIdsToNotify.add(Number(taskDetails.sorumlu_2));
+            if (taskDetails.sorumlu_3) userIdsToNotify.add(Number(taskDetails.sorumlu_3));
+            if (taskDetails.konu_sorumlusu) {
+              const konuSorumlusuId = parseInt(taskDetails.konu_sorumlusu);
+              if (!isNaN(konuSorumlusuId)) userIdsToNotify.add(konuSorumlusuId);
+            }
+          }
+
+          // Notify all admins
+          const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['admin']);
+          for (const admin of adminsResult.rows) {
+            userIdsToNotify.add(admin.id);
+          }
+
+          // Notify all involved users (including admins)
+          for (const userId of userIdsToNotify) {
+            if (userId && userId !== req.user.id) { // Don't notify the updater
+              await addNotification(userId, fullMessage, 'task_update', taskId);
+            }
+          }
 
     // Insert files if any
     if (files.length) {

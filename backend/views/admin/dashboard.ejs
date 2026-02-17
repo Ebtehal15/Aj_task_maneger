@@ -250,9 +250,21 @@
           <h5 class="card-title mb-3"><%= task.title %></h5>
           <div class="task-card-info">
             <p class="mb-2 small">
-              <i class="bi bi-person"></i> <strong><%= t('assignedTo') %>:</strong> 
-              <span class="text-muted"><%= task.assigned_username %></span>
+              <i class="bi bi-person-badge"></i> <strong><%= t('konuSorumlusu') %>:</strong> 
+              <span class="text-muted"><%= task.konu_sorumlusu_username || '-' %></span>
             </p>
+            <div class="mb-2 small">
+              <strong><%= t('team') %>:</strong>
+              <span class="text-muted ms-2">
+                <% 
+                  const teamMembers = [];
+                  if (task.assigned_username) teamMembers.push(task.assigned_username);
+                  if (task.sorumlu_2_username) teamMembers.push(task.sorumlu_2_username);
+                  if (task.sorumlu_3_username) teamMembers.push(task.sorumlu_3_username);
+                %>
+                <%= teamMembers.length > 0 ? teamMembers.join(', ') : '-' %>
+              </span>
+            </div>
             <% if (task.bolge || task.il || task.belediye) { %>
             <p class="mb-2 small">
               <i class="bi bi-geo-alt"></i> 

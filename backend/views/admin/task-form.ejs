@@ -14,7 +14,7 @@
     <form
       method="post"
       action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
-      <% if (typeof task === 'undefined' || !task) { %>enctype="multipart/form-data"<% } %>
+      enctype="multipart/form-data"
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">
@@ -34,7 +34,7 @@
             <% users.forEach(u => { %>
             <option
               value="<%= u.id %>"
-              <%= (typeof task !== 'undefined' && task && task.konu_sorumlusu == u.id) ? 'selected' : '' %>
+              <%= (typeof task !== 'undefined' && task && task.konu_sorumlusu && (String(task.konu_sorumlusu) === String(u.id))) ? 'selected' : '' %>
             >
               <%= u.username %>
             </option>
@@ -96,30 +96,66 @@
       <div class="row">
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('bolge') %></label>
-          <input
-            type="text"
-            name="bolge"
-            class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.bolge) ? task.bolge : '' %>"
-          />
+          <div class="d-flex gap-2">
+            <select name="bolge" id="bolgeSelect" class="form-select flex-grow-1">
+              <option value=""><%= t('bolge') %></option>
+              <% if (typeof regions !== 'undefined' && regions) { %>
+                <% regions.forEach(r => { %>
+                  <option
+                    value="<%= r.name %>"
+                    <%= (typeof task !== 'undefined' && task && task.bolge === r.name) ? 'selected' : '' %>
+                  >
+                    <%= r.name %>
+                  </option>
+                <% }) %>
+              <% } %>
+            </select>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRegionModal" style="white-space: nowrap; flex-shrink: 0;">
+              <i class="bi bi-plus-circle"></i> <%= t('addRegion') %>
+            </button>
+          </div>
         </div>
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('il') %></label>
-          <input
-            type="text"
-            name="il"
-            class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.il) ? task.il : '' %>"
-          />
+          <div class="d-flex gap-2">
+            <select name="il" id="ilSelect" class="form-select flex-grow-1">
+              <option value=""><%= t('il') %></option>
+              <% if (typeof cities !== 'undefined' && cities) { %>
+                <% cities.forEach(c => { %>
+                  <option
+                    value="<%= c.name %>"
+                    <%= (typeof task !== 'undefined' && task && task.il === c.name) ? 'selected' : '' %>
+                  >
+                    <%= c.name %>
+                  </option>
+                <% }) %>
+              <% } %>
+            </select>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCityModal" style="white-space: nowrap; flex-shrink: 0;">
+              <i class="bi bi-plus-circle"></i> <%= t('addCity') %>
+            </button>
+          </div>
         </div>
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('belediye') %></label>
-          <input
-            type="text"
-            name="belediye"
-            class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.belediye) ? task.belediye : '' %>"
-          />
+          <div class="d-flex gap-2">
+            <select name="belediye" id="belediyeSelect" class="form-select flex-grow-1">
+              <option value=""><%= t('belediye') %></option>
+              <% if (typeof municipalities !== 'undefined' && municipalities) { %>
+                <% municipalities.forEach(m => { %>
+                  <option
+                    value="<%= m.name %>"
+                    <%= (typeof task !== 'undefined' && task && task.belediye === m.name) ? 'selected' : '' %>
+                  >
+                    <%= m.name %>
+                  </option>
+                <% }) %>
+              <% } %>
+            </select>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addMunicipalityModal" style="white-space: nowrap; flex-shrink: 0;">
+              <i class="bi bi-plus-circle"></i> <%= t('addMunicipality') %>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -155,8 +191,13 @@
         />
       </div>
       <div class="mb-3">
-        <label class="form-label"><%= t('taskDescription') %> (İş Konusu)</label>
-        <textarea name="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
+        <label class="form-label">
+          <%= t('taskDescription') %> (İş Konusu)
+          <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text-id="description" title="<%= t('translate') %>">
+            <i class="bi bi-translate"></i>
+          </button>
+        </label>
+        <textarea name="description" id="description" rows="4" class="form-control"><%= (typeof task !== 'undefined' && task && task.description) ? task.description : '' %></textarea>
       </div>
 
       <!-- Tarihler, Durum ve Acil -->
@@ -204,7 +245,6 @@
       </div>
 
       <!-- Dosya Yükleme -->
-      <% if (typeof task === 'undefined' || !task) { %>
       <div class="mb-3">
         <label class="form-label"><%= t('uploadFiles') %></label>
         <input
@@ -214,8 +254,8 @@
           multiple
           accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
         />
+        <div class="form-text"><%= t('filesHelpText') %></div>
       </div>
-      <% } %>
       <button class="btn btn-primary"><%= t('save') %></button>
     </form>
   </div>
@@ -255,6 +295,78 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
         <button type="button" class="btn btn-primary" id="saveQuickUserBtn"><%= t('save') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Municipality Modal -->
+<div class="modal fade" id="addMunicipalityModal" tabindex="-1" aria-labelledby="addMunicipalityModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addMunicipalityModalLabel"><%= t('addMunicipality') %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="quickAddMunicipalityForm">
+          <div class="mb-3">
+            <label class="form-label"><%= t('belediye') %></label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-primary" id="saveQuickMunicipalityBtn"><%= t('save') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Region Modal -->
+<div class="modal fade" id="addRegionModal" tabindex="-1" aria-labelledby="addRegionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addRegionModalLabel"><%= t('addRegion') %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="quickAddRegionForm">
+          <div class="mb-3">
+            <label class="form-label"><%= t('bolge') %></label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-primary" id="saveQuickRegionBtn"><%= t('save') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add City Modal -->
+<div class="modal fade" id="addCityModal" tabindex="-1" aria-labelledby="addCityModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCityModalLabel"><%= t('addCity') %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="quickAddCityForm">
+          <div class="mb-3">
+            <label class="form-label"><%= t('il') %></label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-primary" id="saveQuickCityBtn"><%= t('save') %></button>
       </div>
     </div>
   </div>
@@ -320,6 +432,228 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // Municipality quick add
+  const quickAddMunicipalityForm = document.getElementById('quickAddMunicipalityForm');
+  const saveQuickMunicipalityBtn = document.getElementById('saveQuickMunicipalityBtn');
+  const belediyeSelect = document.getElementById('belediyeSelect');
+  const addMunicipalityModalElement = document.getElementById('addMunicipalityModal');
+  
+  if (addMunicipalityModalElement) {
+    const addMunicipalityModal = new bootstrap.Modal(addMunicipalityModalElement);
+
+    if (saveQuickMunicipalityBtn) {
+      saveQuickMunicipalityBtn.addEventListener('click', async function() {
+        const formData = new FormData(quickAddMunicipalityForm);
+        
+        // Validate
+        if (!formData.get('name')) {
+          alert('<%= t("pleaseFillRequiredFields") %>');
+          return;
+        }
+
+        try {
+          const response = await fetch('/admin/municipalities/quick-add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(formData)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Add new municipality to dropdown
+            const option = document.createElement('option');
+            option.value = result.name;
+            option.textContent = result.name;
+            belediyeSelect.appendChild(option);
+            
+            // Select the new municipality
+            belediyeSelect.value = result.name;
+            
+            // Close modal and reset form
+            addMunicipalityModal.hide();
+            quickAddMunicipalityForm.reset();
+            
+            alert('<%= t("municipalityAddedSuccessfully") %>');
+          } else {
+            alert(result.error || '<%= t("errorAddingMunicipality") %>');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('<%= t("errorAddingMunicipality") %>');
+        }
+      });
+    }
+  }
+
+  // Region quick add
+  const quickAddRegionForm = document.getElementById('quickAddRegionForm');
+  const saveQuickRegionBtn = document.getElementById('saveQuickRegionBtn');
+  const bolgeSelect = document.getElementById('bolgeSelect');
+  const addRegionModalElement = document.getElementById('addRegionModal');
+  
+  if (addRegionModalElement) {
+    const addRegionModal = new bootstrap.Modal(addRegionModalElement);
+
+    if (saveQuickRegionBtn) {
+      saveQuickRegionBtn.addEventListener('click', async function() {
+        const formData = new FormData(quickAddRegionForm);
+        
+        // Validate
+        if (!formData.get('name')) {
+          alert('<%= t("pleaseFillRequiredFields") %>');
+          return;
+        }
+
+        try {
+          const response = await fetch('/admin/regions/quick-add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(formData)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Add new region to dropdown
+            const option = document.createElement('option');
+            option.value = result.name;
+            option.textContent = result.name;
+            bolgeSelect.appendChild(option);
+            
+            // Select the new region
+            bolgeSelect.value = result.name;
+            
+            // Close modal and reset form
+            addRegionModal.hide();
+            quickAddRegionForm.reset();
+            
+            alert('<%= t("regionAddedSuccessfully") %>');
+          } else {
+            alert(result.error || '<%= t("errorAddingRegion") %>');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('<%= t("errorAddingRegion") %>');
+        }
+      });
+    }
+  }
+
+  // City quick add
+  const quickAddCityForm = document.getElementById('quickAddCityForm');
+  const saveQuickCityBtn = document.getElementById('saveQuickCityBtn');
+  const ilSelect = document.getElementById('ilSelect');
+  const addCityModalElement = document.getElementById('addCityModal');
+  
+  if (addCityModalElement) {
+    const addCityModal = new bootstrap.Modal(addCityModalElement);
+
+    if (saveQuickCityBtn) {
+      saveQuickCityBtn.addEventListener('click', async function() {
+        const formData = new FormData(quickAddCityForm);
+        
+        // Validate
+        if (!formData.get('name')) {
+          alert('<%= t("pleaseFillRequiredFields") %>');
+          return;
+        }
+
+        try {
+          const response = await fetch('/admin/cities/quick-add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(formData)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Add new city to dropdown
+            const option = document.createElement('option');
+            option.value = result.name;
+            option.textContent = result.name;
+            ilSelect.appendChild(option);
+            
+            // Select the new city
+            ilSelect.value = result.name;
+            
+            // Close modal and reset form
+            addCityModal.hide();
+            quickAddCityForm.reset();
+            
+            alert('<%= t("cityAddedSuccessfully") %>');
+          } else {
+            alert(result.error || '<%= t("errorAddingCity") %>');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('<%= t("errorAddingCity") %>');
+        }
+      });
+    }
+  }
+
+  // Translate functionality
+  const translateBtns = document.querySelectorAll('.translate-btn');
+  const currentLang = '<%= typeof lang !== "undefined" ? lang : "tr" %>';
+  
+  translateBtns.forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const textId = this.getAttribute('data-text-id');
+      
+      if (!textId) return;
+      
+      const targetElement = document.getElementById(textId);
+      if (!targetElement) return;
+      
+      const textToTranslate = targetElement.value || targetElement.textContent;
+      
+      if (!textToTranslate || !textToTranslate.trim()) {
+        alert('Çevrilecek metin bulunamadı');
+        return;
+      }
+      
+      const originalIcon = this.querySelector('i');
+      const originalClass = originalIcon.className;
+      originalIcon.className = 'bi bi-hourglass-split';
+      this.disabled = true;
+      
+      try {
+        const response = await fetch('/admin/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: textToTranslate,
+            targetLang: currentLang
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.translated) {
+          targetElement.value = result.translated;
+        } else {
+          alert('Çeviri başarısız oldu');
+        }
+      } catch (error) {
+        console.error('Translate error:', error);
+        alert('Çeviri sırasında hata oluştu');
+      } finally {
+        originalIcon.className = originalClass;
+        this.disabled = false;
+      }
+    });
+  });
 });
 </script>
 

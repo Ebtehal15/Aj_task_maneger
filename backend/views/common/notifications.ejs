@@ -80,7 +80,27 @@
             <% } %>
             <div>
               <div><%= translateNotification(n.message, t) %></div>
-              <div class="small text-muted"><%= n.created_at ? (typeof n.created_at === 'string' ? n.created_at.slice(0,19).replace('T',' ') : new Date(n.created_at).toISOString().slice(0,19).replace('T',' ')) : '-' %></div>
+              <% 
+                const formatDateForTurkey = (date) => {
+                  if (!date) return '-';
+                  try {
+                    const dateObj = typeof date === 'string' ? new Date(date) : date;
+                    const turkeyOffset = 3 * 60;
+                    const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+                    const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+                    const year = turkeyTime.getFullYear();
+                    const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+                    const day = String(turkeyTime.getDate()).padStart(2, '0');
+                    const hours = String(turkeyTime.getHours()).padStart(2, '0');
+                    const minutes = String(turkeyTime.getMinutes()).padStart(2, '0');
+                    const seconds = String(turkeyTime.getSeconds()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                  } catch (err) {
+                    return typeof date === 'string' ? date.slice(0, 19).replace('T', ' ') : date.toISOString().slice(0, 19).replace('T', ' ');
+                  }
+                };
+              %>
+              <div class="small text-muted"><%= formatDateForTurkey(n.created_at) %></div>
             </div>
           </div>
         </div>

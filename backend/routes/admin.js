@@ -7,6 +7,7 @@ const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
 const { sendTaskAssignedEmail } = require('../services/email');
+const { translateText } = require('../services/translate');
 
 const router = express.Router();
 const pool = getDb();
@@ -101,10 +102,16 @@ router.get('/dashboard', async (req, res) => {
     SELECT t.*, 
            u.username AS assigned_username, 
            c.username AS created_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
            COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+    LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ${whereSql}
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
   `;
@@ -115,10 +122,16 @@ router.get('/dashboard', async (req, res) => {
       SELECT t.*, 
              u.username AS assigned_username, 
              c.username AS created_username,
+             u2.username AS sorumlu_2_username,
+             u3.username AS sorumlu_3_username,
+             ks.username AS konu_sorumlusu_username,
              COALESCE(t.acil, false)::boolean AS acil
       FROM tasks t
       JOIN users u ON t.assigned_to = u.id
       JOIN users c ON t.created_by = c.id
+      LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+      LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+      LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
       ORDER BY t.deadline NULLS FIRST, t.deadline ASC
     `);
     const allTasks = allTasksResult.rows;
@@ -171,12 +184,64 @@ router.get('/dashboard', async (req, res) => {
       stats: stats
     });
   } catch (err) {
+    console.error('❌ Dashboard error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      hint: err.hint
+    });
+    console.error('Error stack:', err.stack);
+    // Render error page instead of just sending status
+    res.status(500).send(`
+      <h1>Internal Server Error</h1>
+      <p>Error: ${err.message}</p>
+      <p><a href="/admin/dashboard">Try again</a></p>
+    `);
+  }
+});
+
+// Tasks page - shows all tasks (similar to dashboard but dedicated page)
+// Admin's My Tasks page - tasks where admin is involved
+router.get('/my-tasks', async (req, res) => {
+  const adminId = req.user.id;
+  
+  try {
+    // Get tasks where admin is assigned_to, sorumlu_2, sorumlu_3, or konu_sorumlusu
+    const tasksResult = await pool.query(`
+      SELECT DISTINCT t.*, 
+             u.username AS assigned_username, 
+             c.username AS created_username,
+             u2.username AS sorumlu_2_username,
+             u3.username AS sorumlu_3_username,
+             ks.username AS konu_sorumlusu_username,
+             COALESCE(t.acil, false)::boolean AS acil
+      FROM tasks t
+      JOIN users u ON t.assigned_to = u.id
+      JOIN users c ON t.created_by = c.id
+      LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+      LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+      LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+      WHERE t.assigned_to = $1 
+         OR t.sorumlu_2 = $1 
+         OR t.sorumlu_3 = $1 
+         OR t.konu_sorumlusu::text = $1::text
+      ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    `, [adminId]);
+    
+    const tasks = tasksResult.rows;
+    
+    res.render('admin/my-tasks', {
+      pageTitle: 'My Tasks',
+      tasks,
+      currentUser: req.user
+    });
+  } catch (err) {
     console.error(err);
     res.sendStatus(500);
   }
 });
 
-// Tasks page - shows all tasks (similar to dashboard but dedicated page)
 router.get('/tasks', async (req, res) => {
   console.log(`📋 Admin tasks page accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
 
@@ -184,10 +249,16 @@ router.get('/tasks', async (req, res) => {
     SELECT t.*, 
            u.username AS assigned_username, 
            c.username AS created_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
            COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+    LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
   `;
 
@@ -213,7 +284,13 @@ router.get('/reports', async (req, res) => {
   let paramIndex = 1;
 
   if (userId) {
-    where.push(`t.assigned_to = $${paramIndex}`);
+    // Kullanıcı assigned_to, sorumlu_2, sorumlu_3 veya konu_sorumlusu alanlarında yer alıyorsa göster
+    where.push(`(
+      t.assigned_to = $${paramIndex} 
+      OR t.sorumlu_2 = $${paramIndex} 
+      OR t.sorumlu_3 = $${paramIndex} 
+      OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex}::text)
+    )`);
     params.push(userId);
     paramIndex++;
   }
@@ -239,16 +316,22 @@ router.get('/reports', async (req, res) => {
     SELECT t.*, 
            u.username AS assigned_username, 
            c.username AS created_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
            COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users u ON t.assigned_to = u.id
     JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+    LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ${whereSql}
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
   `;
 
   try {
-    const usersResult = await pool.query('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['user']);
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
     const tasksResult = await pool.query(sql, params);
     
     res.render('admin/reports', {
@@ -342,7 +425,7 @@ router.get('/reports/export', async (req, res) => {
     JOIN users u ON t.assigned_to = u.id
     LEFT JOIN users u2 ON t.sorumlu_2::text = u2.id::text
     LEFT JOIN users u3 ON t.sorumlu_3::text = u3.id::text
-    LEFT JOIN users ks ON t.konu_sorumlusu::text = ks.id::text
+      LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     JOIN users c ON t.created_by = c.id
     ${whereSql}
     ORDER BY t.deadline NULLS FIRST, t.deadline ASC
@@ -480,6 +563,96 @@ router.get('/users', async (req, res) => {
 });
 
 // Quick add user (AJAX endpoint)
+// Quick add municipality
+router.post('/municipalities/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'Belediye adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO municipalities (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // Municipality already exists
+      const existingResult = await pool.query('SELECT id, name FROM municipalities WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'Belediye eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding municipality:', err);
+    res.status(500).json({ success: false, error: 'Belediye eklenirken hata oluştu' });
+  }
+});
+
+// Quick add region
+router.post('/regions/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'Bölge adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO regions (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // Region already exists
+      const existingResult = await pool.query('SELECT id, name FROM regions WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'Bölge eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding region:', err);
+    res.status(500).json({ success: false, error: 'Bölge eklenirken hata oluştu' });
+  }
+});
+
+// Quick add city
+router.post('/cities/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'İl adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO cities (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // City already exists
+      const existingResult = await pool.query('SELECT id, name FROM cities WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'İl eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding city:', err);
+    res.status(500).json({ success: false, error: 'İl eklenirken hata oluştu' });
+  }
+});
+
 router.post('/users/quick-add', async (req, res) => {
   const { username, email, password, role } = req.body;
   if (!username || !password || !role) {
@@ -619,7 +792,33 @@ router.post('/users/:id/delete', async (req, res) => {
 // Create task form
 router.get('/tasks/new', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['user']);
+    // Get all users (both admin and user roles) for task assignment
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    // Get all municipalities
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    // Get all regions
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
+    // Get all cities
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
+    
+    res.render('admin/task-form', {
+      pageTitle: 'Create Task',
+      users: usersResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      cities: citiesResult.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// Old create task form route (keeping for backward compatibility)
+router.get('/tasks/new-old', async (req, res) => {
+  try {
+    // Get all users (both admin and user roles) for task assignment
+    const result = await pool.query('SELECT id, username FROM users ORDER BY username');
     res.render('admin/task-form', {
       pageTitle: req.t('createTask'),
       users: result.rows
@@ -693,11 +892,14 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
       );
     }
 
-      // Notification for assigned user
+      // Notification for assigned user (sorumlu 1)
       const actor = req.user && req.user.username ? req.user.username : 'Admin';
-    await addNotification(
+      const notificationMessage = `Yeni görev atandı (by ${actor}): ${title}`;
+      
+      // Notify assigned_to (sorumlu 1)
+      await addNotification(
         Number(assigned_to),
-        `Yeni görev atandı (by ${actor}): ${title}`,
+        notificationMessage,
         'task_assigned',
         taskId
       );
@@ -706,7 +908,52 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
       const userResult = await client.query('SELECT email FROM users WHERE id = $1', [assigned_to]);
       if (userResult.rows.length > 0 && userResult.rows[0].email) {
         sendTaskAssignedEmail(userResult.rows[0].email, title, deadline || null, taskId);
+      }
+
+      // Notify sorumlu_2 if exists
+      if (sorumlu_2 && sorumlu_2 !== '') {
+        await addNotification(
+          Number(sorumlu_2),
+          notificationMessage,
+          'task_assigned',
+          taskId
+        );
+        const user2Result = await client.query('SELECT email FROM users WHERE id = $1', [sorumlu_2]);
+        if (user2Result.rows.length > 0 && user2Result.rows[0].email) {
+          sendTaskAssignedEmail(user2Result.rows[0].email, title, deadline || null, taskId);
         }
+      }
+
+      // Notify sorumlu_3 if exists
+      if (sorumlu_3 && sorumlu_3 !== '') {
+        await addNotification(
+          Number(sorumlu_3),
+          notificationMessage,
+          'task_assigned',
+          taskId
+        );
+        const user3Result = await client.query('SELECT email FROM users WHERE id = $1', [sorumlu_3]);
+        if (user3Result.rows.length > 0 && user3Result.rows[0].email) {
+          sendTaskAssignedEmail(user3Result.rows[0].email, title, deadline || null, taskId);
+        }
+      }
+
+      // Notify konu_sorumlusu if exists (konu_sorumlusu is stored as VARCHAR, might be user id as string)
+      if (konu_sorumlusu && konu_sorumlusu !== '') {
+        const konuSorumlusuId = parseInt(konu_sorumlusu);
+        if (!isNaN(konuSorumlusuId)) {
+          await addNotification(
+            konuSorumlusuId,
+            notificationMessage,
+            'task_assigned',
+            taskId
+          );
+          const ksResult = await client.query('SELECT email FROM users WHERE id = $1', [konuSorumlusuId]);
+          if (ksResult.rows.length > 0 && ksResult.rows[0].email) {
+            sendTaskAssignedEmail(ksResult.rows[0].email, title, deadline || null, taskId);
+          }
+        }
+      }
 
     await client.query('COMMIT');
       res.redirect('/admin/dashboard');
@@ -774,11 +1021,21 @@ router.get('/tasks/:id/edit', async (req, res) => {
         return res.sendStatus(404);
       }
 
-    const usersResult = await pool.query('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['user']);
+    // Get all users (both admin and user roles) for task assignment
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    // Get all municipalities
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    // Get all regions
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
+    // Get all cities
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
     
         res.render('admin/task-form', {
           pageTitle: 'Edit Task',
       users: usersResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      cities: citiesResult.rows,
       task: taskResult.rows[0]
         });
   } catch (err) {
@@ -809,8 +1066,15 @@ router.post('/tasks/:id', async (req, res) => {
     status
   } = req.body;
 
+  const client = await pool.connect();
   try {
-    await pool.query(
+    await client.query('BEGIN');
+
+    // Get old task data to compare
+    const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title FROM tasks WHERE id = $1', [taskId]);
+    const oldTask = oldTaskResult.rows[0];
+
+    await client.query(
       `UPDATE tasks SET 
         title = $1, 
         description = $2, 
@@ -849,14 +1113,163 @@ router.post('/tasks/:id', async (req, res) => {
         taskId
       ]
     );
+
+    // Insert files if any
+    const files = req.files || [];
+    if (files.length) {
+      for (const file of files) {
+        await client.query(
+          'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)',
+          [taskId, req.user.id, file.filename, file.originalname, file.mimetype]
+        );
+      }
+    }
+
+    // Notify all involved users about task update
+    const actor = req.user && req.user.username ? req.user.username : 'Admin';
+    const updateMessage = `Görev güncellendi (by ${actor}): ${title}`;
+    
+    // Collect all user IDs to notify
+    const userIdsToNotify = new Set();
+    
+    // Add assigned_to
+    if (assigned_to) userIdsToNotify.add(Number(assigned_to));
+    
+    // Add sorumlu_2
+    if (sorumlu_2 && sorumlu_2 !== '') userIdsToNotify.add(Number(sorumlu_2));
+    
+    // Add sorumlu_3
+    if (sorumlu_3 && sorumlu_3 !== '') userIdsToNotify.add(Number(sorumlu_3));
+    
+    // Add konu_sorumlusu
+    if (konu_sorumlusu && konu_sorumlusu !== '') {
+      const konuSorumlusuId = parseInt(konu_sorumlusu);
+      if (!isNaN(konuSorumlusuId)) userIdsToNotify.add(konuSorumlusuId);
+    }
+
+    // Also notify old assigned users if they changed
+    if (oldTask) {
+      if (oldTask.assigned_to) userIdsToNotify.add(Number(oldTask.assigned_to));
+      if (oldTask.sorumlu_2) userIdsToNotify.add(Number(oldTask.sorumlu_2));
+      if (oldTask.sorumlu_3) userIdsToNotify.add(Number(oldTask.sorumlu_3));
+      if (oldTask.konu_sorumlusu) {
+        const oldKonuSorumlusuId = parseInt(oldTask.konu_sorumlusu);
+        if (!isNaN(oldKonuSorumlusuId)) userIdsToNotify.add(oldKonuSorumlusuId);
+      }
+    }
+
+    // Send notifications to all involved users
+    for (const userId of userIdsToNotify) {
+      if (userId && userId !== req.user.id) { // Don't notify the updater
+        await addNotification(userId, updateMessage, 'task_updated', taskId);
+      }
+    }
+
+    await client.query('COMMIT');
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
-        console.error(err);
+    await client.query('ROLLBACK');
+    console.error(err);
     res.sendStatus(500);
-    }
+  } finally {
+    client.release();
+  }
 });
 
-// Update task status (admin)
+// Update task with note and files (admin)
+router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res) => {
+  const taskId = req.params.id;
+  const { status, note } = req.body;
+  const allowed = ['pending', 'in_progress', 'done'];
+  if (!allowed.includes(status)) {
+    return res.redirect(`/admin/tasks/${taskId}`);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Update task status
+    await client.query(
+      'UPDATE tasks SET status = $1 WHERE id = $2',
+      [status, taskId]
+    );
+
+    // Save update history
+    const updateResult = await client.query(
+      'INSERT INTO task_updates (task_id, user_id, status, note, created_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING id',
+      [taskId, req.user.id, status, note || null]
+    );
+
+    const updateId = updateResult.rows[0]?.id;
+
+    // Insert files if any
+    const files = req.files || [];
+    if (files.length) {
+      for (const file of files) {
+        await client.query(
+          'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at, update_id) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)',
+          [taskId, req.user.id, file.filename, file.originalname, file.mimetype, updateId || null]
+        );
+      }
+    }
+
+    // Build notification message
+    const statusText =
+      status === 'done'
+        ? 'Tamamlandı'
+        : status === 'in_progress'
+        ? 'Devam ediyor'
+        : 'Beklemede';
+    const actor = req.user && req.user.username ? req.user.username : 'Admin';
+    const baseMessage = `Admin (${actor}) görev durumunu güncelledi (ID: ${taskId}) - Durum: ${statusText}`;
+    let fullMessage =
+      note && note.trim().length ? `${baseMessage} - Not: ${note.trim()}` : baseMessage;
+
+    if (files.length) {
+      fullMessage += ` - Ek: ${files.length} dosya yüklendi`;
+    }
+
+    // Get task details to notify all involved users
+    const taskResult = await client.query(`
+      SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu 
+      FROM tasks 
+      WHERE id = $1
+    `, [taskId]);
+    
+    const task = taskResult.rows[0];
+    const userIdsToNotify = new Set();
+    
+    // Add all involved users
+    if (task) {
+      if (task.assigned_to) userIdsToNotify.add(Number(task.assigned_to));
+      if (task.sorumlu_2) userIdsToNotify.add(Number(task.sorumlu_2));
+      if (task.sorumlu_3) userIdsToNotify.add(Number(task.sorumlu_3));
+      if (task.konu_sorumlusu) {
+        const konuSorumlusuId = parseInt(task.konu_sorumlusu);
+        if (!isNaN(konuSorumlusuId)) userIdsToNotify.add(konuSorumlusuId);
+      }
+    }
+
+    // Notify all involved users (except the updater)
+    for (const userId of userIdsToNotify) {
+      if (userId && userId !== req.user.id) {
+        await addNotification(userId, fullMessage, 'task_update', taskId);
+      }
+    }
+
+    await client.query('COMMIT');
+    res.redirect(`/admin/tasks/${taskId}`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error updating task', err);
+    res.sendStatus(500);
+  } finally {
+    client.release();
+  }
+});
+
+// Update task status (admin) - simple status change only
 router.post('/tasks/:id/status', async (req, res) => {
   const taskId = req.params.id;
   const { status } = req.body;
@@ -904,6 +1317,23 @@ router.post('/tasks/:id/delete', async (req, res) => {
   } finally {
     client.release();
       }
+});
+
+// Translate endpoint
+router.post('/translate', async (req, res) => {
+  const { text, targetLang } = req.body;
+  
+  if (!text) {
+    return res.json({ success: false, error: 'Text is required' });
+  }
+
+  try {
+    const translated = await translateText(text, targetLang || 'en');
+    res.json({ success: true, translated });
+  } catch (err) {
+    console.error('Translate error:', err);
+    res.json({ success: false, error: 'Translation failed', translated: text });
+  }
 });
 
 module.exports = router;

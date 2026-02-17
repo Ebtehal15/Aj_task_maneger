@@ -43,7 +43,8 @@ function initDb() {
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
-      client_encoding: 'UTF8'
+      client_encoding: 'UTF8',
+      options: '-c timezone=Europe/Istanbul'
     };
   } else {
     // Ayrı environment variables kullanılıyor
@@ -59,7 +60,8 @@ function initDb() {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
       // Ensure UTF-8 encoding for Arabic/English text support
-      client_encoding: 'UTF8'
+      client_encoding: 'UTF8',
+      options: '-c timezone=Europe/Istanbul'
     };
     console.log('📝 Connecting to:', {
       host: config.host,
@@ -77,6 +79,11 @@ function initDb() {
     console.error('❌ Unexpected error on idle client', err);
   });
 
+  // PostgreSQL timezone ayarını yap
+  pool.query('SET timezone = \'Europe/Istanbul\'').catch((err) => {
+    console.error('⚠️  Timezone ayarı hatası (non-fatal):', err.message);
+  });
+
   // Initialize database schema (async, but don't block)
   initSchema().catch((err) => {
     console.error('❌ Failed to initialize database schema:', err);
@@ -91,6 +98,8 @@ async function initSchema() {
   try {
     // Ensure UTF-8 encoding for the session
     await client.query("SET client_encoding TO 'UTF8'");
+    // Set timezone to Turkey (Europe/Istanbul)
+    await client.query("SET timezone = 'Europe/Istanbul'");
     await client.query('BEGIN');
 
     // Create session table for connect-pg-simple (if not exists)
@@ -237,6 +246,33 @@ async function initSchema() {
           ALTER TABLE tasks ADD COLUMN acil BOOLEAN DEFAULT false;
         END IF;
       END $$;
+    `);
+
+    // Create municipalities table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS municipalities (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create regions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS regions (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create cities table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cities (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
     `);
 
     // Create task_files table
