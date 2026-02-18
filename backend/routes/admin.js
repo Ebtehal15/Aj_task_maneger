@@ -1171,13 +1171,26 @@ router.post('/tasks/:id', async (req, res) => {
     await client.query('BEGIN');
 
     // Get old task data to compare
-    const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title FROM tasks WHERE id = $1', [taskId]);
+    const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title, description, deadline, tarih, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil, status FROM tasks WHERE id = $1', [taskId]);
     const oldTask = oldTaskResult.rows[0];
 
     const finalStatus = status || 'pending';
     // Set completed_at when status is 'done', clear it otherwise
     const completedAtParam = finalStatus === 'done' ? 'CURRENT_TIMESTAMP' : null;
     
+    // Fall back to existing values if some fields are missing from the form
+    const updatedTitle = title && title.trim() ? title : (oldTask ? oldTask.title : null);
+    const updatedDescription = typeof description !== 'undefined' ? description : (oldTask ? oldTask.description : null);
+    const updatedDeadline = typeof deadline !== 'undefined' && deadline !== '' ? deadline : (oldTask ? oldTask.deadline : null);
+    const updatedTarih = typeof tarih !== 'undefined' && tarih !== '' ? tarih : (oldTask ? oldTask.tarih : null);
+    const updatedBolge = typeof bolge !== 'undefined' ? bolge : (oldTask ? oldTask.bolge : null);
+    const updatedIl = typeof il !== 'undefined' ? il : (oldTask ? oldTask.il : null);
+    const updatedBelediye = typeof belediye !== 'undefined' ? belediye : (oldTask ? oldTask.belediye : null);
+    const updatedDepartman = typeof departman !== 'undefined' ? departman : (oldTask ? oldTask.departman : null);
+    const updatedArsiv = typeof arsiv !== 'undefined' ? arsiv : (oldTask ? oldTask.arsiv : 'YOK');
+    const updatedVerilenIsTarihi = typeof verilen_is_tarihi !== 'undefined' && verilen_is_tarihi !== '' ? verilen_is_tarihi : (oldTask ? oldTask.verilen_is_tarihi : null);
+    const updatedAcil = typeof acil !== 'undefined' ? (acil === 'true' || acil === true) : (oldTask ? oldTask.acil : false);
+
     if (finalStatus === 'done') {
       await client.query(
         `UPDATE tasks SET 
@@ -1200,21 +1213,21 @@ router.post('/tasks/:id', async (req, res) => {
           completed_at = CURRENT_TIMESTAMP
         WHERE id = $17`,
         [
-          title, 
-          description, 
-          deadline || null, 
+          updatedTitle, 
+          updatedDescription, 
+          updatedDeadline || null, 
           assigned_to,
-          tarih || null,
+          updatedTarih || null,
           konu_sorumlusu || null,
           sorumlu_2 || null,
           sorumlu_3 || null,
-          bolge || null,
-          il || null,
-          belediye || null,
-          departman || null,
-          arsiv || 'YOK',
-          verilen_is_tarihi || null,
-          acil === 'true' || acil === true,
+          updatedBolge || null,
+          updatedIl || null,
+          updatedBelediye || null,
+          updatedDepartman || null,
+          updatedArsiv || 'YOK',
+          updatedVerilenIsTarihi || null,
+          updatedAcil,
           finalStatus,
           taskId
         ]
@@ -1241,21 +1254,21 @@ router.post('/tasks/:id', async (req, res) => {
           completed_at = NULL
         WHERE id = $17`,
         [
-          title, 
-          description, 
-          deadline || null, 
+          updatedTitle, 
+          updatedDescription, 
+          updatedDeadline || null, 
           assigned_to,
-          tarih || null,
+          updatedTarih || null,
           konu_sorumlusu || null,
           sorumlu_2 || null,
           sorumlu_3 || null,
-          bolge || null,
-          il || null,
-          belediye || null,
-          departman || null,
-          arsiv || 'YOK',
-          verilen_is_tarihi || null,
-          acil === 'true' || acil === true,
+          updatedBolge || null,
+          updatedIl || null,
+          updatedBelediye || null,
+          updatedDepartman || null,
+          updatedArsiv || 'YOK',
+          updatedVerilenIsTarihi || null,
+          updatedAcil,
           finalStatus,
           taskId
         ]

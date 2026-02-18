@@ -14,7 +14,7 @@
     <form
       method="post"
       action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
-      enctype="multipart/form-data"
+      <%= (typeof task === 'undefined' || !task) ? 'enctype="multipart/form-data"' : '' %>
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">
@@ -256,7 +256,8 @@
         <% } %>
       </div>
 
-      <!-- Dosya Yükleme -->
+      <% if (typeof task === 'undefined' || !task) { %>
+      <!-- Dosya Yükleme (sadece yeni görev oluştururken) -->
       <div class="mb-3">
         <label class="form-label">
           <i class="bi bi-paperclip me-1"></i><%= t('uploadFiles') %>
@@ -273,6 +274,7 @@
           <i class="bi bi-info-circle me-1"></i>PDF, Excel, JPG, PNG dosyaları yükleyebilirsiniz. Birden fazla dosya seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak dosyaları seçin. (Max 20 dosya)
         </div>
       </div>
+      <% } %>
       <button class="btn btn-primary"><%= t('save') %></button>
     </form>
   </div>
