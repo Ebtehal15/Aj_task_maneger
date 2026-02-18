@@ -1,3 +1,7 @@
+// Set timezone to Turkey (Europe/Istanbul) for the entire Node.js process
+// This ensures all Date operations use Turkey timezone
+process.env.TZ = 'Europe/Istanbul';
+
 const path = require('path');
 const express = require('express');
 const session = require('express-session');

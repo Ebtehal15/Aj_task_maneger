@@ -64,12 +64,14 @@ router.get('/tasks', async (req, res) => {
     SELECT t.*, 
            c.username AS created_username, 
            u.username AS assigned_username,
+           ks.username AS konu_sorumlusu_username,
            COALESCE(t.acil, false)::boolean AS acil
     FROM tasks t
     JOIN users c ON t.created_by = c.id
     LEFT JOIN users u ON t.assigned_to = u.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ${whereSql}
-    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    ORDER BY t.created_at DESC
   `;
 
   try {

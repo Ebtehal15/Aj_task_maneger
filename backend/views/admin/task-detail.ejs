@@ -32,7 +32,7 @@
         </p>
         <p id="description-display"><%= task.description || '-' %></p>
 
-        <p class="mb-1"><strong><%= t('assignedTo') %>:</strong> <%= task.assigned_username %></p>
+        <p class="mb-1"><strong><%= t('konuSorumlusu') %>:</strong> <%= task.konu_sorumlusu_username || task.assigned_username || '-' %></p>
         <p class="mb-1">
           <strong><%= t('status') %>:</strong>
           <span class="badge status-<%= task.status %>">

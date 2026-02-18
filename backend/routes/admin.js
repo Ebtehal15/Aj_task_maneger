@@ -115,7 +115,7 @@ router.get('/dashboard', async (req, res) => {
     LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
     LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ${whereSql}
-    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    ORDER BY t.created_at DESC
   `;
 
   try {
@@ -134,7 +134,7 @@ router.get('/dashboard', async (req, res) => {
       LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
       LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
       LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
-      ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+      ORDER BY t.created_at DESC
     `);
     const allTasks = allTasksResult.rows;
     
@@ -153,12 +153,22 @@ router.get('/dashboard', async (req, res) => {
       return acil === true || acil === 'true' || acil === 't' || acil === 1 || acil === '1';
     }).length;
     
-    // Find most assigned user
+    // Find most assigned user - count tasks where user is involved in any role
+    // (assigned_to, sorumlu_2, sorumlu_3, or konu_sorumlusu)
     const userTaskCounts = {};
     allTasks.forEach(task => {
-      if (task.assigned_username) {
-        userTaskCounts[task.assigned_username] = (userTaskCounts[task.assigned_username] || 0) + 1;
-      }
+      // Collect all usernames involved in this task (unique set)
+      const involvedUsers = new Set();
+      
+      if (task.assigned_username) involvedUsers.add(task.assigned_username);
+      if (task.sorumlu_2_username) involvedUsers.add(task.sorumlu_2_username);
+      if (task.sorumlu_3_username) involvedUsers.add(task.sorumlu_3_username);
+      if (task.konu_sorumlusu_username) involvedUsers.add(task.konu_sorumlusu_username);
+      
+      // Count this task for each involved user
+      involvedUsers.forEach(username => {
+        userTaskCounts[username] = (userTaskCounts[username] || 0) + 1;
+      });
     });
     
     const mostAssignedUser = Object.keys(userTaskCounts).length > 0
@@ -228,7 +238,7 @@ router.get('/my-tasks', async (req, res) => {
          OR t.sorumlu_2 = $1 
          OR t.sorumlu_3 = $1 
          OR t.konu_sorumlusu::text = $1::text
-      ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+      ORDER BY t.created_at DESC
     `, [adminId]);
     
     const tasks = tasksResult.rows;
@@ -261,7 +271,7 @@ router.get('/tasks', async (req, res) => {
     LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
     LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
     LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
-    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    ORDER BY t.created_at DESC
   `;
 
   try {
@@ -375,7 +385,7 @@ router.get('/reports', async (req, res) => {
     LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
     LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     ${whereSql}
-    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    ORDER BY t.created_at DESC
   `;
 
   try {
@@ -497,7 +507,7 @@ router.get('/reports/export', async (req, res) => {
       LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     JOIN users c ON t.created_by = c.id
     ${whereSql}
-    ORDER BY t.deadline NULLS FIRST, t.deadline ASC
+    ORDER BY t.created_at DESC
   `;
 
   try {
@@ -1072,11 +1082,15 @@ router.get('/tasks/:id', async (req, res) => {
 
   try {
     const taskResult = await pool.query(
-    `SELECT t.*, u.username AS assigned_username, c.username AS created_username
+    `SELECT t.*, 
+            u.username AS assigned_username, 
+            c.username AS created_username,
+            ks.username AS konu_sorumlusu_username
      FROM tasks t
      JOIN users u ON t.assigned_to = u.id
      JOIN users c ON t.created_by = c.id
-       WHERE t.id = $1`,
+     LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+     WHERE t.id = $1`,
       [taskId]
     );
 
