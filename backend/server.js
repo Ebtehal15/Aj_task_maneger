@@ -18,6 +18,7 @@ const { attachNotificationCount } = require('./services/notifications');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
+const creatorRoutes = require('./routes/creator');
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
@@ -165,8 +166,9 @@ app.use('/', authRoutes);
 
 // Protected routes (authentication required)
 app.use('/notifications', ensureAuthenticated, notificationRoutes);
-app.use('/admin', ensureAuthenticated, ensureRole('admin'), adminRoutes);
+app.use('/admin', ensureAuthenticated, ensureRole('super_admin'), adminRoutes);
 app.use('/user', ensureAuthenticated, ensureRole('user'), userRoutes);
+app.use('/creator', ensureAuthenticated, ensureRole('admin'), creatorRoutes);
 
 // 404 handler (must be last, after all routes)
 app.use((req, res) => {

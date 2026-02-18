@@ -137,12 +137,12 @@
           <ul class="tm-sidebar-menu">
             <% if (currentUser) { %>
             <li class="tm-sidebar-item">
-              <a href="<%= currentUser.role === 'admin' ? '/admin/dashboard' : '/user/tasks' %>" class="tm-sidebar-link">
+              <a href="<%= currentUser.role === 'super_admin' ? '/admin/dashboard' : (currentUser.role === 'admin' ? '/creator/tasks' : '/user/tasks') %>" class="tm-sidebar-link">
                 <i class="bi bi-speedometer2"></i>
                 <span><%= t('dashboard') %></span>
               </a>
             </li>
-            <% if (currentUser.role === 'admin') { %>
+            <% if (currentUser.role === 'super_admin') { %>
             <li class="tm-sidebar-item">
               <a href="/admin/tasks" class="tm-sidebar-link">
                 <i class="bi bi-list-task"></i>

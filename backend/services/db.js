@@ -131,9 +131,40 @@ async function initSchema() {
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        role VARCHAR(50) NOT NULL CHECK(role IN ('admin','user')),
+        role VARCHAR(50) NOT NULL CHECK(role IN ('super_admin','user','admin')),
         email VARCHAR(255)
       )
+    `);
+    
+    // Migrate existing user roles BEFORE updating constraint
+    // First, update 'admin' -> 'super_admin' (if constraint allows both temporarily)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        -- Migrate roles: 'admin' -> 'super_admin', 'creator' -> 'admin'
+        UPDATE users SET role = 'super_admin' WHERE role = 'admin';
+        UPDATE users SET role = 'admin' WHERE role = 'creator';
+      EXCEPTION
+        WHEN OTHERS THEN NULL;
+      END $$;
+    `);
+    
+    // Update existing CHECK constraint to include new roles if it exists
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        -- Drop old constraint if exists and create new one with updated roles
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'users_role_check' 
+          AND contype = 'c'
+        ) THEN
+          ALTER TABLE users DROP CONSTRAINT users_role_check;
+        END IF;
+        ALTER TABLE users ADD CONSTRAINT users_role_check CHECK(role IN ('super_admin','user','admin'));
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
 
     // Add email column if it doesn't exist (for existing databases)
@@ -340,12 +371,12 @@ async function initSchema() {
 
     // Seed default admin if not exists (outside transaction for safety)
     try {
-      const adminCheck = await client.query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['admin']);
+      const adminCheck = await client.query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['super_admin']);
       if (parseInt(adminCheck.rows[0].count) === 0) {
         const passwordHash = bcrypt.hashSync('admin123', 10);
         await client.query(
           'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-          ['admin', passwordHash, 'admin']
+          ['admin', passwordHash, 'super_admin']
         );
         console.log('✅ Default admin created: username=admin, password=admin123');
       } else {

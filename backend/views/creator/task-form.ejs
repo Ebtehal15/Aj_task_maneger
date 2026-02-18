@@ -6,14 +6,14 @@
     <%= t('createTask') %>
     <% } %>
   </h1>
-  <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+  <a href="/creator/tasks" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
 </div>
 
 <div class="card shadow-sm">
   <div class="card-body">
     <form
       method="post"
-      action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
+      action="<%= (typeof task !== 'undefined') ? '/creator/tasks/' + task.id : '/creator/tasks' %>"
       <%= (typeof task === 'undefined' || !task) ? 'enctype="multipart/form-data"' : '' %>
     >
       <!-- Tarih ve Konu Sorumlusu -->
@@ -306,7 +306,6 @@
             <label class="form-label"><%= t('role') %></label>
             <select name="role" class="form-select" required>
               <option value="user"><%= t('role_user') %></option>
-              <option value="super_admin"><%= t('role_super_admin') %></option>
               <option value="admin"><%= t('role_admin') %></option>
             </select>
           </div>

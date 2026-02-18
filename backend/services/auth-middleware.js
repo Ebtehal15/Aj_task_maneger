@@ -44,8 +44,12 @@ function ensureRole(role) {
     if (!req.user) {
       return res.redirect('/login');
     }
-    // Eğer role 'user' ise ve kullanıcının role'ü 'user' veya undefined/null ise izin ver
-    if (role === 'user' && (!req.user.role || req.user.role === 'user')) {
+    // Eğer role 'user' ise ve kullanıcının role'ü 'user', 'admin' veya undefined/null ise izin ver
+    if (role === 'user' && (!req.user.role || req.user.role === 'user' || req.user.role === 'admin')) {
+      return next();
+    }
+    // Eğer role 'admin' ise ve kullanıcının role'ü 'admin' ise izin ver
+    if (role === 'admin' && req.user.role === 'admin') {
       return next();
     }
     // Diğer durumlarda role kontrolü yap

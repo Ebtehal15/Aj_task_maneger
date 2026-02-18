@@ -35,8 +35,8 @@ router.get('/tasks', async (req, res) => {
   const where = [];
   let paramIndex = 1;
 
-  // Admin ise tüm görevleri göster, değilse sadece kendisine atanan görevleri
-  if (req.user.role !== 'admin') {
+  // Super admin ise tüm görevleri göster, değilse sadece kendisine atanan görevleri
+  if (req.user.role !== 'super_admin') {
     where.push(`t.assigned_to = $${paramIndex}`);
     params.push(req.user.id);
     paramIndex++;
@@ -80,7 +80,7 @@ router.get('/tasks', async (req, res) => {
       pageTitle: req.t('userTasks'),
       tasks: result.rows,
       filters: { status, from, to },
-      isAdmin: req.user.role === 'admin'
+      isAdmin: req.user.role === 'super_admin'
     });
   } catch (err) {
     console.error(err);
@@ -95,7 +95,7 @@ router.get('/tasks/:id', async (req, res) => {
   try {
     // Admin ise tüm görevleri görebilir, değilse tüm sorumlular görebilir (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
     let taskResult;
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'super_admin') {
       taskResult = await pool.query(
         `SELECT t.*, c.username AS created_username, u.username AS assigned_username
          FROM tasks t
@@ -242,7 +242,7 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
           }
 
           // Notify all admins
-          const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['admin']);
+          const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['super_admin']);
           for (const admin of adminsResult.rows) {
             userIdsToNotify.add(admin.id);
           }

@@ -61,6 +61,9 @@
               <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>
                 <%= t('role_user') %>
               </option>
+              <option value="super_admin" <%= user.role === 'super_admin' ? 'selected' : '' %>>
+                <%= t('role_super_admin') %>
+              </option>
               <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>
                 <%= t('role_admin') %>
               </option>

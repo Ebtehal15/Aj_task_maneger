@@ -13,9 +13,12 @@ router.get('/', (req, res) => {
     
     if (req.user) {
       // User is logged in, redirect to their dashboard
-      if (req.user.role === 'admin') {
+      if (req.user.role === 'super_admin') {
         console.log('  → Redirecting to /admin/dashboard');
         return res.redirect('/admin/dashboard');
+      } else if (req.user.role === 'admin') {
+        console.log('  → Redirecting to /creator/tasks');
+        return res.redirect('/creator/tasks');
       } else {
         console.log('  → Redirecting to /user/tasks');
         return res.redirect('/user/tasks');
@@ -41,8 +44,10 @@ router.get('/login', (req, res) => {
   if (req.user) {
       // User is already logged in, redirect to their dashboard
       console.log('  → User already logged in, redirecting to dashboard');
-      if (req.user.role === 'admin') {
+      if (req.user.role === 'super_admin') {
         return res.redirect('/admin/dashboard');
+      } else if (req.user.role === 'admin') {
+        return res.redirect('/creator/tasks');
       } else {
     return res.redirect('/user/tasks');
   }
@@ -153,9 +158,12 @@ router.post('/login', async (req, res) => {
         console.log(`  Response will include Set-Cookie header`);
 
         // Redirect based on user role
-        if (user.role === 'admin') {
-          console.log(`🔄 Redirecting admin to /admin/dashboard with sessionId: ${req.sessionID}`);
+        if (user.role === 'super_admin') {
+          console.log(`🔄 Redirecting super_admin to /admin/dashboard with sessionId: ${req.sessionID}`);
           return res.redirect('/admin/dashboard');
+        } else if (user.role === 'admin') {
+          console.log(`🔄 Redirecting admin to /creator/tasks with sessionId: ${req.sessionID}`);
+          return res.redirect('/creator/tasks');
         } else {
           console.log(`🔄 Redirecting user to /user/tasks with sessionId: ${req.sessionID}`);
           return res.redirect('/user/tasks');
@@ -180,8 +188,10 @@ router.post('/login', async (req, res) => {
 // Dedicated user login URL – only allows logging in as normal user
 router.get('/user-login', (req, res) => {
   if (req.user) {
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'super_admin') {
       return res.redirect('/admin/dashboard');
+    } else if (req.user.role === 'admin') {
+      return res.redirect('/creator/tasks');
     } else {
     return res.redirect('/user/tasks');
     }

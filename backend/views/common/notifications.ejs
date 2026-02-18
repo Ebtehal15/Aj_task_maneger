@@ -106,7 +106,7 @@
         </div>
         <% if (n.related_task_id) { %>
         <a
-          href="<%= (currentUser && currentUser.role === 'admin') ? '/admin/tasks/' + n.related_task_id : '/user/tasks/' + n.related_task_id %>"
+          href="<%= (currentUser && currentUser.role === 'super_admin') ? '/admin/tasks/' + n.related_task_id : '/user/tasks/' + n.related_task_id %>"
           class="btn btn-sm btn-outline-primary ms-2"
         >
           <%= t('viewTask') %>
