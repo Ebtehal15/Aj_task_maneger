@@ -190,6 +190,7 @@
             <th>ID</th>
             <th><%= t('taskTitle') %></th>
             <th><%= t('assignedTo') %></th>
+            <th><%= t('departman') %></th>
             <th><%= t('status') %></th>
             <th><%= t('deadline') %></th>
             <th><%= t('completedAt') %></th>
@@ -207,6 +208,7 @@
               <% } %>
             </td>
             <td><%= task.assigned_username %></td>
+            <td><%= task.departman || '-' %></td>
             <td>
               <span class="badge status-<%= task.status %>">
                 <%= t('status_' + task.status) %>
