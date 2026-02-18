@@ -1317,8 +1317,8 @@ html[dir='rtl'] .tm-navbar .navbar-brand.flex-row-reverse {
 
 /* Status pills */
 .status-pending {
-  background-color: #fbbf24;
-  color: #111827;
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
 .status-in_progress {
