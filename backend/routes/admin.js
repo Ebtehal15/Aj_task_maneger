@@ -297,6 +297,11 @@ router.get('/reports', async (req, res) => {
     city,
     municipality,
     region,
+    from_verilen,
+    to_verilen,
+    from_completed,
+    to_completed,
+    departman,
     filterTypes: filterTypesRaw,
     // Backward-compat: older UI used a single filterType
     filterType
@@ -320,6 +325,9 @@ router.get('/reports', async (req, res) => {
     if (municipality) filterTypes.push('municipality');
     if (region) filterTypes.push('region');
     if (from || to) filterTypes.push('date');
+    if (from_verilen || to_verilen) filterTypes.push('given_date');
+    if (from_completed || to_completed) filterTypes.push('completed_date');
+    if (departman) filterTypes.push('department');
   }
 
   const params = [];
@@ -367,6 +375,31 @@ router.get('/reports', async (req, res) => {
     params.push(to);
     paramIndex++;
   }
+  if (from_verilen) {
+    where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
+    params.push(from_verilen);
+    paramIndex++;
+  }
+  if (to_verilen) {
+    where.push(`DATE(t.verilen_is_tarihi) <= DATE($${paramIndex})`);
+    params.push(to_verilen);
+    paramIndex++;
+  }
+  if (from_completed) {
+    where.push(`DATE(t.completed_at) >= DATE($${paramIndex})`);
+    params.push(from_completed);
+    paramIndex++;
+  }
+  if (to_completed) {
+    where.push(`DATE(t.completed_at) <= DATE($${paramIndex})`);
+    params.push(to_completed);
+    paramIndex++;
+  }
+  if (departman) {
+    where.push(`t.departman = $${paramIndex}`);
+    params.push(departman);
+    paramIndex++;
+  }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
@@ -402,7 +435,7 @@ router.get('/reports', async (req, res) => {
       cities: citiesResult.rows,
       municipalities: municipalitiesResult.rows,
       regions: regionsResult.rows,
-      filters: { userId, status, from, to, city, municipality, region, filterTypes }
+      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, filterTypes }
     });
   } catch (err) {
     console.error(err);
@@ -447,7 +480,7 @@ router.post('/reports/upload-temp', async (req, res) => {
 
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, from, to, city, municipality, region } = req.query;
+  const { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman } = req.query;
 
   const params = [];
   const where = [];
@@ -487,6 +520,31 @@ router.get('/reports/export', async (req, res) => {
   if (to && to !== 'undefined' && to !== 'null') {
     where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
     params.push(to);
+    paramIndex++;
+  }
+  if (from_verilen && from_verilen !== 'undefined' && from_verilen !== 'null') {
+    where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
+    params.push(from_verilen);
+    paramIndex++;
+  }
+  if (to_verilen && to_verilen !== 'undefined' && to_verilen !== 'null') {
+    where.push(`DATE(t.verilen_is_tarihi) <= DATE($${paramIndex})`);
+    params.push(to_verilen);
+    paramIndex++;
+  }
+  if (from_completed && from_completed !== 'undefined' && from_completed !== 'null') {
+    where.push(`DATE(t.completed_at) >= DATE($${paramIndex})`);
+    params.push(from_completed);
+    paramIndex++;
+  }
+  if (to_completed && to_completed !== 'undefined' && to_completed !== 'null') {
+    where.push(`DATE(t.completed_at) <= DATE($${paramIndex})`);
+    params.push(to_completed);
+    paramIndex++;
+  }
+  if (departman && departman !== 'undefined' && departman !== 'null') {
+    where.push(`t.departman = $${paramIndex}`);
+    params.push(departman);
     paramIndex++;
   }
 
@@ -634,6 +692,19 @@ router.get('/reports/export', async (req, res) => {
       const fromPart = from && from !== 'undefined' && from !== 'null' ? from : 'any';
       const toPart = to && to !== 'undefined' && to !== 'null' ? to : 'any';
       nameParts.push(`tarih_${fromPart}_${toPart}`);
+    }
+    if ((from_verilen && from_verilen !== 'undefined' && from_verilen !== 'null') || (to_verilen && to_verilen !== 'undefined' && to_verilen !== 'null')) {
+      const fromPart = from_verilen && from_verilen !== 'undefined' && from_verilen !== 'null' ? from_verilen : 'any';
+      const toPart = to_verilen && to_verilen !== 'undefined' && to_verilen !== 'null' ? to_verilen : 'any';
+      nameParts.push(`verilen_${fromPart}_${toPart}`);
+    }
+    if ((from_completed && from_completed !== 'undefined' && from_completed !== 'null') || (to_completed && to_completed !== 'undefined' && to_completed !== 'null')) {
+      const fromPart = from_completed && from_completed !== 'undefined' && from_completed !== 'null' ? from_completed : 'any';
+      const toPart = to_completed && to_completed !== 'undefined' && to_completed !== 'null' ? to_completed : 'any';
+      nameParts.push(`bitis_${fromPart}_${toPart}`);
+    }
+    if (departman && departman !== 'undefined' && departman !== 'null') {
+      nameParts.push(`departman_${departman}`);
     }
     nameParts.push(datePart);
 

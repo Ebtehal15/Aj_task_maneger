@@ -95,6 +95,24 @@
                 <label class="form-check-label" for="ft-date"><%= t('date') %></label>
               </div>
             </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="given_date" id="ft-given-date" <%= selectedFilterTypes.includes('given_date') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-given-date"><%= t('filterByGivenDate') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="completed_date" id="ft-completed-date" <%= selectedFilterTypes.includes('completed_date') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-completed-date"><%= t('filterByCompletedDate') %></label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="department" id="ft-department" <%= selectedFilterTypes.includes('department') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-department"><%= t('filterByDepartment') %></label>
+              </div>
+            </div>
           </div>
           <div class="text-muted small mt-2">
             <span><%= t('optional') %></span>
@@ -191,6 +209,48 @@
           <input type="date" name="to" value="<%= filters.to || '' %>" class="form-control filter-input" />
         </div>
       </div>
+    </div>
+    
+    <!-- Given Date Filter -->
+    <div class="col-md-6 filter-option" id="filter-given-date" data-filter-type="given_date" style="display: <%= selectedFilterTypes.includes('given_date') ? 'block' : 'none' %>;">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByGivenDate') %> (from)</label>
+          <input type="date" name="from_verilen" value="<%= filters.from_verilen || '' %>" class="form-control filter-input" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByGivenDate') %> (to)</label>
+          <input type="date" name="to_verilen" value="<%= filters.to_verilen || '' %>" class="form-control filter-input" />
+        </div>
+      </div>
+    </div>
+    
+    <!-- Completed Date Filter -->
+    <div class="col-md-6 filter-option" id="filter-completed-date" data-filter-type="completed_date" style="display: <%= selectedFilterTypes.includes('completed_date') ? 'block' : 'none' %>;">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByCompletedDate') %> (from)</label>
+          <input type="date" name="from_completed" value="<%= filters.from_completed || '' %>" class="form-control filter-input" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><%= t('filterByCompletedDate') %> (to)</label>
+          <input type="date" name="to_completed" value="<%= filters.to_completed || '' %>" class="form-control filter-input" />
+        </div>
+      </div>
+    </div>
+    
+    <!-- Department Filter -->
+    <div class="col-md-3 filter-option" id="filter-department" data-filter-type="department" style="display: <%= selectedFilterTypes.includes('department') ? 'block' : 'none' %>;">
+      <label class="form-label"><%= t('filterByDepartment') %></label>
+      <select name="departman" class="form-select filter-input">
+        <option value="">--</option>
+        <option value="SAHA" <%= filters.departman === 'SAHA' ? 'selected' : '' %>><%= t('departmanSaha') %></option>
+        <option value="BELEDİYE" <%= filters.departman === 'BELEDİYE' ? 'selected' : '' %>><%= t('departmanBelediye') %></option>
+        <option value="HUKUK" <%= filters.departman === 'HUKUK' ? 'selected' : '' %>><%= t('departmanHukuk') %></option>
+        <option value="LİSANS" <%= filters.departman === 'LİSANS' ? 'selected' : '' %>><%= t('departmanLisans') %></option>
+        <option value="GENEL" <%= filters.departman === 'GENEL' ? 'selected' : '' %>><%= t('departmanGenel') %></option>
+        <option value="İNSAN KAYNAKLARI" <%= filters.departman === 'İNSAN KAYNAKLARI' ? 'selected' : '' %>><%= t('departmanInsanKaynaklari') %></option>
+      </select>
     </div>
     
     <div class="col-md-3 d-flex align-items-end">
