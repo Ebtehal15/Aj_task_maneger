@@ -245,6 +245,12 @@ async function initSchema() {
                        WHERE table_name='tasks' AND column_name='acil') THEN
           ALTER TABLE tasks ADD COLUMN acil BOOLEAN DEFAULT false;
         END IF;
+        
+        -- Tamamlanma Tarihi (Completion Date)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='completed_at') THEN
+          ALTER TABLE tasks ADD COLUMN completed_at TIMESTAMP;
+        END IF;
       END $$;
     `);
 

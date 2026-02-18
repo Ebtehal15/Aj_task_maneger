@@ -25,6 +25,12 @@
           <strong><%= t('deadline') %>:</strong>
           <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
         </p>
+        <% if (task.status === 'done') { %>
+        <p class="mb-1">
+          <strong><%= t('completedAt') %>:</strong>
+          <%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %>
+        </p>
+        <% } %>
         <p class="mb-0">
           <strong><%= t('createdBy') %>:</strong> <%= task.created_username %>
         </p>
@@ -53,7 +59,7 @@
               <label class="form-label fw-semibold" style="font-size: 0.875rem;">
                 <i class="bi bi-flag me-1"></i><%= t('status') %>
               </label>
-              <select name="status" class="form-select" style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;">
+              <select name="status" id="status-select" class="form-select" style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;">
                 <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>
                   <%= t('status_pending') %>
                 </option>
@@ -64,6 +70,23 @@
                   <%= t('status_done') %>
                 </option>
               </select>
+            </div>
+            
+            <div class="col-md-12" id="completed-date-container" style="display: <%= task.status === 'done' ? 'block' : 'none' %>;">
+              <label class="form-label fw-semibold" style="font-size: 0.875rem;">
+                <i class="bi bi-calendar-check me-1"></i><%= t('completedAt') %> (<%= t('optional') %>)
+              </label>
+              <input
+                type="date"
+                name="completed_at"
+                id="completed_at"
+                class="form-control"
+                value="<%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '' %>"
+                style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;"
+              />
+              <div class="form-text mt-1" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i>Boş bırakılırsa otomatik olarak bugünün tarihi kaydedilir
+              </div>
             </div>
             
             <div class="col-md-12">
@@ -96,7 +119,7 @@
                 style="border-radius: 8px; border: 2px dashed #d1d5db; padding: 0.5rem; font-size: 0.875rem;"
               />
               <div class="form-text mt-1" style="font-size: 0.75rem;">
-                <i class="bi bi-info-circle me-1"></i>PDF, Excel, JPG, PNG dosyaları yükleyebilirsiniz (Max 5 dosya)
+                <i class="bi bi-info-circle me-1"></i>PDF, Excel, JPG, PNG dosyaları yükleyebilirsiniz. Birden fazla dosya seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak dosyaları seçin. (Max 20 dosya)
               </div>
             </div>
             
@@ -122,7 +145,7 @@
           <% files.forEach(file => { %>
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span><%= file.original_name %></span>
-            <a href="/uploads/<%= file.filename %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <a href="/uploads/<%= encodeURIComponent(file.filename) %>" target="_blank" class="btn btn-sm btn-outline-secondary">
               <%= t('view') %>
             </a>
           </li>
@@ -136,6 +159,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Show/hide completed date field based on status
+  const statusSelect = document.getElementById('status-select');
+  const completedDateContainer = document.getElementById('completed-date-container');
+  
+  if (statusSelect && completedDateContainer) {
+    function toggleCompletedDate() {
+      if (statusSelect.value === 'done') {
+        completedDateContainer.style.display = 'block';
+      } else {
+        completedDateContainer.style.display = 'none';
+      }
+    }
+    
+    statusSelect.addEventListener('change', toggleCompletedDate);
+    toggleCompletedDate(); // Initial check
+  }
+  
   const translateBtns = document.querySelectorAll('.translate-btn');
   const currentLang = '<%= typeof lang !== "undefined" ? lang : "tr" %>';
   

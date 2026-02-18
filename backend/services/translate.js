@@ -55,3 +55,5 @@ async function translateText(text, targetLang) {
 
 module.exports = { translateText };
 
+
+

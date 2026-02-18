@@ -258,15 +258,20 @@
 
       <!-- Dosya Yükleme -->
       <div class="mb-3">
-        <label class="form-label"><%= t('uploadFiles') %></label>
+        <label class="form-label">
+          <i class="bi bi-paperclip me-1"></i><%= t('uploadFiles') %>
+        </label>
         <input
           type="file"
           name="attachments"
           class="form-control"
           multiple
           accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+          style="border-radius: 8px; border: 2px dashed #d1d5db; padding: 0.5rem;"
         />
-        <div class="form-text"><%= t('filesHelpText') %></div>
+        <div class="form-text mt-1" style="font-size: 0.875rem;">
+          <i class="bi bi-info-circle me-1"></i>PDF, Excel, JPG, PNG dosyaları yükleyebilirsiniz. Birden fazla dosya seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak dosyaları seçin. (Max 20 dosya)
+        </div>
       </div>
       <button class="btn btn-primary"><%= t('save') %></button>
     </form>

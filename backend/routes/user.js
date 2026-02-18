@@ -20,7 +20,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + '-' + file.originalname);
+    // Preserve original filename encoding
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    cb(null, unique + '-' + originalName);
   }
 });
 
@@ -138,9 +140,9 @@ router.get('/tasks/:id', async (req, res) => {
 });
 
 // Update status + upload evidence + optional note to admin
-router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res) => {
+router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, res) => {
   const taskId = req.params.id;
-  const { status, note } = req.body;
+  const { status, note, completed_at } = req.body;
   const allowed = ['pending', 'in_progress', 'done'];
   if (!allowed.includes(status)) {
     return res.redirect(`/user/tasks/${taskId}`);
@@ -169,10 +171,26 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
     // Update task status (only if user is assigned_to, otherwise just add update record)
     const task = taskCheckResult.rows[0];
     if (task.assigned_to === req.user.id) {
-      await client.query(
-        'UPDATE tasks SET status = $1 WHERE id = $2',
-        [status, taskId]
-      );
+      // Set completed_at when status is 'done', clear it otherwise
+      if (status === 'done') {
+        // Use manual date if provided, otherwise use current timestamp
+        if (completed_at && completed_at.trim()) {
+          await client.query(
+            'UPDATE tasks SET status = $1, completed_at = $2::timestamp WHERE id = $3',
+            [status, completed_at, taskId]
+          );
+        } else {
+          await client.query(
+            'UPDATE tasks SET status = $1, completed_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [status, taskId]
+          );
+        }
+      } else {
+        await client.query(
+          'UPDATE tasks SET status = $1, completed_at = NULL WHERE id = $2',
+          [status, taskId]
+        );
+      }
     }
 
     // Save update history
@@ -237,9 +255,11 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
     // Insert files if any
     if (files.length) {
       for (const file of files) {
+        // Normalize filename encoding for database storage
+        const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
         await client.query(
           'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at, update_id) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)',
-          [taskId, req.user.id, file.filename, file.originalname, file.mimetype, updateId || null]
+          [taskId, req.user.id, file.filename, originalName, file.mimetype, updateId || null]
             );
       }
     }

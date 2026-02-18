@@ -70,6 +70,7 @@
             <% } %>
             <th><%= t('status') %></th>
             <th><%= t('deadline') %></th>
+            <th><%= t('completedAt') %></th>
             <th></th>
           </tr>
         </thead>
@@ -92,6 +93,7 @@
               </span>
             </td>
             <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
+            <td><%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %></td>
             <td class="text-end">
               <a href="/user/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
                 Detay

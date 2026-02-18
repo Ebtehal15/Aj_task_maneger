@@ -24,7 +24,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + '-' + file.originalname);
+    // Preserve original filename encoding
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    cb(null, unique + '-' + originalName);
   }
 });
 
@@ -926,7 +928,7 @@ router.get('/tasks/new-old', async (req, res) => {
 });
 
 // Create task handler
-router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
+router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
   const { 
     title, 
     description, 
@@ -982,9 +984,11 @@ router.post('/tasks', upload.array('attachments', 5), async (req, res) => {
 
     // Insert files if any
     for (const file of files) {
+      // Normalize filename encoding for database storage
+      const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
       await client.query(
         'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)',
-        [taskId, req.user.id, file.filename, file.originalname, file.mimetype]
+        [taskId, req.user.id, file.filename, originalName, file.mimetype]
       );
     }
 
@@ -1170,53 +1174,103 @@ router.post('/tasks/:id', async (req, res) => {
     const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title FROM tasks WHERE id = $1', [taskId]);
     const oldTask = oldTaskResult.rows[0];
 
-    await client.query(
-      `UPDATE tasks SET 
-        title = $1, 
-        description = $2, 
-        deadline = $3, 
-        assigned_to = $4,
-        tarih = $5,
-        konu_sorumlusu = $6,
-        sorumlu_2 = $7,
-        sorumlu_3 = $8,
-        bolge = $9,
-        il = $10,
-        belediye = $11,
-        departman = $12,
-        arsiv = $13,
-        verilen_is_tarihi = $14,
-        acil = $15,
-        status = $16
-      WHERE id = $17`,
-      [
-        title, 
-        description, 
-        deadline || null, 
-        assigned_to,
-        tarih || null,
-        konu_sorumlusu || null,
-        sorumlu_2 || null,
-        sorumlu_3 || null,
-        bolge || null,
-        il || null,
-        belediye || null,
-        departman || null,
-        arsiv || 'YOK',
-        verilen_is_tarihi || null,
-        acil === 'true' || acil === true,
-        status || 'pending',
-        taskId
-      ]
-    );
+    const finalStatus = status || 'pending';
+    // Set completed_at when status is 'done', clear it otherwise
+    const completedAtParam = finalStatus === 'done' ? 'CURRENT_TIMESTAMP' : null;
+    
+    if (finalStatus === 'done') {
+      await client.query(
+        `UPDATE tasks SET 
+          title = $1, 
+          description = $2, 
+          deadline = $3, 
+          assigned_to = $4,
+          tarih = $5,
+          konu_sorumlusu = $6,
+          sorumlu_2 = $7,
+          sorumlu_3 = $8,
+          bolge = $9,
+          il = $10,
+          belediye = $11,
+          departman = $12,
+          arsiv = $13,
+          verilen_is_tarihi = $14,
+          acil = $15,
+          status = $16,
+          completed_at = CURRENT_TIMESTAMP
+        WHERE id = $17`,
+        [
+          title, 
+          description, 
+          deadline || null, 
+          assigned_to,
+          tarih || null,
+          konu_sorumlusu || null,
+          sorumlu_2 || null,
+          sorumlu_3 || null,
+          bolge || null,
+          il || null,
+          belediye || null,
+          departman || null,
+          arsiv || 'YOK',
+          verilen_is_tarihi || null,
+          acil === 'true' || acil === true,
+          finalStatus,
+          taskId
+        ]
+      );
+    } else {
+      await client.query(
+        `UPDATE tasks SET 
+          title = $1, 
+          description = $2, 
+          deadline = $3, 
+          assigned_to = $4,
+          tarih = $5,
+          konu_sorumlusu = $6,
+          sorumlu_2 = $7,
+          sorumlu_3 = $8,
+          bolge = $9,
+          il = $10,
+          belediye = $11,
+          departman = $12,
+          arsiv = $13,
+          verilen_is_tarihi = $14,
+          acil = $15,
+          status = $16,
+          completed_at = NULL
+        WHERE id = $17`,
+        [
+          title, 
+          description, 
+          deadline || null, 
+          assigned_to,
+          tarih || null,
+          konu_sorumlusu || null,
+          sorumlu_2 || null,
+          sorumlu_3 || null,
+          bolge || null,
+          il || null,
+          belediye || null,
+          departman || null,
+          arsiv || 'YOK',
+          verilen_is_tarihi || null,
+          acil === 'true' || acil === true,
+          finalStatus,
+          taskId
+        ]
+      );
+    }
 
     // Insert files if any
     const files = req.files || [];
     if (files.length) {
       for (const file of files) {
+        // Normalize filename encoding for database storage
+        const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
         await client.query(
           'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)',
-          [taskId, req.user.id, file.filename, file.originalname, file.mimetype]
+          [taskId, req.user.id, file.filename, originalName, file.mimetype]
         );
       }
     }
@@ -1273,9 +1327,9 @@ router.post('/tasks/:id', async (req, res) => {
 });
 
 // Update task with note and files (admin)
-router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res) => {
+router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, res) => {
   const taskId = req.params.id;
-  const { status, note } = req.body;
+  const { status, note, completed_at } = req.body;
   const allowed = ['pending', 'in_progress', 'done'];
   if (!allowed.includes(status)) {
     return res.redirect(`/admin/tasks/${taskId}`);
@@ -1285,11 +1339,26 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
   try {
     await client.query('BEGIN');
 
-    // Update task status
-    await client.query(
-      'UPDATE tasks SET status = $1 WHERE id = $2',
-      [status, taskId]
-    );
+    // Update task status and set completed_at when status is 'done'
+    if (status === 'done') {
+      // Use manual date if provided, otherwise use current timestamp
+      if (completed_at && completed_at.trim()) {
+        await client.query(
+          'UPDATE tasks SET status = $1, completed_at = $2::timestamp WHERE id = $3',
+          [status, completed_at, taskId]
+        );
+      } else {
+        await client.query(
+          'UPDATE tasks SET status = $1, completed_at = CURRENT_TIMESTAMP WHERE id = $2',
+          [status, taskId]
+        );
+      }
+    } else {
+      await client.query(
+        'UPDATE tasks SET status = $1, completed_at = NULL WHERE id = $2',
+        [status, taskId]
+      );
+    }
 
     // Save update history
     const updateResult = await client.query(
@@ -1303,9 +1372,11 @@ router.post('/tasks/:id/update', upload.array('attachments', 5), async (req, res
     const files = req.files || [];
     if (files.length) {
       for (const file of files) {
+        // Normalize filename encoding for database storage
+        const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
         await client.query(
           'INSERT INTO task_files (task_id, uploader_id, filename, original_name, mime_type, uploaded_at, update_id) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)',
-          [taskId, req.user.id, file.filename, file.originalname, file.mimetype, updateId || null]
+          [taskId, req.user.id, file.filename, originalName, file.mimetype, updateId || null]
         );
       }
     }
@@ -1375,7 +1446,12 @@ router.post('/tasks/:id/status', async (req, res) => {
   }
 
   try {
-    await pool.query('UPDATE tasks SET status = $1 WHERE id = $2', [status, taskId]);
+    // Update task status and set completed_at when status is 'done'
+    if (status === 'done') {
+      await pool.query('UPDATE tasks SET status = $1, completed_at = CURRENT_TIMESTAMP WHERE id = $2', [status, taskId]);
+    } else {
+      await pool.query('UPDATE tasks SET status = $1, completed_at = NULL WHERE id = $2', [status, taskId]);
+    }
     
     // Log admin status update
     await pool.query(
