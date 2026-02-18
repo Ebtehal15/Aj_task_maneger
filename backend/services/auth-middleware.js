@@ -52,6 +52,10 @@ function ensureRole(role) {
     if (role === 'admin' && req.user.role === 'admin') {
       return next();
     }
+    // Eğer role 'super_admin' ise ve kullanıcının role'ü 'super_admin' ise izin ver
+    if (role === 'super_admin' && req.user.role === 'super_admin') {
+      return next();
+    }
     // Diğer durumlarda role kontrolü yap
     if (req.user.role !== role) {
       return res.status(403).render('errors/403', {
