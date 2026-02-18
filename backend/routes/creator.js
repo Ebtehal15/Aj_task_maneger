@@ -90,6 +90,28 @@ router.get('/tasks', async (req, res) => {
   }
 });
 
+// Create new task form (must be before /tasks/:id route)
+router.get('/tasks/new', async (req, res) => {
+  try {
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
+
+    res.render('creator/task-form', {
+      pageTitle: req.t('createTask'),
+      // task is intentionally omitted so it is undefined in the template (create mode)
+      users: usersResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      cities: citiesResult.rows
+    });
+  } catch (err) {
+    console.error('Error loading task form:', err);
+    res.sendStatus(500);
+  }
+});
+
 // Task detail - creator can see tasks assigned to them
 router.get('/tasks/:id', async (req, res) => {
   const taskId = req.params.id;
@@ -152,34 +174,12 @@ router.get('/tasks/:id', async (req, res) => {
   }
 });
 
-// Create new task form
-router.get('/tasks/new', async (req, res) => {
-  try {
-    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
-    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
-    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
-    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
-
-    res.render('creator/task-form', {
-      pageTitle: req.t('createTask'),
-      task: null,
-      users: usersResult.rows,
-      municipalities: municipalitiesResult.rows,
-      regions: regionsResult.rows,
-      cities: citiesResult.rows
-    });
-  } catch (err) {
-    console.error('Error loading task form:', err);
-    res.sendStatus(500);
-  }
-});
-
 // Create new task
 router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
   const {
     title, description, deadline, status, assigned_to,
     tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv,
-    verilen_is_tarihi, acil
+    verilen_is_tarihi, acil, task_subject
   } = req.body;
 
   if (!title || !assigned_to) {
@@ -196,8 +196,8 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
     const taskResult = await client.query(
       `INSERT INTO tasks (
         title, description, deadline, status, assigned_to, created_by, created_at,
-        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil
-      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
+        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil, task_subject
+      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
       [
         title, 
         description, 
@@ -215,7 +215,8 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
         departman || null,
         arsiv || 'YOK',
         verilen_is_tarihi || null,
-        acil === 'true' || acil === true
+        acil === 'true' || acil === true,
+        task_subject || null
       ]
     );
 

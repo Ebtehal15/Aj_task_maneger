@@ -27,7 +27,10 @@
           <tr>
             <td><%= index + 1 %></td>
             <td>
-              <%= task.title %>
+              <div><strong><%= task.title %></strong></div>
+              <% if (task.task_subject && task.task_subject.trim()) { %>
+              <div class="small text-muted mt-1"><%= task.task_subject %></div>
+              <% } %>
               <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
                 <span class="badge bg-danger ms-2"><%= t('urgent') %></span>
               <% } %>

@@ -1038,8 +1038,8 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
     const taskResult = await client.query(
       `INSERT INTO tasks (
         title, description, deadline, status, assigned_to, created_by, created_at,
-        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil
-      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
+        tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil, task_subject
+      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
       [
         title, 
         description, 
@@ -1057,7 +1057,8 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
         departman || null,
         arsiv || 'YOK',
         verilen_is_tarihi || null,
-        acil === 'true' || acil === true
+        acil === 'true' || acil === true,
+        task_subject || null
       ]
     );
 
@@ -1248,7 +1249,8 @@ router.post('/tasks/:id', async (req, res) => {
     arsiv,
     verilen_is_tarihi,
     acil,
-    status
+    status,
+    task_subject
   } = req.body;
 
   const client = await pool.connect();
@@ -1256,7 +1258,7 @@ router.post('/tasks/:id', async (req, res) => {
     await client.query('BEGIN');
 
     // Get old task data to compare
-    const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title, description, deadline, tarih, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil, status FROM tasks WHERE id = $1', [taskId]);
+    const oldTaskResult = await client.query('SELECT assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu, title, description, deadline, tarih, bolge, il, belediye, departman, arsiv, verilen_is_tarihi, acil, status, task_subject FROM tasks WHERE id = $1', [taskId]);
     const oldTask = oldTaskResult.rows[0];
 
     const finalStatus = status || 'pending';
@@ -1275,6 +1277,7 @@ router.post('/tasks/:id', async (req, res) => {
     const updatedArsiv = typeof arsiv !== 'undefined' ? arsiv : (oldTask ? oldTask.arsiv : 'YOK');
     const updatedVerilenIsTarihi = typeof verilen_is_tarihi !== 'undefined' && verilen_is_tarihi !== '' ? verilen_is_tarihi : (oldTask ? oldTask.verilen_is_tarihi : null);
     const updatedAcil = typeof acil !== 'undefined' ? (acil === 'true' || acil === true) : (oldTask ? oldTask.acil : false);
+    const updatedTaskSubject = typeof task_subject !== 'undefined' ? task_subject : (oldTask ? oldTask.task_subject : null);
 
     if (finalStatus === 'done') {
       await client.query(
@@ -1295,8 +1298,9 @@ router.post('/tasks/:id', async (req, res) => {
           verilen_is_tarihi = $14,
           acil = $15,
           status = $16,
+          task_subject = $17,
           completed_at = CURRENT_TIMESTAMP
-        WHERE id = $17`,
+        WHERE id = $18`,
         [
           updatedTitle, 
           updatedDescription, 
@@ -1314,6 +1318,7 @@ router.post('/tasks/:id', async (req, res) => {
           updatedVerilenIsTarihi || null,
           updatedAcil,
           finalStatus,
+          updatedTaskSubject || null,
           taskId
         ]
       );
@@ -1336,8 +1341,9 @@ router.post('/tasks/:id', async (req, res) => {
           verilen_is_tarihi = $14,
           acil = $15,
           status = $16,
+          task_subject = $17,
           completed_at = NULL
-        WHERE id = $17`,
+        WHERE id = $18`,
         [
           updatedTitle, 
           updatedDescription, 
@@ -1355,6 +1361,7 @@ router.post('/tasks/:id', async (req, res) => {
           updatedVerilenIsTarihi || null,
           updatedAcil,
           finalStatus,
+          updatedTaskSubject || null,
           taskId
         ]
       );

@@ -137,18 +137,6 @@ async function initSchema() {
     `);
     
     // Migrate existing user roles BEFORE updating constraint
-    // First, update 'admin' -> 'super_admin' (if constraint allows both temporarily)
-    await client.query(`
-      DO $$ 
-      BEGIN 
-        -- Migrate roles: 'admin' -> 'super_admin', 'creator' -> 'admin'
-        UPDATE users SET role = 'super_admin' WHERE role = 'admin';
-        UPDATE users SET role = 'admin' WHERE role = 'creator';
-      EXCEPTION
-        WHEN OTHERS THEN NULL;
-      END $$;
-    `);
-    
     // Update existing CHECK constraint to include new roles if it exists
     await client.query(`
       DO $$ 
@@ -281,6 +269,12 @@ async function initSchema() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                        WHERE table_name='tasks' AND column_name='completed_at') THEN
           ALTER TABLE tasks ADD COLUMN completed_at TIMESTAMP;
+        END IF;
+        
+        -- İş Konusu (Task Subject)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='task_subject') THEN
+          ALTER TABLE tasks ADD COLUMN task_subject TEXT;
         END IF;
       END $$;
     `);
