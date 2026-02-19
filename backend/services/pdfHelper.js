@@ -20,6 +20,8 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
   // 3) Built‑in Helvetica (last resort, may break TR/AR chars)
   const candidateFonts = [
     // Project fonts FIRST (these work on Render/Linux)
+    // Arabic-specific font for better Arabic rendering
+    path.join(__dirname, '..', 'public', 'fonts', 'NotoSansArabic-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'NotoSans-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'Inter-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'Roboto-Regular.ttf'),
