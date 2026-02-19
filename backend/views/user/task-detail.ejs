@@ -12,28 +12,57 @@
   <div class="col-md-7">
     <div class="card shadow-sm mb-3">
       <div class="card-body">
-        <p class="mb-1 text-muted"><strong><%= t('taskDescription') %>:</strong></p>
-        <p><%= task.description || '-' %></p>
-
+        <!-- 1. Görev Başlığı (zaten başlıkta gösteriliyor) -->
+        
+        <!-- 2. İş Konusu -->
+        <% if (task.task_subject && task.task_subject.trim()) { %>
+        <p class="mb-1">
+          <strong><%= t('taskSubject') %>:</strong>
+          <span id="task-subject-display"><%= task.task_subject %></span>
+          <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text="<%= task.task_subject || '' %>" data-display-id="task-subject-display" title="<%= t('translate') %>">
+            <i class="bi bi-translate"></i>
+          </button>
+        </p>
+        <% } %>
+        
+        <!-- 3. Durum -->
         <p class="mb-1">
           <strong><%= t('status') %>:</strong>
           <span class="badge status-<%= task.status %>">
             <%= t('status_' + task.status) %>
           </span>
         </p>
+        
+        <!-- 4. Oluşturan -->
+        <p class="mb-1">
+          <strong><%= t('createdBy') %>:</strong> <%= task.created_username %>
+        </p>
+        
+        <!-- 5. Oluşturma Tarihi -->
+        <p class="mb-1">
+          <strong><%= t('createdAt') || 'Oluşturma Tarihi' %>:</strong>
+          <%= task.created_at ? (typeof task.created_at === 'string' ? task.created_at.slice(0,10) : new Date(task.created_at).toISOString().slice(0,10)) : '-' %>
+        </p>
+        
+        <!-- 6. Tahmini İş Bitiş Tarihi -->
         <p class="mb-1">
           <strong><%= t('deadline') %>:</strong>
           <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
         </p>
-        <% if (task.status === 'done') { %>
+        
+        <!-- 7. Bitiş Tarihi -->
+        <% if (task.status === 'done' && task.completed_at) { %>
         <p class="mb-1">
           <strong><%= t('completedAt') %>:</strong>
           <%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %>
         </p>
         <% } %>
-        <p class="mb-0">
-          <strong><%= t('createdBy') %>:</strong> <%= task.created_username %>
+        
+        <!-- 8. Açıklama -->
+        <p class="mb-1 text-muted">
+          <strong><%= t('taskDescription') %>:</strong>
         </p>
+        <p class="mb-0"><%= task.description || '-' %></p>
       </div>
     </div>
 
@@ -213,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
       this.disabled = true;
       
       try {
-        const response = await fetch('/admin/translate', {
+        const response = await fetch('/user/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

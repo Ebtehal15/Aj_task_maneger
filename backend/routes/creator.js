@@ -6,6 +6,7 @@ const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
 const { streamTaskPdf } = require('../services/pdfHelper');
+const { translateText } = require('../services/translate');
 
 const router = express.Router();
 const pool = getDb();
@@ -847,6 +848,23 @@ router.get('/reports/export', async (req, res) => {
   } catch (err) {
     console.error('Excel export error:', err);
     res.sendStatus(500);
+  }
+});
+
+// Translate endpoint for admin role
+router.post('/translate', async (req, res) => {
+  const { text, targetLang } = req.body;
+  
+  if (!text) {
+    return res.json({ success: false, error: 'Text is required' });
+  }
+
+  try {
+    const translated = await translateText(text, targetLang || 'en');
+    res.json({ success: true, translated });
+  } catch (err) {
+    console.error('Translate error:', err);
+    res.json({ success: false, error: 'Translation failed', translated: text });
   }
 });
 
