@@ -18,7 +18,8 @@ router.get('/', async (req, res) => {
     
     res.render('common/notifications', {
       pageTitle: 'Notifications',
-      notifications
+      notifications,
+      currentUser: req.user
     });
   } catch (err) {
     console.error('Error loading notifications', err);

@@ -54,7 +54,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4"><%= t('notificationsTitle') %></h1>
-  <a href="/" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+  <a href="<%= currentUser && currentUser.role === 'super_admin' ? '/admin/dashboard' : (currentUser && currentUser.role === 'admin' ? '/creator/tasks' : '/user/tasks') %>" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
 </div>
 
 <div class="card shadow-sm">
@@ -106,7 +106,7 @@
         </div>
         <% if (n.related_task_id) { %>
         <a
-          href="<%= (currentUser && currentUser.role === 'super_admin') ? '/admin/tasks/' + n.related_task_id : '/user/tasks/' + n.related_task_id %>"
+          href="<%= (currentUser && currentUser.role === 'super_admin') ? '/admin/tasks/' + n.related_task_id : (currentUser && currentUser.role === 'admin' ? '/creator/tasks/' + n.related_task_id : '/user/tasks/' + n.related_task_id) %>"
           class="btn btn-sm btn-outline-primary ms-2"
         >
           <%= t('viewTask') %>

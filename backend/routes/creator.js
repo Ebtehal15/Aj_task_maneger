@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
+const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
 const { streamTaskPdf } = require('../services/pdfHelper');
@@ -171,6 +172,64 @@ router.get('/tasks/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching task:', err);
+    res.sendStatus(500);
+  }
+});
+
+// Task edit form - creator can edit tasks assigned to them
+router.get('/tasks/:id/edit', async (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+  
+  try {
+    // Creator can only edit tasks assigned to them
+    const taskResult = await pool.query(
+      `SELECT t.*
+       FROM tasks t
+       WHERE t.id = $1 
+         AND (t.assigned_to = $2 OR t.sorumlu_2 = $2 OR t.sorumlu_3 = $2 
+              OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $3))`,
+      [taskId, userId, userId.toString()]
+    );
+    
+    if (taskResult.rows.length === 0) {
+      return res.status(404).render('errors/404', {
+        pageTitle: 'Task Not Found',
+        t: req.t,
+        lang: req.lang,
+        dir: req.dir,
+        user: req.user
+      });
+    }
+
+    const task = taskResult.rows[0];
+    
+    // Get task updates (aşamalar)
+    const updatesResult = await pool.query(
+      `SELECT tu.*, u.username
+       FROM task_updates tu
+       JOIN users u ON tu.user_id = u.id
+       WHERE tu.task_id = $1
+       ORDER BY tu.created_at DESC`,
+      [taskId]
+    );
+
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
+
+    res.render('creator/task-form', {
+      pageTitle: req.t('editTask'),
+      task: task,
+      updates: updatesResult.rows,
+      users: usersResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      cities: citiesResult.rows
+    });
+  } catch (err) {
+    console.error('Error loading task edit form:', err);
     res.sendStatus(500);
   }
 });
@@ -401,6 +460,393 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
     res.sendStatus(500);
   } finally {
     client.release();
+  }
+});
+
+// Reports page with filters (for admin role)
+// This route handles /creator/reports
+router.get('/reports', async (req, res) => {
+  const {
+    userId,
+    status,
+    from,
+    to,
+    city,
+    municipality,
+    region,
+    from_verilen,
+    to_verilen,
+    from_completed,
+    to_completed,
+    departman,
+    filterTypes: filterTypesRaw,
+    filterType
+  } = req.query;
+
+  let filterTypes = [];
+  if (typeof filterTypesRaw === 'string' && filterTypesRaw.trim()) {
+    filterTypes = filterTypesRaw
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+  } else if (typeof filterType === 'string' && filterType.trim()) {
+    filterTypes = [filterType.trim()];
+  }
+
+  if (filterTypes.length === 0) {
+    if (userId) filterTypes.push('user');
+    if (status) filterTypes.push('status');
+    if (city) filterTypes.push('city');
+    if (municipality) filterTypes.push('municipality');
+    if (region) filterTypes.push('region');
+    if (from || to) filterTypes.push('date');
+    if (from_verilen || to_verilen) filterTypes.push('given_date');
+    if (from_completed || to_completed) filterTypes.push('completed_date');
+    if (departman) filterTypes.push('department');
+  }
+
+  const params = [];
+  const where = [];
+  let paramIndex = 1;
+
+  // Admin role can only see their own tasks (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+  // Ignore userId filter for admin role - they can only see their own tasks
+  where.push(`(
+    t.assigned_to = $${paramIndex} 
+    OR t.sorumlu_2 = $${paramIndex} 
+    OR t.sorumlu_3 = $${paramIndex} 
+    OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex + 1}::text)
+  )`);
+  params.push(req.user.id);
+  params.push(req.user.id.toString());
+  paramIndex += 2;
+  if (status) {
+    where.push(`t.status = $${paramIndex}`);
+    params.push(status);
+    paramIndex++;
+  }
+  if (city) {
+    where.push(`t.il = $${paramIndex}`);
+    params.push(city);
+    paramIndex++;
+  }
+  if (municipality) {
+    where.push(`t.belediye = $${paramIndex}`);
+    params.push(municipality);
+    paramIndex++;
+  }
+  if (region) {
+    where.push(`t.bolge = $${paramIndex}`);
+    params.push(region);
+    paramIndex++;
+  }
+  if (from) {
+    where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
+    params.push(from);
+    paramIndex++;
+  }
+  if (to) {
+    where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
+    params.push(to);
+    paramIndex++;
+  }
+  if (from_verilen) {
+    where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
+    params.push(from_verilen);
+    paramIndex++;
+  }
+  if (to_verilen) {
+    where.push(`DATE(t.verilen_is_tarihi) <= DATE($${paramIndex})`);
+    params.push(to_verilen);
+    paramIndex++;
+  }
+  if (from_completed) {
+    where.push(`DATE(t.completed_at) >= DATE($${paramIndex})`);
+    params.push(from_completed);
+    paramIndex++;
+  }
+  if (to_completed) {
+    where.push(`DATE(t.completed_at) <= DATE($${paramIndex})`);
+    params.push(to_completed);
+    paramIndex++;
+  }
+  if (departman) {
+    where.push(`t.departman = $${paramIndex}`);
+    params.push(departman);
+    paramIndex++;
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+  const sql = `
+    SELECT t.*, 
+           u.username AS assigned_username, 
+           c.username AS created_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
+           COALESCE(t.acil, false)::boolean AS acil
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+    LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+    ${whereSql}
+    ORDER BY t.created_at DESC
+  `;
+
+  try {
+    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
+    const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
+    const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
+    const tasksResult = await pool.query(sql, params);
+    
+    res.render('creator/reports', {
+      pageTitle: req.t('reports'),
+      tasks: tasksResult.rows,
+      users: usersResult.rows,
+      cities: citiesResult.rows,
+      municipalities: municipalitiesResult.rows,
+      regions: regionsResult.rows,
+      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, filterTypes }
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// Export tasks to Excel (for admin role)
+// Handle both /creator/reports/export and /admin/reports/export for admin role
+router.get('/admin/reports/export', async (req, res) => {
+  // Redirect to /creator/reports/export to maintain consistency
+  const queryString = Object.keys(req.query).length > 0 ? '?' + new URLSearchParams(req.query).toString() : '';
+  return res.redirect(`/creator/reports/export${queryString}`);
+});
+
+router.get('/reports/export', async (req, res) => {
+  const { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman } = req.query;
+
+  const params = [];
+  const where = [];
+  let paramIndex = 1;
+
+  // Admin role can only see their own tasks (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+  // Ignore userId filter for admin role - they can only see their own tasks
+  where.push(`(
+    t.assigned_to = $${paramIndex} 
+    OR t.sorumlu_2 = $${paramIndex} 
+    OR t.sorumlu_3 = $${paramIndex} 
+    OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex + 1}::text)
+  )`);
+  params.push(req.user.id);
+  params.push(req.user.id.toString());
+  paramIndex += 2;
+  if (status && status !== 'undefined' && status !== 'null') {
+    where.push(`t.status = $${paramIndex}`);
+    params.push(status);
+    paramIndex++;
+  }
+  if (city && city !== 'undefined' && city !== 'null') {
+    where.push(`t.il = $${paramIndex}`);
+    params.push(city);
+    paramIndex++;
+  }
+  if (municipality && municipality !== 'undefined' && municipality !== 'null') {
+    where.push(`t.belediye = $${paramIndex}`);
+    params.push(municipality);
+    paramIndex++;
+  }
+  if (region && region !== 'undefined' && region !== 'null') {
+    where.push(`t.bolge = $${paramIndex}`);
+    params.push(region);
+    paramIndex++;
+  }
+  if (from && from !== 'undefined' && from !== 'null') {
+    where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
+    params.push(from);
+    paramIndex++;
+  }
+  if (to && to !== 'undefined' && to !== 'null') {
+    where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
+    params.push(to);
+    paramIndex++;
+  }
+  if (from_verilen && from_verilen !== 'undefined' && from_verilen !== 'null') {
+    where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
+    params.push(from_verilen);
+    paramIndex++;
+  }
+  if (to_verilen && to_verilen !== 'undefined' && to_verilen !== 'null') {
+    where.push(`DATE(t.verilen_is_tarihi) <= DATE($${paramIndex})`);
+    params.push(to_verilen);
+    paramIndex++;
+  }
+  if (from_completed && from_completed !== 'undefined' && from_completed !== 'null') {
+    where.push(`DATE(t.completed_at) >= DATE($${paramIndex})`);
+    params.push(from_completed);
+    paramIndex++;
+  }
+  if (to_completed && to_completed !== 'undefined' && to_completed !== 'null') {
+    where.push(`DATE(t.completed_at) <= DATE($${paramIndex})`);
+    params.push(to_completed);
+    paramIndex++;
+  }
+  if (departman && departman !== 'undefined' && departman !== 'null') {
+    where.push(`t.departman = $${paramIndex}`);
+    params.push(departman);
+    paramIndex++;
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+  const sql = `
+    SELECT t.*, 
+           u.username AS assigned_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
+           c.username AS created_username,
+           COALESCE(t.acil, false)::boolean AS acil
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    LEFT JOIN users u2 ON t.sorumlu_2::text = u2.id::text
+    LEFT JOIN users u3 ON t.sorumlu_3::text = u3.id::text
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+    JOIN users c ON t.created_by = c.id
+    ${whereSql}
+    ORDER BY t.created_at DESC
+  `;
+
+  try {
+    const tasksResult = await pool.query(sql, params);
+    const tasks = tasksResult.rows;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Görevler');
+
+    worksheet.columns = [
+      { header: 'TARİH', key: 'tarih', width: 12 },
+      { header: 'KONU SORUMLUSU', key: 'konu_sorumlusu', width: 15 },
+      { header: 'SORUMLU 1', key: 'sorumlu_1', width: 15 },
+      { header: 'SORUMLU 2', key: 'sorumlu_2', width: 15 },
+      { header: 'SORUMLU 3', key: 'sorumlu_3', width: 15 },
+      { header: 'BÖLGE', key: 'bolge', width: 15 },
+      { header: 'İL', key: 'il', width: 15 },
+      { header: 'BELEDİYE', key: 'belediye', width: 15 },
+      { header: 'DEPARTMAN', key: 'departman', width: 15 },
+      { header: 'KONU', key: 'konu', width: 20 },
+      { header: 'İŞ KONUSU', key: 'is_konusu', width: 30 },
+      { header: 'VERİLEN İŞ TARİHİ', key: 'verilen_is_tarihi', width: 18 },
+      { header: 'TAHMİNİ İŞ BİTİŞ TARİHİ', key: 'tahmini_is_bitis_tarihi', width: 22 },
+      { header: 'ARŞİV', key: 'arsiv', width: 10 },
+      { header: 'DURUM', key: 'durum', width: 15 }
+    ];
+
+    worksheet.getRow(1).font = { bold: true, size: 11 };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFC000' }
+    };
+    worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+    tasks.forEach(task => {
+      const row = worksheet.addRow({
+        tarih: task.tarih ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : '',
+        konu_sorumlusu: task.konu_sorumlusu_username || '',
+        sorumlu_1: task.assigned_username || '',
+        sorumlu_2: task.sorumlu_2_username || '',
+        sorumlu_3: task.sorumlu_3_username || '',
+        bolge: task.bolge || '',
+        il: task.il || '',
+        belediye: task.belediye || '',
+        departman: task.departman || '',
+        konu: task.title || '',
+        is_konusu: task.task_subject || '',
+        verilen_is_tarihi: task.verilen_is_tarihi ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '',
+        tahmini_is_bitis_tarihi: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '',
+        arsiv: task.arsiv || 'YOK',
+        durum: task.status === 'done' ? 'BİTTİ' : task.status === 'in_progress' ? 'DEVAM EDİYOR' : task.status === 'onemli' ? 'ÖNEMLİ' : 'BEKLEMEDE'
+      });
+
+      const departmanCell = row.getCell('departman');
+      if (task.departman === 'SAHA') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF92D050' }
+        };
+      } else if (task.departman === 'BELEDİYE') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4472C4' }
+        };
+      } else if (task.departman === 'HUKUK') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFC000' }
+        };
+      }
+
+      const durumCell = row.getCell('durum');
+      if (task.status === 'done') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF92D050' }
+        };
+      } else if (task.status === 'in_progress') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFEB9C' }
+        };
+      } else if (task.status === 'onemli') {
+        durumCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF0000' }
+        };
+        durumCell.font = { color: { argb: 'FFFFFFFF' } };
+      }
+    });
+
+    const datePart = new Date().toISOString().slice(0, 10);
+    const nameParts = ['gorevler'];
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      nameParts.push(`kullanici_${userId}`);
+    }
+    if (status && status !== 'undefined' && status !== 'null') {
+      nameParts.push(`durum_${status}`);
+    }
+    if (city && city !== 'undefined' && city !== 'null') {
+      nameParts.push(`il_${city}`);
+    }
+    if (municipality && municipality !== 'undefined' && municipality !== 'null') {
+      nameParts.push(`belediye_${municipality}`);
+    }
+    if (region && region !== 'undefined' && region !== 'null') {
+      nameParts.push(`bolge_${region}`);
+    }
+    if (departman && departman !== 'undefined' && departman !== 'null') {
+      nameParts.push(`departman_${departman}`);
+    }
+    nameParts.push(datePart);
+    const safeFileName = nameParts.join('_').replace(/[^a-zA-Z0-9_]/g, '_');
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${safeFileName}.xlsx`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Excel export error:', err);
+    res.sendStatus(500);
   }
 });
 

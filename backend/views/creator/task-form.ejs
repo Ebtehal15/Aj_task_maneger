@@ -13,8 +13,8 @@
   <div class="card-body">
     <form
       method="post"
-      action="<%= (typeof task !== 'undefined') ? '/creator/tasks/' + task.id : '/creator/tasks' %>"
-      <%= (typeof task === 'undefined' || !task) ? 'enctype="multipart/form-data"' : '' %>
+      action="<%= (typeof task !== 'undefined') ? '/creator/tasks/' + task.id + '/update' : '/creator/tasks' %>"
+      enctype="multipart/form-data"
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">
@@ -279,6 +279,65 @@
     </form>
   </div>
 </div>
+
+<% if (typeof task !== 'undefined' && task && typeof updates !== 'undefined' && updates) { %>
+<div class="card shadow-sm mt-4">
+  <div class="card-body">
+    <h2 class="h6 mb-3"><%= t('recentUpdates') %></h2>
+    <% if (!updates || !updates.length) { %>
+    <p class="text-muted mb-0"><%= t('noUpdates') %></p>
+    <% } else { %>
+    <ul class="list-group">
+      <% updates.forEach(update => { %>
+      <li class="list-group-item">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1">
+            <strong><%= update.username %></strong>
+            <span class="text-muted ms-2" style="font-size: 0.875rem;">
+              <%
+                const formatDateForTurkey = (date) => {
+                  if (!date) return '-';
+                  try {
+                    const dateObj = typeof date === 'string' ? new Date(date) : date;
+                    const turkeyOffset = 3 * 60;
+                    const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+                    const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+                    const year = turkeyTime.getFullYear();
+                    const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+                    const day = String(turkeyTime.getDate()).padStart(2, '0');
+                    const hours = String(turkeyTime.getHours()).padStart(2, '0');
+                    const minutes = String(turkeyTime.getMinutes()).padStart(2, '0');
+                    const seconds = String(turkeyTime.getSeconds()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                  } catch (err) {
+                    return typeof date === 'string' ? date.slice(0, 19).replace('T', ' ') : date.toISOString().slice(0, 19).replace('T', ' ');
+                  }
+                };
+              %>
+              <%= formatDateForTurkey(update.created_at) %>
+            </span>
+          </div>
+        </div>
+        <div class="small text-muted mt-1">
+          <span class="badge status-<%= update.status %> me-2">
+            <%= t('status_' + update.status) %>
+          </span>
+          <% if (update.note) { %>
+          <div class="mt-2">
+            <span id="note-<%= update.id %>-display"><%= update.note %></span>
+            <button type="button" class="btn btn-sm btn-link p-0 ms-2 translate-btn" data-text="<%= update.note || '' %>" data-display-id="note-<%= update.id %>-display" title="<%= t('translate') %>">
+              <i class="bi bi-translate"></i>
+            </button>
+          </div>
+          <% } %>
+        </div>
+      </li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+<% } %>
 
 <!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">

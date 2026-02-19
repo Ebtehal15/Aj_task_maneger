@@ -14,7 +14,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4"><%= t('reports') %></h1>
   <div class="d-flex gap-2 align-items-center">
-    <a href="/admin/reports/export<%
+    <a href="/creator/reports/export<%
       const validFilters = {};
       Object.keys(filters || {}).forEach(key => {
         if (filters[key] && filters[key] !== 'undefined' && filters[key] !== 'null' && filters[key] !== '') {
@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<form class="card card-body shadow-sm mb-3" method="get" action="/admin/reports" id="filterForm">
+<form class="card card-body shadow-sm mb-3" method="get" action="/creator/reports" id="filterForm">
   <div class="row g-2 align-items-end">
     <% const selectedFilterTypes = (filters && Array.isArray(filters.filterTypes)) ? filters.filterTypes : []; %>
     <div class="col-md-3">
@@ -59,14 +59,6 @@
         </button>
         <div class="dropdown-menu p-3 shadow-sm" style="min-width: 320px;">
           <div class="row g-2">
-            <% if (typeof isAdminRole === 'undefined' || !isAdminRole) { %>
-            <div class="col-6">
-              <div class="form-check">
-                <input class="form-check-input filter-type-checkbox" type="checkbox" value="user" id="ft-user" <%= selectedFilterTypes.includes('user') ? 'checked' : '' %>>
-                <label class="form-check-label" for="ft-user"><%= t('personnel') %></label>
-              </div>
-            </div>
-            <% } %>
             <div class="col-6">
               <div class="form-check">
                 <input class="form-check-input filter-type-checkbox" type="checkbox" value="municipality" id="ft-municipality" <%= selectedFilterTypes.includes('municipality') ? 'checked' : '' %>>
@@ -123,21 +115,6 @@
       </div>
       <input type="hidden" name="filterTypes" id="filterTypesInput" value="<%= selectedFilterTypes.join(',') %>" />
     </div>
-    
-    <% if (typeof isAdminRole === 'undefined' || !isAdminRole) { %>
-    <!-- User Filter -->
-    <div class="col-md-3 filter-option" id="filter-user" data-filter-type="user" style="display: <%= selectedFilterTypes.includes('user') ? 'block' : 'none' %>;">
-      <label class="form-label"><%= t('filterByUser') %></label>
-      <select name="userId" class="form-select filter-input">
-        <option value="">--</option>
-        <% users.forEach(u => { %>
-        <option value="<%= u.id %>" <%= filters.userId == u.id ? 'selected' : '' %>>
-          <%= u.username %>
-        </option>
-        <% }) %>
-      </select>
-    </div>
-    <% } %>
     
     <!-- Status Filter -->
     <div class="col-md-3 filter-option" id="filter-status" data-filter-type="status" style="display: <%= selectedFilterTypes.includes('status') ? 'block' : 'none' %>;">
@@ -274,7 +251,7 @@
     const filterOptions = document.querySelectorAll('.filter-option');
     const dropdownBtn = document.getElementById('filtersDropdownBtn');
     const dropdownLabel = document.getElementById('filtersDropdownLabel');
-    const STORAGE_KEY = 'reportsSelectedFilterTypes';
+    const STORAGE_KEY = 'creatorReportsSelectedFilterTypes';
 
     function getSelectedTypes() {
       return Array.from(checkboxes)
@@ -390,11 +367,11 @@
     if (resetFiltersBtn) {
       resetFiltersBtn.addEventListener('click', function() {
         try {
-          localStorage.removeItem('reportsSelectedFilterTypes');
+          localStorage.removeItem('creatorReportsSelectedFilterTypes');
         } catch (e) {
           // ignore
         }
-        window.location.href = '/admin/reports';
+        window.location.href = '/creator/reports';
       });
     }
   })();
@@ -445,7 +422,7 @@
             <td><%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %></td>
             <td><%= task.created_username %></td>
             <td class="text-end">
-              <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
+              <a href="/creator/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
                 <%= t('viewTask') %>
               </a>
             </td>
@@ -533,11 +510,11 @@
           </div>
         </div>
         <div class="card-footer bg-transparent border-top-0 pt-0 d-flex gap-2">
-          <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary flex-grow-1">
+          <a href="/creator/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary flex-grow-1">
             <i class="bi bi-eye"></i> <%= t('viewTask') %>
           </a>
           <a
-            href="/admin/tasks/<%= task.id %>/pdf"
+            href="/creator/tasks/<%= task.id %>/pdf"
             class="btn btn-sm btn-outline-danger task-pdf-download"
             title="PDF İndir"
             download

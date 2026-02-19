@@ -168,6 +168,14 @@
               </a>
             </li>
             <% } %>
+            <% if (currentUser.role === 'admin') { %>
+            <li class="tm-sidebar-item">
+              <a href="/creator/reports" class="tm-sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span><%= t('reports') %></span>
+              </a>
+            </li>
+            <% } %>
             <% } %>
           </ul>
         </nav>
