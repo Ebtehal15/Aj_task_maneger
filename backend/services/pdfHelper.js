@@ -20,7 +20,8 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
   // 3) Built‑in Helvetica (last resort, may break TR/AR chars)
   const candidateFonts = [
     // Project fonts FIRST (these work on Render/Linux)
-    // Arabic-specific font for better Arabic rendering
+    // Arabic-specific font for better Arabic rendering (Naskh style - more traditional)
+    path.join(__dirname, '..', 'public', 'fonts', 'NotoNaskhArabic-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'NotoSansArabic-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'NotoSans-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'Inter-Regular.ttf'),
@@ -194,34 +195,32 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
     const sectionStartY = doc.y;
     const sectionMargin = 15;
     const sectionPadding = 12;
+    const sectionHeaderHeight = 35;
 
     // Section header with background
     doc
       .rect(doc.page.margins.left, sectionStartY, 
-            doc.page.width - doc.page.margins.left - doc.page.margins.right, 30)
+            doc.page.width - doc.page.margins.left - doc.page.margins.right, sectionHeaderHeight)
       .fillColor(colors.background)
       .fill()
       .fillColor(colors.primary);
 
     const sectionTitleFixed = hasArabic(title) ? fixArabicText(title) : title;
     
+    // Calculate text position (centered vertically in header)
+    const textY = sectionStartY + 10;
+    
     doc
       .fontSize(16)
       .fillColor(colors.primary)
-      .text(sectionTitleFixed, doc.page.margins.left + sectionPadding, sectionStartY + 8, {
+      .text(sectionTitleFixed, doc.page.margins.left + sectionPadding, textY, {
         width: doc.page.width - doc.page.margins.left - doc.page.margins.right - (sectionPadding * 2),
         align: isRTL ? 'right' : 'left'
       });
 
-    // Underline for section title
-    doc
-      .moveTo(doc.page.margins.left + sectionPadding, sectionStartY + 28)
-      .lineTo(doc.page.width - doc.page.margins.right - sectionPadding, sectionStartY + 28)
-      .lineWidth(1)
-      .strokeColor(colors.secondary)
-      .stroke();
+    // No underline - removed as requested
 
-    doc.y = sectionStartY + 35;
+    doc.y = sectionStartY + sectionHeaderHeight;
 
     // Section content
     if (contentCallback) {
@@ -264,7 +263,7 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
       doc
         .fontSize(11)
         .fillColor(fieldColor)
-        .text(`${labelTextFixed}${iconPart}:`, fieldX, currentY, {
+        .text(`${labelTextFixed}${iconPart}`, fieldX, currentY, {
           align: 'right',
           width: fieldWidth
         });
@@ -297,7 +296,7 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
       doc
         .fontSize(11)
         .fillColor(fieldColor)
-        .text(` ${labelText}: `, { continued: true });
+        .text(` ${labelText} `, { continued: true });
 
       // Value
       doc
@@ -359,7 +358,7 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
       doc
         .fontSize(11)
         .fillColor(colors.dark)
-        .text(`${statusLabelFixed}:`, fieldX, statusY, {
+        .text(statusLabelFixed, fieldX, statusY, {
           align: 'right',
           width: fieldWidth
         });
@@ -386,7 +385,7 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
       doc
         .fontSize(11)
         .fillColor(colors.dark)
-        .text(`${statusLabel}: `, { continued: true })
+        .text(`${statusLabel} `, { continued: true })
         .fillColor(statusColor)
         .text(statusText);
 
