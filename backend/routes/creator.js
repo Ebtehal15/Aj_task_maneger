@@ -480,6 +480,7 @@ router.get('/reports', async (req, res) => {
     from_completed,
     to_completed,
     departman,
+    arsiv,
     filterTypes: filterTypesRaw,
     filterType
   } = req.query;
@@ -504,6 +505,7 @@ router.get('/reports', async (req, res) => {
     if (from_verilen || to_verilen) filterTypes.push('given_date');
     if (from_completed || to_completed) filterTypes.push('completed_date');
     if (departman) filterTypes.push('department');
+    if (arsiv) filterTypes.push('archive');
   }
 
   const params = [];
@@ -576,6 +578,11 @@ router.get('/reports', async (req, res) => {
     params.push(departman);
     paramIndex++;
   }
+  if (arsiv && arsiv !== 'undefined' && arsiv !== 'null') {
+    where.push(`t.arsiv = $${paramIndex}`);
+    params.push(arsiv);
+    paramIndex++;
+  }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
@@ -611,7 +618,7 @@ router.get('/reports', async (req, res) => {
       cities: citiesResult.rows,
       municipalities: municipalitiesResult.rows,
       regions: regionsResult.rows,
-      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, filterTypes }
+      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes }
     });
   } catch (err) {
     console.error(err);
@@ -628,7 +635,7 @@ router.get('/admin/reports/export', async (req, res) => {
 });
 
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman } = req.query;
+  const { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv } = req.query;
 
   const params = [];
   const where = [];
@@ -698,6 +705,11 @@ router.get('/reports/export', async (req, res) => {
   if (departman && departman !== 'undefined' && departman !== 'null') {
     where.push(`t.departman = $${paramIndex}`);
     params.push(departman);
+    paramIndex++;
+  }
+  if (arsiv && arsiv !== 'undefined' && arsiv !== 'null') {
+    where.push(`t.arsiv = $${paramIndex}`);
+    params.push(arsiv);
     paramIndex++;
   }
 

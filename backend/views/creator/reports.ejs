@@ -107,6 +107,12 @@
                 <label class="form-check-label" for="ft-department"><%= t('filterByDepartment') %></label>
               </div>
             </div>
+            <div class="col-6">
+              <div class="form-check">
+                <input class="form-check-input filter-type-checkbox" type="checkbox" value="archive" id="ft-archive" <%= selectedFilterTypes.includes('archive') ? 'checked' : '' %>>
+                <label class="form-check-label" for="ft-archive"><%= t('filterByArchive') %></label>
+              </div>
+            </div>
           </div>
           <div class="text-muted small mt-2">
             <span><%= t('optional') %></span>
@@ -231,6 +237,16 @@
         <option value="LİSANS" <%= filters.departman === 'LİSANS' ? 'selected' : '' %>><%= t('departmanLisans') %></option>
         <option value="GENEL" <%= filters.departman === 'GENEL' ? 'selected' : '' %>><%= t('departmanGenel') %></option>
         <option value="İNSAN KAYNAKLARI" <%= filters.departman === 'İNSAN KAYNAKLARI' ? 'selected' : '' %>><%= t('departmanInsanKaynaklari') %></option>
+      </select>
+    </div>
+    
+    <!-- Archive Filter -->
+    <div class="col-md-3 filter-option" id="filter-archive" data-filter-type="archive" style="display: <%= selectedFilterTypes.includes('archive') ? 'block' : 'none' %>;">
+      <label class="form-label"><%= t('filterByArchive') %></label>
+      <select name="arsiv" class="form-select filter-input">
+        <option value="">--</option>
+        <option value="YOK" <%= filters.arsiv === 'YOK' ? 'selected' : '' %>><%= t('arsivYok') %></option>
+        <option value="VAR" <%= filters.arsiv === 'VAR' ? 'selected' : '' %>><%= t('arsivVar') %></option>
       </select>
     </div>
     
