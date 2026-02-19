@@ -1,11 +1,13 @@
 // Basic service worker for AJ İş Takip
 // This is enough to make the app installable as a PWA.
 
-const CACHE_NAME = 'aj-istakip-cache-v1';
+const CACHE_NAME = 'aj-istakip-cache-v2';
 const OFFLINE_URLS = [
   '/',
   '/public/css/style.css',
-  '/public/img/site_ikon.png'
+  '/public/img/site_ikon.png',
+  '/public/img/logo.jpg',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {

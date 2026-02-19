@@ -270,15 +270,36 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
 }
 
 .tm-pwa-install-btn-mobile {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0.5rem;
   justify-content: center;
-  margin-right: 0.25rem;
+  margin-right: 0.5rem;
+  font-size: 1.125rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(250, 204, 21, 0.2);
 }
 
 .tm-pwa-install-btn-mobile span {
   display: none;
+}
+
+/* Mobile specific styles for better visibility */
+@media (max-width: 768px) {
+  .tm-pwa-install-btn-mobile {
+    background: rgba(250, 204, 21, 0.15) !important;
+    border-color: rgba(250, 204, 21, 0.4) !important;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
 }
 
 .tm-notification-btn,

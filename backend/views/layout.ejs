@@ -3,16 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <title><%= pageTitle %> | <%= t('appTitle') %></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#facc15" />
-    <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="AJ İş Takip" />
+    <link rel="manifest" href="/manifest.json" />
     <!-- PWA / mobile icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="/public/img/site_ikon.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="/public/img/site_ikon.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/public/img/site_ikon.png" />
     <link rel="apple-touch-icon" href="/public/img/site_ikon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AJ İş Takip" />
+    <!-- Android Chrome -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#facc15" />
+    <meta name="msapplication-TileImage" content="/public/img/site_ikon.png" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -736,7 +751,24 @@
         // Show the install button
         if (installBtnDesktop) installBtnDesktop.style.display = 'flex';
         if (installBtnMobile) installBtnMobile.style.display = 'flex';
+        console.log('PWA install prompt available');
       });
+
+      // For mobile devices, also check if install is possible
+      // On mobile Chrome, the prompt might not fire immediately
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Check if service worker is registered
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(() => {
+            // On mobile, show install button after a delay if prompt hasn't fired
+            setTimeout(() => {
+              if (deferredPrompt && installBtnMobile) {
+                installBtnMobile.style.display = 'flex';
+              }
+            }, 2000);
+          });
+        }
+      }
 
       // Handle install button click
       function handleInstallClick() {
