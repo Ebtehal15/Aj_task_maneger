@@ -152,7 +152,14 @@ app.use(attachNotificationCount);
 
 // Service worker file for PWA (must be at root scope)
 app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
+// Manifest file for PWA
+app.get('/public/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json');
+  res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
 });
 
 // Route logging middleware (for debugging)
