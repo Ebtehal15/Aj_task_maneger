@@ -2,7 +2,7 @@
   "name": "AJ İş Takip - Görev Yönetim Sistemi",
   "short_name": "AJ İş Takip",
   "description": "Görev yönetim ve takip sistemi",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#facc15",
