@@ -5,7 +5,7 @@
     <title><%= pageTitle %> | <%= t('appTitle') %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#facc15" />
-    <link rel="manifest" href="/public/manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="AJ İş Takip" />
     <!-- PWA / mobile icons -->
@@ -54,6 +54,11 @@
             <% if (currentUser) { %>
               <!-- Desktop: Avatar, Bildirim, Dil, Logout -->
               <div class="tm-navbar-items-desktop">
+                <!-- PWA Install Button (hidden by default) -->
+                <button id="pwa-install-btn" class="tm-pwa-install-btn" style="display: none;" title="Uygulamayı Yükle">
+                  <i class="bi bi-download"></i>
+                  <span class="d-none d-md-inline">Yükle</span>
+                </button>
                 <div class="tm-user-avatar-new">
                   <% if (currentUser.avatar) { %>
                     <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-image" />
@@ -91,6 +96,10 @@
 
               <!-- Mobile: Avatar, Bildirim, Dil, Logout -->
               <div class="tm-navbar-items-mobile">
+                <!-- PWA Install Button Mobile (hidden by default) -->
+                <button id="pwa-install-btn-mobile" class="tm-pwa-install-btn-mobile" style="display: none;" title="Uygulamayı Yükle">
+                  <i class="bi bi-download"></i>
+                </button>
                 <div class="tm-user-avatar-new-mobile">
                   <% if (currentUser.avatar) { %>
                     <img src="/<%= currentUser.avatar %>" alt="<%= currentUser.username %>" class="tm-avatar-image-mobile" />
@@ -708,6 +717,72 @@
               console.error('Service worker registration failed:', err);
             });
         });
+      }
+    })();
+  </script>
+  <script>
+    // PWA Install Button Handler
+    (function() {
+      let deferredPrompt;
+      const installBtnDesktop = document.getElementById('pwa-install-btn');
+      const installBtnMobile = document.getElementById('pwa-install-btn-mobile');
+
+      // Listen for the beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Show the install button
+        if (installBtnDesktop) installBtnDesktop.style.display = 'flex';
+        if (installBtnMobile) installBtnMobile.style.display = 'flex';
+      });
+
+      // Handle install button click
+      function handleInstallClick() {
+        if (!deferredPrompt) {
+          // If the prompt is not available, show a message
+          alert('Uygulama zaten yüklü veya bu tarayıcı PWA kurulumunu desteklemiyor.');
+          return;
+        }
+
+        // Show the install prompt
+        deferredPrompt.prompt();
+
+        // Wait for the user to respond to the prompt
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          // Clear the deferredPrompt variable
+          deferredPrompt = null;
+          // Hide the install button
+          if (installBtnDesktop) installBtnDesktop.style.display = 'none';
+          if (installBtnMobile) installBtnMobile.style.display = 'none';
+        });
+      }
+
+      if (installBtnDesktop) {
+        installBtnDesktop.addEventListener('click', handleInstallClick);
+      }
+      if (installBtnMobile) {
+        installBtnMobile.addEventListener('click', handleInstallClick);
+      }
+
+      // Hide install button if app is already installed
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        deferredPrompt = null;
+        if (installBtnDesktop) installBtnDesktop.style.display = 'none';
+        if (installBtnMobile) installBtnMobile.style.display = 'none';
+      });
+
+      // Check if app is already installed (standalone mode)
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        if (installBtnDesktop) installBtnDesktop.style.display = 'none';
+        if (installBtnMobile) installBtnMobile.style.display = 'none';
       }
     })();
   </script>

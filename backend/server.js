@@ -156,8 +156,8 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'sw.js'));
 });
 
-// Manifest file for PWA
-app.get('/public/manifest.json', (req, res) => {
+// Manifest file for PWA (must be at root scope)
+app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
 });

@@ -243,6 +243,44 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
 }
 
 /* Notification Button */
+/* PWA Install Button */
+.tm-pwa-install-btn,
+.tm-pwa-install-btn-mobile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+.tm-pwa-install-btn:hover,
+.tm-pwa-install-btn-mobile:hover {
+  background: rgba(250, 204, 21, 0.2);
+  border-color: rgba(250, 204, 21, 0.5);
+  color: #facc15;
+  transform: translateY(-1px);
+}
+
+.tm-pwa-install-btn-mobile {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.5rem;
+  justify-content: center;
+  margin-right: 0.25rem;
+}
+
+.tm-pwa-install-btn-mobile span {
+  display: none;
+}
+
 .tm-notification-btn,
 .tm-notification-btn-mobile {
   position: relative;
