@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
@@ -877,6 +878,115 @@ router.post('/translate', async (req, res) => {
   } catch (err) {
     console.error('Translate error:', err);
     res.json({ success: false, error: 'Translation failed', translated: text });
+  }
+});
+
+// Quick add municipality (for admin role)
+router.post('/municipalities/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'Belediye adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO municipalities (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // Municipality already exists
+      const existingResult = await pool.query('SELECT id, name FROM municipalities WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'Belediye eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding municipality:', err);
+    res.status(500).json({ success: false, error: 'Belediye eklenirken hata oluştu' });
+  }
+});
+
+// Quick add region (for admin role)
+router.post('/regions/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'Bölge adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO regions (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // Region already exists
+      const existingResult = await pool.query('SELECT id, name FROM regions WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'Bölge eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding region:', err);
+    res.status(500).json({ success: false, error: 'Bölge eklenirken hata oluştu' });
+  }
+});
+
+// Quick add city (for admin role)
+router.post('/cities/quick-add', async (req, res) => {
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: 'İl adı gereklidir' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO cities (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id, name',
+      [name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // City already exists
+      const existingResult = await pool.query('SELECT id, name FROM cities WHERE name = $1', [name.trim()]);
+      if (existingResult.rows.length > 0) {
+        return res.json({ success: true, name: existingResult.rows[0].name });
+      }
+      return res.status(400).json({ success: false, error: 'İl eklenemedi' });
+    }
+
+    res.json({ success: true, name: result.rows[0].name });
+  } catch (err) {
+    console.error('Error adding city:', err);
+    res.status(500).json({ success: false, error: 'İl eklenirken hata oluştu' });
+  }
+});
+
+// Quick add user (for admin role)
+router.post('/users/quick-add', async (req, res) => {
+  const { username, email, password, role } = req.body;
+  if (!username || !password || !role) {
+    return res.json({ success: false, error: 'Username, password and role are required' });
+  }
+  try {
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username',
+      [username, email || null, passwordHash, role]
+    );
+    res.json({ success: true, userId: result.rows[0].id, username: result.rows[0].username });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message || 'Error adding user' });
   }
 });
 
