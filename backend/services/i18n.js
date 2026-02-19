@@ -12,8 +12,11 @@ const STRINGS = {
     createTask: 'Create Task',
     taskTitle: 'Task Title',
     taskDescription: 'Description',
+    description: 'Description',
     deadline: 'Estimated Completion Date',
     completedAt: 'Completion Date',
+    givenDate: 'Start Date',
+    location: 'Location',
     assignedTo: 'Assign to',
     status: 'Status',
     status_pending: 'Pending',
@@ -146,7 +149,12 @@ const STRINGS = {
     linkCopied: 'Link copied to clipboard!',
     shareFileTitle: 'Share Excel File',
     fileDownloaded: 'File downloaded',
-    shareDownloadedFile: 'Share downloaded file'
+    shareDownloadedFile: 'Share downloaded file',
+    taskDetailsTitle: 'Task Details',
+    basicInfo: 'General Info',
+    responsibleInfo: 'Responsibles',
+    dateInfo: 'Dates',
+    attachments: 'Attachments'
   },
   tr: {
     appTitle: 'Görev Yönetimi',
@@ -162,8 +170,11 @@ const STRINGS = {
     taskTitle: 'Görev Başlığı',
     taskSubject: 'İş Konusu',
     taskDescription: 'Açıklama',
+    description: 'Açıklama',
     deadline: 'Tahmini İş Bitiş Tarihi',
     completedAt: 'Bitiş Tarihi',
+    givenDate: 'İş Başlama Tarihi',
+    location: 'Lokasyon',
     assignedTo: 'Atanan',
     status: 'Durum',
     status_pending: 'Beklemede',
@@ -285,7 +296,12 @@ const STRINGS = {
     linkCopied: 'Link panoya kopyalandı!',
     shareFileTitle: 'Excel Dosyasını Paylaş',
     fileDownloaded: 'Dosya indirildi',
-    shareDownloadedFile: 'İndirilen dosyayı paylaş'
+    shareDownloadedFile: 'İndirilen dosyayı paylaş',
+    taskDetailsTitle: 'Görev Detayları',
+    basicInfo: 'Genel Bilgiler',
+    responsibleInfo: 'Sorumlular',
+    dateInfo: 'Tarihler',
+    attachments: 'Ekler'
   },
   ar: {
     appTitle: 'نظام إدارة المهام',
@@ -301,8 +317,11 @@ const STRINGS = {
     taskTitle: 'عنوان المهمة',
     taskSubject: 'موضوع العمل',
     taskDescription: 'وصف المهمة',
+    description: 'الوصف',
     deadline: 'تاريخ انتهاء العمل المتوقع',
     completedAt: 'تاريخ الانتهاء',
+    givenDate: 'تاريخ بدء العمل',
+    location: 'الموقع',
     assignedTo: 'تعيين إلى',
     status: 'الحالة',
     status_pending: 'قيد الانتظار',
@@ -344,7 +363,7 @@ const STRINGS = {
     responsible3: 'المسؤول 3',
     view: 'عرض',
     filesHelpText: 'يمكن للمدير والموظفين رفع الملفات عند إنشاء أو تحديث المهمة.',
-    recentUpdates: 'أحدث التحديثات',
+    recentUpdates: 'آخر التحديثات',
     noUpdates: 'لا توجد تحديثات مسجلة بعد.',
     statusLabel: 'الحالة',
     usersPageTitle: 'المستخدمون',
@@ -426,7 +445,12 @@ const STRINGS = {
     linkCopied: 'تم نسخ الرابط إلى الحافظة!',
     shareFileTitle: 'مشاركة ملف Excel',
     fileDownloaded: 'تم تنزيل الملف',
-    shareDownloadedFile: 'مشاركة الملف الذي تم تنزيله'
+    shareDownloadedFile: 'مشاركة الملف الذي تم تنزيله',
+    taskDetailsTitle: 'تفاصيل المهمة',
+    basicInfo: 'معلومات عامة',
+    responsibleInfo: 'المسؤولون',
+    dateInfo: 'التواريخ',
+    attachments: 'المرفقات'
   }
 };
 

@@ -303,9 +303,17 @@
             </p>
           </div>
         </div>
-        <div class="card-footer bg-transparent border-top-0 pt-0">
-          <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary w-100">
+        <div class="card-footer bg-transparent border-top-0 pt-0 d-flex gap-2">
+          <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary flex-grow-1">
             <i class="bi bi-eye"></i> <%= t('viewTask') %>
+          </a>
+          <a
+            href="/admin/tasks/<%= task.id %>/pdf"
+            class="btn btn-sm btn-outline-danger task-pdf-download"
+            title="PDF İndir"
+            download
+          >
+            <i class="bi bi-file-pdf"></i> PDF
           </a>
         </div>
       </div>

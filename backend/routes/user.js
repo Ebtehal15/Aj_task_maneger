@@ -4,6 +4,7 @@ const express = require('express');
 const multer = require('multer');
 const { getDb } = require('../services/db');
 const { addNotification } = require('../services/notifications');
+const { streamTaskPdf } = require('../services/pdfHelper');
 
 const router = express.Router();
 const pool = getDb();
@@ -139,6 +140,66 @@ router.get('/tasks/:id', async (req, res) => {
     console.error(err);
     res.sendStatus(500);
     }
+});
+
+// Task detail PDF for normal users (only if they are involved in the task)
+router.get('/tasks/:id/pdf', async (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const taskResult = await pool.query(
+      `SELECT t.*,
+              c.username  AS created_username,
+              u.username  AS assigned_username,
+              u2.username AS sorumlu_2_username,
+              u3.username AS sorumlu_3_username,
+              ks.username AS konu_sorumlusu_username
+       FROM tasks t
+       JOIN users c  ON t.created_by = c.id
+       LEFT JOIN users u  ON t.assigned_to = u.id
+       LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+       LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+       LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+       WHERE t.id = $1
+         AND (t.assigned_to = $2 
+              OR t.sorumlu_2 = $2 
+              OR t.sorumlu_3 = $2 
+              OR t.konu_sorumlusu::text = $2::text)`,
+      [taskId, userId]
+    );
+
+    if (!taskResult.rows.length) {
+      return res.sendStatus(404);
+    }
+
+    const task = taskResult.rows[0];
+
+    const updatesResult = await pool.query(
+      `SELECT tu.*, u.username
+       FROM task_updates tu
+       JOIN users u ON tu.user_id = u.id
+       WHERE tu.task_id = $1
+       ORDER BY tu.created_at DESC`,
+      [taskId]
+    );
+
+    const filesResult = await pool.query(
+      'SELECT filename, original_name FROM task_files WHERE task_id = $1 ORDER BY uploaded_at DESC',
+      [taskId]
+    );
+
+    streamTaskPdf({
+      task,
+      updates: updatesResult.rows,
+      files: filesResult.rows,
+      req,
+      res,
+    });
+  } catch (err) {
+    console.error('Error generating user task PDF:', err);
+    res.sendStatus(500);
+  }
 });
 
 // Update status + upload evidence + optional note to admin

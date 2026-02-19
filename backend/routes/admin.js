@@ -79,6 +79,8 @@ const upload = multer({
   }
 });
 
+const { streamTaskPdf } = require('../services/pdfHelper');
+
 // Admin dashboard - with optional filters from query params
 router.get('/dashboard', async (req, res) => {
   console.log(`📊 Admin dashboard accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
@@ -1026,9 +1028,18 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
     arsiv,
     verilen_is_tarihi,
     acil,
-    status
+    status,
+    task_subject
   } = req.body;
       const files = req.files || [];
+
+  // Validation
+  if (!title || !title.trim()) {
+    return res.status(400).send('Title is required');
+  }
+  if (!assigned_to) {
+    return res.status(400).send('Assigned user is required');
+  }
 
   const client = await pool.connect();
   try {
@@ -1141,8 +1152,9 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
       res.redirect('/admin/dashboard');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
-    res.sendStatus(500);
+    console.error('Error creating task:', err);
+    console.error('Request body:', req.body);
+    res.status(500).send(`Error creating task: ${err.message}`);
   } finally {
     client.release();
   }
@@ -1195,6 +1207,61 @@ router.get('/tasks/:id', async (req, res) => {
     console.error(err);
     res.sendStatus(500);
     }
+});
+
+// Task detail PDF (for sharing/printing)
+router.get('/tasks/:id/pdf', async (req, res) => {
+  const taskId = req.params.id;
+
+  try {
+    const taskResult = await pool.query(
+      `SELECT t.*,
+              u.username  AS assigned_username,
+              u2.username AS sorumlu_2_username,
+              u3.username AS sorumlu_3_username,
+              c.username  AS created_username,
+              ks.username AS konu_sorumlusu_username
+       FROM tasks t
+       JOIN users u  ON t.assigned_to = u.id
+       JOIN users c  ON t.created_by = c.id
+       LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+       LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+       LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+       WHERE t.id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const task = taskResult.rows[0];
+
+    const updatesResult = await pool.query(
+      `SELECT tu.*, u.username
+       FROM task_updates tu
+       JOIN users u ON tu.user_id = u.id
+       WHERE tu.task_id = $1
+       ORDER BY tu.created_at DESC`,
+      [taskId]
+    );
+
+    const filesResult = await pool.query(
+      'SELECT filename, original_name FROM task_files WHERE task_id = $1 ORDER BY uploaded_at DESC',
+      [taskId]
+    );
+
+    streamTaskPdf({
+      task,
+      updates: updatesResult.rows,
+      files: filesResult.rows,
+      req,
+      res,
+    });
+  } catch (err) {
+    console.error('Error generating admin task PDF:', err);
+    res.sendStatus(500);
+  }
 });
 
 // Edit task form

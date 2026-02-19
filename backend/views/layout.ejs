@@ -330,6 +330,38 @@
       let currentFileName = '';
       
       // Global paylaşım fonksiyonu
+      window.shareViaWhatsApp = async function() {
+        if (!currentDownloadedFile) return;
+        
+        // Web Share API ile WhatsApp'a paylaşmayı dene
+        if (navigator.share) {
+          try {
+            const shareData = {
+              files: [currentDownloadedFile]
+            };
+            
+            if (navigator.canShare && navigator.canShare(shareData)) {
+              await navigator.share(shareData);
+              
+              // Toast'u kapat
+              const toastElement = document.getElementById('downloadToast');
+              if (toastElement) {
+                const toastInstance = bootstrap.Toast.getInstance(toastElement);
+                if (toastInstance) toastInstance.hide();
+              }
+              return;
+            }
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              console.error('WhatsApp share error:', error);
+            }
+          }
+        }
+        
+        // Fallback: WhatsApp Web link
+        alert('WhatsApp paylaşımı için Web Share API desteklenmiyor. Lütfen dosyayı manuel olarak WhatsApp\'a gönderin.');
+      };
+      
       window.shareDownloadedFile = async function() {
         if (!currentDownloadedFile) return;
         
@@ -466,25 +498,39 @@
         
         const toast = document.createElement('div');
         toast.id = 'downloadToast';
-        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+        toast.className = 'toast border position-fixed top-50 start-50 translate-middle shadow-lg';
+        toast.style.cssText = 'background: white; border-radius: 16px; min-width: 350px; max-width: 450px; z-index: 9999; border: 1px solid #e5e7eb !important;';
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
-        toast.style.minWidth = '300px';
-        toast.style.zIndex = '9999';
         
         const fileDownloadedText = '<%= t("fileDownloaded") %>';
         const shareDownloadedFileText = '<%= t("shareDownloadedFile") %>';
+        const shareViaWhatsAppText = '<%= t("shareViaWhatsApp") %>';
         toast.innerHTML = `
-          <div class="d-flex align-items-center">
-            <div class="toast-body d-flex align-items-center gap-2">
-              <i class="bi bi-check-circle-fill"></i>
-              <span>${fileDownloadedText}: ${fileName}</span>
+          <div class="toast-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="flex-shrink-0 me-3">
+                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                  <i class="bi bi-check-circle-fill text-white" style="font-size: 24px;"></i>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-0 fw-bold text-dark">${fileDownloadedText}</h6>
+                <small class="text-muted">${fileName}</small>
+              </div>
+              <button type="button" class="btn-close ms-3" data-bs-dismiss="toast"></button>
             </div>
-            <button type="button" class="btn btn-sm btn-light me-2" onclick="shareDownloadedFile()" title="${shareDownloadedFileText}">
-              <i class="bi bi-share-fill"></i>
-            </button>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            <div class="d-flex gap-2 mt-3">
+              <button type="button" class="btn btn-success flex-fill d-flex align-items-center justify-content-center gap-2" onclick="shareViaWhatsApp()" style="border-radius: 8px; padding: 10px; font-weight: 600;">
+                <i class="bi bi-whatsapp" style="font-size: 18px;"></i>
+                <span>${shareViaWhatsAppText}</span>
+              </button>
+              <button type="button" class="btn btn-light flex-fill d-flex align-items-center justify-content-center gap-2" onclick="shareDownloadedFile()" style="border-radius: 8px; padding: 10px; font-weight: 600;">
+                <i class="bi bi-share-fill" style="font-size: 18px;"></i>
+                <span>${shareDownloadedFileText}</span>
+              </button>
+            </div>
           </div>
         `;
         document.body.appendChild(toast);
@@ -558,6 +604,70 @@
               // Hata durumunda normal indirme
               const downloadLink = document.createElement('a');
               downloadLink.href = exportUrl;
+              downloadLink.download = '';
+              downloadLink.style.display = 'none';
+              document.body.appendChild(downloadLink);
+              downloadLink.click();
+              document.body.removeChild(downloadLink);
+            }
+          });
+        });
+        
+        // PDF indirme linkleri için
+        const pdfLinks = document.querySelectorAll('a.task-pdf-download');
+        
+        pdfLinks.forEach(link => {
+          link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const pdfUrl = this.href;
+            
+            try {
+              // PDF'i fetch ile blob olarak al
+              const response = await fetch(pdfUrl);
+              if (!response.ok) throw new Error('Download failed');
+              
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              
+              // Dosya adını oluştur
+              let fileName = '';
+              const contentDisposition = response.headers.get('content-disposition');
+              if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch) {
+                  fileName = decodeURIComponent(fileNameMatch[1].replace(/['"]/g, ''));
+                }
+              }
+              if (!fileName) {
+                fileName = `gorev_${new Date().toISOString().slice(0,10)}.pdf`;
+              }
+              
+              // Dosyayı indir
+              const downloadLink = document.createElement('a');
+              downloadLink.href = url;
+              downloadLink.download = fileName;
+              downloadLink.style.display = 'none';
+              document.body.appendChild(downloadLink);
+              downloadLink.click();
+              document.body.removeChild(downloadLink);
+              
+              // URL'i temizle
+              setTimeout(() => window.URL.revokeObjectURL(url), 100);
+              
+              // Dosyayı sakla (paylaşım için)
+              currentDownloadedFile = new File([blob], fileName, { 
+                type: 'application/pdf' 
+              });
+              currentFileName = fileName;
+              
+              // İndirme bildirimi göster (WhatsApp paylaşım butonu ile)
+              showDownloadNotification(fileName, currentDownloadedFile);
+              
+            } catch (error) {
+              console.error('PDF download error:', error);
+              // Hata durumunda normal indirme
+              const downloadLink = document.createElement('a');
+              downloadLink.href = pdfUrl;
               downloadLink.download = '';
               downloadLink.style.display = 'none';
               document.body.appendChild(downloadLink);
