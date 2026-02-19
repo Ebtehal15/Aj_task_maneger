@@ -14,25 +14,21 @@ function streamTaskPdf({ task, updates = [], files = [], req, res }) {
   });
 
   // Try to use a Unicode font so Turkish/Arabic characters render correctly.
-  // Priority:
-  // 1) Segoe UI (modern, clean Windows font)
-  // 2) Project font: backend/public/fonts/NotoSans-Regular.ttf or Inter/Roboto
-  // 3) Other modern Windows system fonts (Calibri, Tahoma)
-  // 4) Standard Windows fonts (Arial)
-  // 5) Built‑in Helvetica (last resort, may break TR/AR chars)
+  // Priority for Render (Linux) - project fonts first, then Windows fonts (local dev only)
+  // 1) Project fonts (works on Render/Linux) - MUST HAVE for production
+  // 2) Windows system fonts (local development only)
+  // 3) Built‑in Helvetica (last resort, may break TR/AR chars)
   const candidateFonts = [
-    // Segoe UI first (modern, clean, supports TR/AR)
-    'C:\\Windows\\Fonts\\segoeui.ttf',
-    'C:\\Windows\\Fonts\\segoeuib.ttf', // Bold variant
-    // Project fonts
+    // Project fonts FIRST (these work on Render/Linux)
     path.join(__dirname, '..', 'public', 'fonts', 'NotoSans-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'Inter-Regular.ttf'),
     path.join(__dirname, '..', 'public', 'fonts', 'Roboto-Regular.ttf'),
-    // Other modern Windows fonts
+    // Windows fonts (local development only - won't work on Render)
+    'C:\\Windows\\Fonts\\segoeui.ttf',
+    'C:\\Windows\\Fonts\\segoeuib.ttf',
     'C:\\Windows\\Fonts\\calibri.ttf',
-    'C:\\Windows\\Fonts\\calibrib.ttf', // Bold variant
+    'C:\\Windows\\Fonts\\calibrib.ttf',
     'C:\\Windows\\Fonts\\tahoma.ttf',
-    // Standard Windows fonts
     'C:\\Windows\\Fonts\\arial.ttf',
   ];
 
