@@ -722,16 +722,32 @@
           const isHttps = window.location.protocol === 'https:';
           if (!isLocalhost && !isHttps) {
             console.log('Service worker registration skipped (requires HTTPS in production).');
+            console.log('Current protocol:', window.location.protocol);
             return;
           }
           navigator.serviceWorker.register('/sw.js')
             .then(function(reg) {
               console.log('Service worker registered:', reg.scope);
+              console.log('Service worker active:', reg.active);
+              // Check if manifest is accessible
+              fetch('/manifest.json')
+                .then(res => {
+                  console.log('Manifest.json accessible:', res.ok);
+                  return res.json();
+                })
+                .then(manifest => {
+                  console.log('Manifest.json content:', manifest);
+                })
+                .catch(err => {
+                  console.error('Manifest.json error:', err);
+                });
             })
             .catch(function(err) {
               console.error('Service worker registration failed:', err);
             });
         });
+      } else {
+        console.log('Service worker not supported in this browser');
       }
     })();
   </script>
@@ -744,14 +760,44 @@
 
       // Listen for the beforeinstallprompt event
       window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event fired');
         // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
         // Stash the event so it can be triggered later
         deferredPrompt = e;
         // Show the install button
-        if (installBtnDesktop) installBtnDesktop.style.display = 'flex';
-        if (installBtnMobile) installBtnMobile.style.display = 'flex';
+        if (installBtnDesktop) {
+          installBtnDesktop.style.display = 'flex';
+          console.log('Desktop install button shown');
+        }
+        if (installBtnMobile) {
+          installBtnMobile.style.display = 'flex';
+          console.log('Mobile install button shown');
+        }
         console.log('PWA install prompt available');
+      });
+
+      // Debug: Log if install criteria are met
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          console.log('PWA Installability Check:');
+          console.log('- Service Worker:', 'serviceWorker' in navigator);
+          console.log('- Manifest link:', document.querySelector('link[rel="manifest"]') ? 'Found' : 'Not found');
+          console.log('- Deferred prompt:', deferredPrompt ? 'Available' : 'Not available');
+          console.log('- Display mode:', window.matchMedia('(display-mode: standalone)').matches ? 'Standalone' : 'Browser');
+          
+          // Check manifest
+          fetch('/manifest.json')
+            .then(res => res.json())
+            .then(manifest => {
+              console.log('- Manifest valid:', manifest.name ? 'Yes' : 'No');
+              console.log('- Manifest name:', manifest.name);
+              console.log('- Manifest icons:', manifest.icons ? manifest.icons.length : 0);
+            })
+            .catch(err => {
+              console.error('- Manifest error:', err);
+            });
+        }, 3000);
       });
 
       // For mobile devices, also check if install is possible

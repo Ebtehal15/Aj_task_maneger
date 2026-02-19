@@ -1,0 +1,36 @@
+{
+  "name": "AJ İş Takip - Görev Yönetim Sistemi",
+  "short_name": "AJ İş Takip",
+  "description": "Görev yönetim ve takip sistemi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#facc15",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "718x715",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/img/site_ikon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "business"
+  ],
+  "prefer_related_applications": false
+}

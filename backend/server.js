@@ -150,16 +150,33 @@ app.use(attachUserToRequest);
 app.use(getI18nMiddleware());
 app.use(attachNotificationCount);
 
-// Service worker file for PWA (must be at root scope)
+// Service worker file for PWA (must be at root scope, before static files)
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'sw.js'));
 });
 
-// Manifest file for PWA (must be at root scope)
+// Manifest file for PWA (must be at root scope, before static files)
 app.get('/manifest.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/manifest+json');
-  res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
+  const manifestPath = path.join(__dirname, 'public', 'manifest.json');
+  const fs = require('fs');
+  
+  // Read file synchronously to ensure it's loaded
+  try {
+    const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    // Validate JSON
+    JSON.parse(manifestContent);
+    
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(manifestContent);
+  } catch (err) {
+    console.error('Error reading manifest.json:', err);
+    res.status(500).json({ error: 'Failed to load manifest', details: err.message });
+  }
 });
 
 // Route logging middleware (for debugging)
