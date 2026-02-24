@@ -165,6 +165,7 @@ const STRINGS = {
     loginButton: 'Giriş',
     logout: 'Çıkış',
     adminDashboard: 'Yönetici Paneli',
+    tasks: 'Görevler',
     userTasks: 'Görevlerim',
     myTasks: 'Görevlerim',
     createTask: 'Görev Oluştur',
