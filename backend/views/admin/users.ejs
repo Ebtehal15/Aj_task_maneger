@@ -54,9 +54,16 @@
             (<%= users.length %>)
           <% } %>
         </h2>
+        <div class="mb-3">
+          <input 
+            type="text" 
+            id="userSearchInput" 
+            class="form-control form-control-sm" 
+            placeholder="<%= t('searchUsersPlaceholder') %>" />
+        </div>
         <ul class="list-group">
           <% users.forEach(u => { %>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
+          <li class="list-group-item d-flex justify-content-between align-items-center user-list-item">
             <div class="d-flex align-items-center gap-3">
               <% if (u.avatar) { %>
               <img src="/<%= u.avatar %>" alt="<%= u.username %>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #facc15;" />
@@ -115,6 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const deleteUserModalElement = document.getElementById('deleteUserModal');
   const addUserFormCard = document.getElementById('addUserFormCard');
   const toggleAddUserFormBtn = document.getElementById('toggleAddUserFormBtn');
+  const userSearchInput = document.getElementById('userSearchInput');
+  const userListItems = document.querySelectorAll('.user-list-item');
   
   if (!deleteUserModalElement) return;
   
@@ -168,6 +177,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     toggleAddUserFormBtn.addEventListener('click', function() {
       addUserFormCard.classList.toggle('d-none');
+    });
+  }
+
+  // Kullanıcı arama (listeyi filtreleme)
+  if (userSearchInput && userListItems.length) {
+    userSearchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+
+      userListItems.forEach(function(item) {
+        const nameEl = item.querySelector('strong');
+        const roleEl = item.querySelector('.small.text-muted');
+        const text = ((nameEl ? nameEl.textContent : '') + ' ' + (roleEl ? roleEl.textContent : '')).toLowerCase();
+
+        if (!query || text.includes(query)) {
+          item.classList.remove('d-none');
+        } else {
+          item.classList.add('d-none');
+        }
+      });
     });
   }
 });
