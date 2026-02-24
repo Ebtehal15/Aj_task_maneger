@@ -626,7 +626,7 @@ router.get('/reports/export', async (req, res) => {
         belediye: task.belediye || '',
         departman: task.departman || '',
         konu: task.title || '',
-        is_konusu: task.description || '',
+        is_konusu: task.task_subject || '',
         verilen_is_tarihi: task.verilen_is_tarihi ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '',
         tahmini_is_bitis_tarihi: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '',
         arsiv: task.arsiv || 'YOK',

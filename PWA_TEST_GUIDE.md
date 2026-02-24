@@ -144,3 +144,4 @@ Bu durumda şunları kontrol edin:
 - **Service worker değişikliklerinde** sayfayı hard refresh yapın (Ctrl+F5)
 - **Eski service worker'ları** temizlemek için Application → Service Workers → Unregister kullanın
 
+
