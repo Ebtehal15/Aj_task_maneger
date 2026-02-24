@@ -417,6 +417,11 @@
 </script>
 
 <!-- Tablo Görünümü -->
+<% if (typeof tasks !== 'undefined') { %>
+<div class="mb-2 small text-muted">
+  <strong><%= t('resultsCount') %>:</strong> <%= tasks.length %>
+</div>
+<% } %>
 <div class="card shadow-sm task-view-container d-none" id="tableView" data-view="table">
   <div class="card-body p-0">
     <% if (!tasks.length) { %>

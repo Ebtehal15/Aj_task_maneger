@@ -3,9 +3,14 @@
   <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
 </div>
 
+<!-- Mobilde kullanıcı ekleme formu varsayılan olarak kapalı olsun -->
+<button type="button" class="btn btn-primary btn-sm mb-3 d-md-none" id="toggleAddUserFormBtn">
+  <%= t('addUser') %>
+</button>
+
 <div class="row g-2 g-md-3">
   <div class="col-12 col-md-5">
-    <div class="card shadow-sm mb-3">
+    <div class="card shadow-sm mb-3 d-none d-md-block" id="addUserFormCard">
       <div class="card-body p-2 p-md-3">
         <h2 class="h6 mb-3"><%= t('addUser') %></h2>
         <form method="post" action="/admin/users" enctype="multipart/form-data">
@@ -43,7 +48,12 @@
   <div class="col-12 col-md-7">
     <div class="card shadow-sm">
       <div class="card-body p-2 p-md-3">
-        <h2 class="h6 mb-3"><%= t('existingUsers') %></h2>
+        <h2 class="h6 mb-3">
+          <%= t('existingUsers') %>
+          <% if (typeof users !== 'undefined') { %>
+            (<%= users.length %>)
+          <% } %>
+        </h2>
         <ul class="list-group">
           <% users.forEach(u => { %>
           <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -103,6 +113,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   const deleteUserBtns = document.querySelectorAll('.delete-user-btn');
   const deleteUserModalElement = document.getElementById('deleteUserModal');
+  const addUserFormCard = document.getElementById('addUserFormCard');
+  const toggleAddUserFormBtn = document.getElementById('toggleAddUserFormBtn');
   
   if (!deleteUserModalElement) return;
   
@@ -144,6 +156,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error:', error);
         alert('<%= t("errorDeletingUser") %>');
       }
+    });
+  }
+
+  // Mobil görünümde kullanıcı ekleme formunu aç/kapat
+  if (toggleAddUserFormBtn && addUserFormCard) {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      addUserFormCard.classList.add('d-none');
+    }
+
+    toggleAddUserFormBtn.addEventListener('click', function() {
+      addUserFormCard.classList.toggle('d-none');
     });
   }
 });

@@ -57,6 +57,12 @@
   })();
 </script>
 
+<% if (typeof tasks !== 'undefined') { %>
+<div class="mb-2 small text-muted">
+  <strong><%= t('resultsCount') %>:</strong> <%= tasks.length %>
+</div>
+<% } %>
+
 <div class="card shadow-sm">
   <div class="card-body p-0">
     <% if (!tasks.length) { %>
