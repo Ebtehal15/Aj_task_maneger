@@ -140,7 +140,8 @@ router.get('/tasks/:id', async (req, res) => {
         t: req.t,
         lang: req.lang,
         dir: req.dir,
-        user: req.user
+        user: req.user,
+        dashboardUrl: '/creator/tasks'
       });
     }
 
@@ -196,7 +197,8 @@ router.get('/tasks/:id/edit', async (req, res) => {
         t: req.t,
         lang: req.lang,
         dir: req.dir,
-        user: req.user
+        user: req.user,
+        dashboardUrl: '/creator/tasks'
       });
     }
 

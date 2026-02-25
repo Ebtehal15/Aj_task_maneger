@@ -198,12 +198,19 @@ app.use('/creator', ensureAuthenticated, ensureRole('admin'), creatorRoutes);
 // 404 handler (must be last, after all routes)
 app.use((req, res) => {
   console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
+  let dashboardUrl = '/';
+  if (req.user) {
+    if (req.user.role === 'super_admin') dashboardUrl = '/admin/dashboard';
+    else if (req.user.role === 'admin') dashboardUrl = '/creator/tasks';
+    else dashboardUrl = '/user/tasks';
+  }
   res.status(404).render('errors/404', {
     pageTitle: 'Not Found',
     t: req.t,
     lang: req.lang,
     dir: req.dir,
-    user: req.user
+    user: req.user,
+    dashboardUrl
   });
 });
 
@@ -211,12 +218,19 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err);
   console.error('Stack:', err.stack);
+  let dashboardUrl = '/';
+  if (req.user) {
+    if (req.user.role === 'super_admin') dashboardUrl = '/admin/dashboard';
+    else if (req.user.role === 'admin') dashboardUrl = '/creator/tasks';
+    else dashboardUrl = '/user/tasks';
+  }
   res.status(err.status || 500).render('errors/404', {
     pageTitle: 'Error',
     t: req.t || ((key) => key),
     lang: req.lang || 'ar',
     dir: req.dir || 'rtl',
-    user: req.user || null
+    user: req.user || null,
+    dashboardUrl
   });
 });
 
