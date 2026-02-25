@@ -24,7 +24,7 @@
             type="date"
             name="tarih"
             class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.tarih) ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : '' %>"
+            value="<%= (typeof task !== 'undefined' && task && task.tarih) ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : new Date().toISOString().slice(0,10) %>"
           />
         </div>
         <div class="col-md-6 mb-3">
