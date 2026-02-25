@@ -12,15 +12,11 @@ const { translateText } = require('../services/translate');
 const router = express.Router();
 const pool = getDb();
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const { getUploadsDir, getAvatarsDir, resolveUploadPath } = require('../services/uploadsPath');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, getUploadsDir());
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -33,11 +29,7 @@ const storage = multer.diskStorage({
 // Avatar upload için ayrı storage
 const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const avatarDir = path.join(__dirname, '..', 'uploads', 'avatars');
-    if (!fs.existsSync(avatarDir)) {
-      fs.mkdirSync(avatarDir, { recursive: true });
-    }
-    cb(null, avatarDir);
+    cb(null, getAvatarsDir());
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -913,8 +905,8 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
       // Eski avatar'ı sil (opsiyonel)
       const oldUser = await pool.query('SELECT avatar FROM users WHERE id = $1', [userId]);
       if (oldUser.rows[0] && oldUser.rows[0].avatar) {
-        const oldAvatarPath = path.join(__dirname, '..', oldUser.rows[0].avatar);
-        if (fs.existsSync(oldAvatarPath)) {
+        const oldAvatarPath = resolveUploadPath(oldUser.rows[0].avatar);
+        if (oldAvatarPath && fs.existsSync(oldAvatarPath)) {
           fs.unlinkSync(oldAvatarPath);
         }
       }
@@ -962,8 +954,8 @@ router.post('/users/:id/delete', async (req, res) => {
     // Delete user's avatar if exists
     const userResult = await pool.query('SELECT avatar FROM users WHERE id = $1', [userId]);
     if (userResult.rows.length > 0 && userResult.rows[0].avatar) {
-      const avatarPath = path.join(__dirname, '..', userResult.rows[0].avatar);
-      if (fs.existsSync(avatarPath)) {
+      const avatarPath = resolveUploadPath(userResult.rows[0].avatar);
+      if (avatarPath && fs.existsSync(avatarPath)) {
         fs.unlinkSync(avatarPath);
       }
     }

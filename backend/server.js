@@ -11,6 +11,7 @@ const pgSession = require('connect-pg-simple')(session);
 const { Pool } = require('pg');
 
 const { initDb } = require('./services/db');
+const { getUploadsDir } = require('./services/uploadsPath');
 const { attachUserToRequest, ensureAuthenticated, ensureRole } = require('./services/auth-middleware');
 const { getI18nMiddleware } = require('./services/i18n');
 const { attachNotificationCount } = require('./services/notifications');
@@ -53,7 +54,7 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
   maxAge: '1d',
   etag: true
 }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+app.use('/uploads', express.static(getUploadsDir(), {
   maxAge: '1d',
   etag: true
 }));
