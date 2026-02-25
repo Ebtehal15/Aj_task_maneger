@@ -178,8 +178,8 @@
     <div class="card shadow-sm mb-3">
       <div class="card-body">
         <h2 class="h6 mb-3"><%= t('uploadFiles') %></h2>
-        <% if (!files.length) { %>
-        <p class="text-muted mb-2"><%= t('noTasks') %></p>
+        <% if (!files || !files.length) { %>
+        <p class="text-muted mb-2"><%= t('noFiles') %></p>
         <% } else { %>
         <ul class="list-group mb-3">
           <% files.forEach(file => { %>

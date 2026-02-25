@@ -13,8 +13,8 @@
   <div class="card-body">
     <form
       method="post"
-      action="<%= (typeof task !== 'undefined') ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
-      <%= (typeof task === 'undefined' || !task) ? 'enctype="multipart/form-data"' : '' %>
+      action="<%= (typeof task !== 'undefined' && task) ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
+      enctype="multipart/form-data"
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">

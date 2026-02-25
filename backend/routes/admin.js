@@ -61,7 +61,10 @@ const upload = multer({
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'image/jpeg',
-      'image/png'
+      'image/png',
+      // Bazı tarayıcılar (veya istemciler) dosya tipini tanıyamayınca
+      // `application/octet-stream` gönderebiliyor. Uzantı doğruysa bunu da kabul edelim.
+      'application/octet-stream'
     ];
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
