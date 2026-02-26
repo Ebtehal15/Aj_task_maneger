@@ -1211,6 +1211,43 @@ router.get('/tasks/:id', async (req, res) => {
     }
 });
 
+// Delete a single attached file from a task
+router.post('/tasks/:taskId/files/:fileId/delete', async (req, res) => {
+  const { taskId, fileId } = req.params;
+
+  try {
+    // Find file and ensure it belongs to this task
+    const fileResult = await pool.query(
+      'SELECT filename FROM task_files WHERE id = $1 AND task_id = $2',
+      [fileId, taskId]
+    );
+
+    if (fileResult.rows.length === 0) {
+      return res.redirect(`/admin/tasks/${taskId}`);
+    }
+
+    const filename = fileResult.rows[0].filename;
+
+    // Delete DB record
+    await pool.query('DELETE FROM task_files WHERE id = $1', [fileId]);
+
+    // Try to delete the physical file (ignore errors)
+    try {
+      const filePath = path.join(getUploadsDir(), filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {
+      console.error('Error deleting file from disk:', e);
+    }
+
+    res.redirect(`/admin/tasks/${taskId}`);
+  } catch (err) {
+    console.error(err);
+    res.redirect(`/admin/tasks/${taskId}`);
+  }
+});
+
 // Task detail PDF (for sharing/printing)
 router.get('/tasks/:id/pdf', async (req, res) => {
   const taskId = req.params.id;

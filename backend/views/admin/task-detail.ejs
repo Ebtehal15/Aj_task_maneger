@@ -184,10 +184,17 @@
         <ul class="list-group mb-3">
           <% files.forEach(file => { %>
           <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span><%= file.original_name %></span>
-            <a href="/uploads/<%= encodeURIComponent(file.filename) %>" target="_blank" class="btn btn-sm btn-outline-secondary">
-              <%= t('view') %>
-            </a>
+            <span class="text-truncate" style="max-width: 60%;"><%= file.original_name %></span>
+            <div class="btn-group">
+              <a href="/uploads/<%= encodeURIComponent(file.filename) %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-eye"></i>
+              </a>
+              <form method="post" action="/admin/tasks/<%= task.id %>/files/<%= file.id %>/delete" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bu dosyayı silmek istediğinize emin misiniz?');">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
           </li>
           <% }) %>
         </ul>
