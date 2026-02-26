@@ -1384,6 +1384,8 @@ router.post('/tasks/:id', async (req, res) => {
     const updatedVerilenIsTarihi = typeof verilen_is_tarihi !== 'undefined' && verilen_is_tarihi !== '' ? verilen_is_tarihi : (oldTask ? oldTask.verilen_is_tarihi : null);
     const updatedAcil = typeof acil !== 'undefined' ? (acil === 'true' || acil === true) : (oldTask ? oldTask.acil : false);
     const updatedTaskSubject = typeof task_subject !== 'undefined' ? task_subject : (oldTask ? oldTask.task_subject : null);
+    // assigned_to boş veya undefined gelirse eski değere geri dön
+    const updatedAssignedTo = assigned_to && String(assigned_to).trim() !== '' ? assigned_to : (oldTask ? oldTask.assigned_to : null);
 
     if (finalStatus === 'done') {
       await client.query(
@@ -1411,7 +1413,7 @@ router.post('/tasks/:id', async (req, res) => {
           updatedTitle, 
           updatedDescription, 
           updatedDeadline || null, 
-          assigned_to,
+          updatedAssignedTo,
           updatedTarih || null,
           konu_sorumlusu || null,
           sorumlu_2 || null,
@@ -1454,7 +1456,7 @@ router.post('/tasks/:id', async (req, res) => {
           updatedTitle, 
           updatedDescription, 
           updatedDeadline || null, 
-          assigned_to,
+          updatedAssignedTo,
           updatedTarih || null,
           konu_sorumlusu || null,
           sorumlu_2 || null,
@@ -1494,7 +1496,7 @@ router.post('/tasks/:id', async (req, res) => {
     const userIdsToNotify = new Set();
     
     // Add assigned_to
-    if (assigned_to) userIdsToNotify.add(Number(assigned_to));
+    if (updatedAssignedTo) userIdsToNotify.add(Number(updatedAssignedTo));
     
     // Add sorumlu_2
     if (sorumlu_2 && sorumlu_2 !== '') userIdsToNotify.add(Number(sorumlu_2));

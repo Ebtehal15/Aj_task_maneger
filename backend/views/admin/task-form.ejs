@@ -14,7 +14,7 @@
     <form
       method="post"
       action="<%= (typeof task !== 'undefined' && task) ? '/admin/tasks/' + task.id : '/admin/tasks' %>"
-      enctype="multipart/form-data"
+      <%= (typeof task === 'undefined' || !task) ? 'enctype=\"multipart/form-data\"' : '' %>
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">
