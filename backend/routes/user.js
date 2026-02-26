@@ -33,11 +33,14 @@ router.get('/tasks', async (req, res) => {
   const where = [];
   let paramIndex = 1;
 
-  // Super admin ise tüm görevleri göster, değilse sadece kendisine atanan görevleri
+  // Kullanıcı rolü ise; kendisinin sorumlu olduğu TÜM görevleri göster:
+  // assigned_to, sorumlu_2, sorumlu_3 veya konu_sorumlusu
   if (req.user.role !== 'super_admin') {
-    where.push(`t.assigned_to = $${paramIndex}`);
+    where.push(`(t.assigned_to = $${paramIndex} OR t.sorumlu_2 = $${paramIndex} OR t.sorumlu_3 = $${paramIndex} OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex +
+      1}))`);
     params.push(req.user.id);
-    paramIndex++;
+    params.push(req.user.id.toString());
+    paramIndex += 2;
   }
 
   if (status) {
