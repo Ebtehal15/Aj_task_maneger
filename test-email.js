@@ -2,7 +2,7 @@
 // Bu script ile email yapılandırmanızı test edebilirsiniz
 
 require('dotenv').config();
-const { sendNotificationEmail } = require('./backend/services/email');
+const { sendTaskAssignedEmail } = require('./backend/services/email');
 
 // Test email adresinizi buraya yazın
 const testEmail = process.env.TEST_EMAIL || 'your-test-email@gmail.com';
@@ -17,10 +17,12 @@ console.log('');
 console.log(`Sending test email to: ${testEmail}`);
 console.log('');
 
-sendNotificationEmail(
+// Basit bir "Yeni Görev Atandı" maili simüle et
+sendTaskAssignedEmail(
   testEmail,
-  'Bu bir test bildirimidir. Email yapılandırmanız çalışıyorsa bu mesajı görmelisiniz.',
-  null
+  'Test Görevi - Email Yapılandırma',
+  null,
+  0
 );
 
 // Script'in hemen kapanmaması için

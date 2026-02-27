@@ -10,22 +10,27 @@ async function addNotification(userId, message, type = null, relatedTaskId = nul
     );
 
     // Email gönder (eğer kullanıcının email'i varsa)
-    try {
-      const userResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
-      if (userResult.rows.length > 0 && userResult.rows[0].email) {
-        const userEmail = userResult.rows[0].email.trim();
-        if (userEmail) {
-          console.log(`Sending notification email to user ${userId} (${userEmail})`);
-          sendNotificationEmail(userEmail, message, relatedTaskId);
+    // Not: Görev atama bildirimlerinde (type === 'task_assigned') email zaten
+    // admin routes içinde sendTaskAssignedEmail ile gönderiliyor.
+    // Aynı kullanıcıya iki mail gitmemesi için burada task_assigned türünü atlıyoruz.
+    if (type !== 'task_assigned') {
+      try {
+        const userResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+        if (userResult.rows.length > 0 && userResult.rows[0].email) {
+          const userEmail = userResult.rows[0].email.trim();
+          if (userEmail) {
+            console.log(`Sending notification email to user ${userId} (${userEmail})`);
+            sendNotificationEmail(userEmail, message, relatedTaskId);
+          } else {
+            console.log(`User ${userId} has no email address`);
+          }
         } else {
-          console.log(`User ${userId} has no email address`);
+          console.log(`User ${userId} not found or has no email address`);
         }
-      } else {
-        console.log(`User ${userId} not found or has no email address`);
+      } catch (emailErr) {
+        console.error('Error sending notification email', emailErr);
+        // Email hatası bildirim eklemeyi engellemez
       }
-    } catch (emailErr) {
-      console.error('Error sending notification email', emailErr);
-      // Email hatası bildirim eklemeyi engellemez
     }
   } catch (err) {
     console.error('Error inserting notification', err);

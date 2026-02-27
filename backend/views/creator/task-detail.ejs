@@ -5,7 +5,17 @@
       <i class="bi bi-translate"></i>
     </button>
   </div>
-  <a href="/creator/tasks" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+  <div class="d-flex gap-2">
+    <a href="/creator/tasks/<%= task.id %>/edit" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil-square me-1"></i><%= t('edit') %>
+    </a>
+    <a href="/creator/tasks" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+    <form method="post" action="/creator/tasks/<%= task.id %>/delete" onsubmit="return confirm('Bu görevi silmek istediğinize emin misiniz?');">
+      <button type="submit" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash"></i>
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="row">

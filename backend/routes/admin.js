@@ -1087,66 +1087,36 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
       );
     }
 
-      // Notification for assigned user (sorumlu 1)
+      // Notification + email for all responsible users (deduplicated)
       const actor = req.user && req.user.username ? req.user.username : 'Admin';
       const notificationMessage = `Yeni görev atandı (by ${actor}): ${title}`;
-      
-      // Notify assigned_to (sorumlu 1)
-      await addNotification(
-        Number(assigned_to),
-        notificationMessage,
-        'task_assigned',
-        taskId
-      );
 
-      // Try to send email if user has email address
-      const userResult = await client.query('SELECT email FROM users WHERE id = $1', [assigned_to]);
-      if (userResult.rows.length > 0 && userResult.rows[0].email) {
-        sendTaskAssignedEmail(userResult.rows[0].email, title, deadline || null, taskId);
-      }
+      const userIdsToNotify = new Set();
 
-      // Notify sorumlu_2 if exists
-      if (sorumlu_2 && sorumlu_2 !== '') {
-        await addNotification(
-          Number(sorumlu_2),
-          notificationMessage,
-          'task_assigned',
-          taskId
-        );
-        const user2Result = await client.query('SELECT email FROM users WHERE id = $1', [sorumlu_2]);
-        if (user2Result.rows.length > 0 && user2Result.rows[0].email) {
-          sendTaskAssignedEmail(user2Result.rows[0].email, title, deadline || null, taskId);
-        }
-      }
-
-      // Notify sorumlu_3 if exists
-      if (sorumlu_3 && sorumlu_3 !== '') {
-        await addNotification(
-          Number(sorumlu_3),
-          notificationMessage,
-          'task_assigned',
-          taskId
-        );
-        const user3Result = await client.query('SELECT email FROM users WHERE id = $1', [sorumlu_3]);
-        if (user3Result.rows.length > 0 && user3Result.rows[0].email) {
-          sendTaskAssignedEmail(user3Result.rows[0].email, title, deadline || null, taskId);
-        }
-      }
-
-      // Notify konu_sorumlusu if exists (konu_sorumlusu is stored as VARCHAR, might be user id as string)
+      if (assigned_to) userIdsToNotify.add(Number(assigned_to));
+      if (sorumlu_2 && sorumlu_2 !== '') userIdsToNotify.add(Number(sorumlu_2));
+      if (sorumlu_3 && sorumlu_3 !== '') userIdsToNotify.add(Number(sorumlu_3));
       if (konu_sorumlusu && konu_sorumlusu !== '') {
         const konuSorumlusuId = parseInt(konu_sorumlusu);
         if (!isNaN(konuSorumlusuId)) {
-          await addNotification(
-            konuSorumlusuId,
-            notificationMessage,
-            'task_assigned',
-            taskId
-          );
-          const ksResult = await client.query('SELECT email FROM users WHERE id = $1', [konuSorumlusuId]);
-          if (ksResult.rows.length > 0 && ksResult.rows[0].email) {
-            sendTaskAssignedEmail(ksResult.rows[0].email, title, deadline || null, taskId);
-          }
+          userIdsToNotify.add(konuSorumlusuId);
+        }
+      }
+
+      for (const userId of userIdsToNotify) {
+        if (!userId) continue;
+
+        await addNotification(
+          userId,
+          notificationMessage,
+          'task_assigned',
+          taskId
+        );
+
+        // Try to send email if user has email address
+        const emailResult = await client.query('SELECT email FROM users WHERE id = $1', [userId]);
+        if (emailResult.rows.length > 0 && emailResult.rows[0].email) {
+          sendTaskAssignedEmail(emailResult.rows[0].email, title, deadline || null, taskId);
         }
       }
 

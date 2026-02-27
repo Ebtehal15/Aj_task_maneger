@@ -13,8 +13,8 @@
   <div class="card-body">
     <form
       method="post"
-      action="<%= (typeof task !== 'undefined') ? '/creator/tasks/' + task.id + '/update' : '/creator/tasks' %>"
-      enctype="multipart/form-data"
+      action="<%= (typeof task !== 'undefined' && task) ? '/creator/tasks/' + task.id + '/edit' : '/creator/tasks' %>"
+      <%= (typeof task === 'undefined' || !task) ? 'enctype=\"multipart/form-data\"' : '' %>
     >
       <!-- Tarih ve Konu Sorumlusu -->
       <div class="row">

@@ -1,6 +1,7 @@
 // Set timezone to Turkey (Europe/Istanbul) for the entire Node.js process
 // This ensures all Date operations use Turkey timezone
 process.env.TZ = 'Europe/Istanbul';
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const path = require('path');
 const express = require('express');

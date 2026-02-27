@@ -35,8 +35,20 @@ router.get('/tasks', async (req, res) => {
   const where = [];
   let paramIndex = 1;
 
-  // Creator can only see tasks assigned to them
-  where.push(`(t.assigned_to = $${paramIndex} OR t.sorumlu_2 = $${paramIndex} OR t.sorumlu_3 = $${paramIndex} OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex + 1}))`);
+  // Creator (admin role) şunları görebilsin:
+  // - Kendisine atanan görevler (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+  // - KENDİ OLUŞTURDUĞU görevler (created_by)
+  where.push(`(
+    t.assigned_to = $${paramIndex} 
+    OR t.sorumlu_2 = $${paramIndex} 
+    OR t.sorumlu_3 = $${paramIndex} 
+    OR t.created_by = $${paramIndex}
+    OR (
+      t.konu_sorumlusu IS NOT NULL 
+      AND t.konu_sorumlusu::text != '' 
+      AND t.konu_sorumlusu::text = $${paramIndex + 1}
+    )
+  )`);
   params.push(req.user.id);
   params.push(req.user.id.toString());
   paramIndex += 2;
@@ -112,12 +124,14 @@ router.get('/tasks/new', async (req, res) => {
   }
 });
 
-// Task detail - creator can see tasks assigned to them
+// Task detail - creator can see:
+// - tasks assigned to them (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+// - OR tasks they created (created_by)
 router.get('/tasks/:id', async (req, res) => {
   const taskId = req.params.id;
   const userId = req.user.id;
   try {
-    // Creator can only see tasks assigned to them
+    // Permission check
     const taskResult = await pool.query(
       `SELECT t.*, c.username AS created_username, u.username AS assigned_username,
               u2.username AS sorumlu_2_username, u3.username AS sorumlu_3_username,
@@ -129,8 +143,17 @@ router.get('/tasks/:id', async (req, res) => {
        LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
        LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
        WHERE t.id = $1 
-         AND (t.assigned_to = $2 OR t.sorumlu_2 = $2 OR t.sorumlu_3 = $2 
-              OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $3))`,
+         AND (
+           t.assigned_to = $2 
+           OR t.sorumlu_2 = $2 
+           OR t.sorumlu_3 = $2 
+           OR t.created_by = $2
+           OR (
+             t.konu_sorumlusu IS NOT NULL 
+             AND t.konu_sorumlusu::text != '' 
+             AND t.konu_sorumlusu::text = $3
+           )
+         )`,
       [taskId, userId, userId.toString()]
     );
 
@@ -175,19 +198,30 @@ router.get('/tasks/:id', async (req, res) => {
   }
 });
 
-// Task edit form - creator can edit tasks assigned to them
+// Task edit form - admin (creator role) can edit:
+// - tasks where they are assigned (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+// - OR tasks they created (created_by)
 router.get('/tasks/:id/edit', async (req, res) => {
   const taskId = req.params.id;
   const userId = req.user.id;
   
   try {
-    // Creator can only edit tasks assigned to them
+    // Permission check: assigned or created_by
     const taskResult = await pool.query(
       `SELECT t.*
        FROM tasks t
        WHERE t.id = $1 
-         AND (t.assigned_to = $2 OR t.sorumlu_2 = $2 OR t.sorumlu_3 = $2 
-              OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $3))`,
+         AND (
+           t.assigned_to = $2 
+           OR t.sorumlu_2 = $2 
+           OR t.sorumlu_3 = $2 
+           OR t.created_by = $2
+           OR (
+             t.konu_sorumlusu IS NOT NULL 
+             AND t.konu_sorumlusu::text != '' 
+             AND t.konu_sorumlusu::text = $3
+           )
+         )`,
       [taskId, userId, userId.toString()]
     );
     
@@ -231,6 +265,120 @@ router.get('/tasks/:id/edit', async (req, res) => {
   } catch (err) {
     console.error('Error loading task edit form:', err);
     res.sendStatus(500);
+  }
+});
+
+// Update full task fields from edit form
+// Admin (creator role) can update:
+// - tasks where they are assigned (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+// - OR tasks they created (created_by)
+router.post('/tasks/:id/edit', async (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+
+  const {
+    title,
+    description,
+    deadline,
+    status,
+    assigned_to,
+    tarih,
+    konu_sorumlusu,
+    sorumlu_2,
+    sorumlu_3,
+    bolge,
+    il,
+    belediye,
+    departman,
+    arsiv,
+    verilen_is_tarihi,
+    acil,
+    task_subject
+  } = req.body;
+
+  if (!title || !assigned_to) {
+    return res.status(400).send('Title and assigned user are required');
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Permission check: user must be assigned or creator or konu_sorumlusu
+    const checkResult = await client.query(
+      `SELECT id FROM tasks
+       WHERE id = $1
+         AND (
+           assigned_to = $2
+           OR sorumlu_2 = $2
+           OR sorumlu_3 = $2
+           OR created_by = $2
+           OR (
+             konu_sorumlusu IS NOT NULL
+             AND konu_sorumlusu::text != ''
+             AND konu_sorumlusu::text = $3
+           )
+         )`,
+      [taskId, userId, userId.toString()]
+    );
+
+    if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(403).send('You do not have permission to edit this task');
+    }
+
+    // Update all editable task fields
+    await client.query(
+      `UPDATE tasks
+       SET
+         title = $1,
+         description = $2,
+         deadline = $3,
+         status = $4,
+         assigned_to = $5,
+         tarih = $6,
+         konu_sorumlusu = $7,
+         sorumlu_2 = $8,
+         sorumlu_3 = $9,
+         bolge = $10,
+         il = $11,
+         belediye = $12,
+         departman = $13,
+         arsiv = $14,
+         verilen_is_tarihi = $15,
+         acil = $16,
+         task_subject = $17
+       WHERE id = $18`,
+      [
+        title,
+        description || null,
+        deadline || null,
+        status || 'pending',
+        assigned_to,
+        tarih || null,
+        konu_sorumlusu || null,
+        sorumlu_2 || null,
+        sorumlu_3 || null,
+        bolge || null,
+        il || null,
+        belediye || null,
+        departman || null,
+        arsiv || 'YOK',
+        verilen_is_tarihi || null,
+        acil === 'true' || acil === true,
+        task_subject || null,
+        taskId
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.redirect(`/creator/tasks/${taskId}`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error editing task:', err);
+    res.status(500).send(`Error editing task: ${err.message}`);
+  } finally {
+    client.release();
   }
 });
 
@@ -349,28 +497,23 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
       );
     }
 
-    // Notification for assigned user
+    // Notification for all responsible users (deduplicated)
     const actor = req.user && req.user.username ? req.user.username : 'Creator';
     const notificationMessage = `Yeni görev atandı (by ${actor}): ${title}`;
-    
-    // Notify assigned_to (sorumlu 1)
-    if (assigned_to) {
-      await addNotification(parseInt(assigned_to), notificationMessage, 'task_assigned', taskId);
-    }
 
-    // Notify sorumlu_2
-    if (sorumlu_2) {
-      await addNotification(parseInt(sorumlu_2), notificationMessage, 'task_assigned', taskId);
-    }
+    const userIdsToNotify = new Set();
 
-    // Notify sorumlu_3
-    if (sorumlu_3) {
-      await addNotification(parseInt(sorumlu_3), notificationMessage, 'task_assigned', taskId);
-    }
-
-    // Notify konu_sorumlusu
+    if (assigned_to) userIdsToNotify.add(parseInt(assigned_to));
+    if (sorumlu_2) userIdsToNotify.add(parseInt(sorumlu_2));
+    if (sorumlu_3) userIdsToNotify.add(parseInt(sorumlu_3));
     if (konu_sorumlusu) {
-      await addNotification(parseInt(konu_sorumlusu), notificationMessage, 'task_assigned', taskId);
+      const ksId = parseInt(konu_sorumlusu);
+      if (!isNaN(ksId)) userIdsToNotify.add(ksId);
+    }
+
+    for (const userId of userIdsToNotify) {
+      if (!userId || isNaN(userId)) continue;
+      await addNotification(userId, notificationMessage, 'task_assigned', taskId);
     }
 
     await client.query('COMMIT');
@@ -385,7 +528,168 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
   }
 });
 
-// Update task (status, note, files) - creator can update tasks assigned to them
+// Update task main fields (full edit form)
+router.post('/tasks/:id/edit', async (req, res) => {
+  const taskId = req.params.id;
+  const {
+    title, description, deadline, status, assigned_to,
+    tarih, konu_sorumlusu, sorumlu_2, sorumlu_3, bolge, il, belediye, departman, arsiv,
+    verilen_is_tarihi, acil, task_subject
+  } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Permission check: user must be assigned or creator (same kural edit formdaki gibi)
+    const permCheck = await client.query(
+      `SELECT * FROM tasks 
+       WHERE id = $1 
+         AND (
+           assigned_to = $2 
+           OR sorumlu_2 = $2 
+           OR sorumlu_3 = $2 
+           OR created_by = $2
+           OR (
+             konu_sorumlusu IS NOT NULL 
+             AND konu_sorumlusu::text != '' 
+             AND konu_sorumlusu::text = $3
+           )
+         )`,
+      [taskId, req.user.id, req.user.id.toString()]
+    );
+
+    if (permCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(403).send('Bu görevi düzenleme yetkiniz yok.');
+    }
+
+    const oldTask = permCheck.rows[0];
+
+    const finalStatus = status || oldTask.status || 'pending';
+
+    const updatedTitle = title && title.trim() ? title : oldTask.title;
+    const updatedDescription = typeof description !== 'undefined' ? description : oldTask.description;
+    const updatedDeadline = typeof deadline !== 'undefined' && deadline !== '' ? deadline : oldTask.deadline;
+    const updatedTarih = typeof tarih !== 'undefined' && tarih !== '' ? tarih : oldTask.tarih;
+    const updatedBolge = typeof bolge !== 'undefined' ? bolge : oldTask.bolge;
+    const updatedIl = typeof il !== 'undefined' ? il : oldTask.il;
+    const updatedBelediye = typeof belediye !== 'undefined' ? belediye : oldTask.belediye;
+    const updatedDepartman = typeof departman !== 'undefined' ? departman : oldTask.departman;
+    const updatedArsiv = typeof arsiv !== 'undefined' ? arsiv : (oldTask.arsiv || 'YOK');
+    const updatedVerilenIsTarihi =
+      typeof verilen_is_tarihi !== 'undefined' && verilen_is_tarihi !== ''
+        ? verilen_is_tarihi
+        : oldTask.verilen_is_tarihi;
+    const updatedAcil =
+      typeof acil !== 'undefined' ? (acil === 'true' || acil === true) : (oldTask.acil || false);
+    const updatedTaskSubject =
+      typeof task_subject !== 'undefined' ? task_subject : oldTask.task_subject;
+    const updatedAssignedTo =
+      assigned_to && String(assigned_to).trim() !== '' ? assigned_to : oldTask.assigned_to;
+
+    if (finalStatus === 'done') {
+      await client.query(
+        `UPDATE tasks SET 
+          title = $1, 
+          description = $2, 
+          deadline = $3, 
+          assigned_to = $4,
+          tarih = $5,
+          konu_sorumlusu = $6,
+          sorumlu_2 = $7,
+          sorumlu_3 = $8,
+          bolge = $9,
+          il = $10,
+          belediye = $11,
+          departman = $12,
+          arsiv = $13,
+          verilen_is_tarihi = $14,
+          acil = $15,
+          status = $16,
+          task_subject = $17,
+          completed_at = CURRENT_TIMESTAMP
+        WHERE id = $18`,
+        [
+          updatedTitle,
+          updatedDescription,
+          updatedDeadline || null,
+          updatedAssignedTo,
+          updatedTarih || null,
+          konu_sorumlusu || null,
+          sorumlu_2 || null,
+          sorumlu_3 || null,
+          updatedBolge || null,
+          updatedIl || null,
+          updatedBelediye || null,
+          updatedDepartman || null,
+          updatedArsiv || 'YOK',
+          updatedVerilenIsTarihi || null,
+          updatedAcil,
+          finalStatus,
+          updatedTaskSubject || null,
+          taskId
+        ]
+      );
+    } else {
+      await client.query(
+        `UPDATE tasks SET 
+          title = $1, 
+          description = $2, 
+          deadline = $3, 
+          assigned_to = $4,
+          tarih = $5,
+          konu_sorumlusu = $6,
+          sorumlu_2 = $7,
+          sorumlu_3 = $8,
+          bolge = $9,
+          il = $10,
+          belediye = $11,
+          departman = $12,
+          arsiv = $13,
+          verilen_is_tarihi = $14,
+          acil = $15,
+          status = $16,
+          task_subject = $17,
+          completed_at = NULL
+        WHERE id = $18`,
+        [
+          updatedTitle,
+          updatedDescription,
+          updatedDeadline || null,
+          updatedAssignedTo,
+          updatedTarih || null,
+          konu_sorumlusu || null,
+          sorumlu_2 || null,
+          sorumlu_3 || null,
+          updatedBolge || null,
+          updatedIl || null,
+          updatedBelediye || null,
+          updatedDepartman || null,
+          updatedArsiv || 'YOK',
+          updatedVerilenIsTarihi || null,
+          updatedAcil,
+          finalStatus,
+          updatedTaskSubject || null,
+          taskId
+        ]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.redirect(`/creator/tasks/${taskId}`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error updating task main fields (creator):', err);
+    res.status(500).send('Error updating task');
+  } finally {
+    client.release();
+  }
+});
+
+// Update task (status, note, files) - admin (creator role) can update:
+// - tasks where they are assigned (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
+// - OR tasks they created (created_by)
 router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, res) => {
   const taskId = req.params.id;
   const { status, note, completed_at } = req.body;
@@ -394,12 +698,21 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
   try {
     await client.query('BEGIN');
 
-    // Check if task exists and is assigned to creator
+    // Check if task exists and user has permission (assigned or creator)
     const taskCheck = await client.query(
       `SELECT id FROM tasks 
        WHERE id = $1 
-         AND (assigned_to = $2 OR sorumlu_2 = $2 OR sorumlu_3 = $2 
-              OR (konu_sorumlusu IS NOT NULL AND konu_sorumlusu::text != '' AND konu_sorumlusu::text = $3))`,
+       AND (
+         assigned_to = $2 
+         OR sorumlu_2 = $2 
+         OR sorumlu_3 = $2 
+         OR created_by = $2
+         OR (
+           konu_sorumlusu IS NOT NULL 
+           AND konu_sorumlusu::text != '' 
+           AND konu_sorumlusu::text = $3
+         )
+       )`,
       [taskId, req.user.id, req.user.id.toString()]
     );
 
@@ -458,6 +771,55 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
     await client.query('ROLLBACK');
     console.error('Error updating task:', err);
     res.sendStatus(500);
+  } finally {
+    client.release();
+  }
+});
+
+// Delete task - admin (creator role) can delete tasks they created or are responsible for
+router.post('/tasks/:id/delete', async (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Permission check: user must be assigned or creator
+    const checkResult = await client.query(
+      `SELECT id FROM tasks 
+       WHERE id = $1 
+         AND (
+           assigned_to = $2 
+           OR sorumlu_2 = $2 
+           OR sorumlu_3 = $2 
+           OR created_by = $2
+           OR (
+             konu_sorumlusu IS NOT NULL 
+             AND konu_sorumlusu::text != '' 
+             AND konu_sorumlusu::text = $3
+           )
+         )`,
+      [taskId, userId, userId.toString()]
+    );
+
+    if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(403).send('Bu görevi silme yetkiniz yok.');
+    }
+
+    // Explicitly delete related records (also covered by ON DELETE CASCADE but kept for clarity)
+    await client.query('DELETE FROM task_files WHERE task_id = $1', [taskId]);
+    await client.query('DELETE FROM task_updates WHERE task_id = $1', [taskId]);
+    await client.query('DELETE FROM notifications WHERE related_task_id = $1', [taskId]);
+    await client.query('DELETE FROM tasks WHERE id = $1', [taskId]);
+
+    await client.query('COMMIT');
+    res.redirect('/creator/tasks');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting task (creator):', err);
+    res.redirect('/creator/tasks');
   } finally {
     client.release();
   }
