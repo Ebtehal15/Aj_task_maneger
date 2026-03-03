@@ -11,6 +11,25 @@
 
 <div class="card shadow-sm">
   <div class="card-body">
+    <%
+      const formatDateOnlyTurkey = (date) => {
+        if (!date) return '';
+        try {
+          const dateObj = typeof date === 'string' ? new Date(date) : date;
+          const turkeyOffset = 3 * 60;
+          const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+          const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+          const year = turkeyTime.getFullYear();
+          const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+          const day = String(turkeyTime.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (err) {
+          return typeof date === 'string'
+            ? date.slice(0, 10)
+            : date.toISOString().slice(0, 10);
+        }
+      };
+    %>
     <form
       method="post"
       action="<%= (typeof task !== 'undefined' && task) ? '/creator/tasks/' + task.id + '/edit' : '/creator/tasks' %>"
@@ -24,7 +43,7 @@
             type="date"
             name="tarih"
             class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.tarih) ? (typeof task.tarih === 'string' ? task.tarih.slice(0,10) : new Date(task.tarih).toISOString().slice(0,10)) : new Date().toISOString().slice(0,10) %>"
+            value="<%= (typeof task !== 'undefined' && task && task.tarih) ? formatDateOnlyTurkey(task.tarih) : formatDateOnlyTurkey(new Date()) %>"
           />
         </div>
         <div class="col-md-6 mb-3">
@@ -220,7 +239,7 @@
             type="date"
             name="verilen_is_tarihi"
             class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.verilen_is_tarihi) ? (typeof task.verilen_is_tarihi === 'string' ? task.verilen_is_tarihi.slice(0,10) : new Date(task.verilen_is_tarihi).toISOString().slice(0,10)) : '' %>"
+            value="<%= (typeof task !== 'undefined' && task && task.verilen_is_tarihi) ? formatDateOnlyTurkey(task.verilen_is_tarihi) : '' %>"
           />
         </div>
         <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">
@@ -229,7 +248,7 @@
             type="date"
             name="deadline"
             class="form-control"
-            value="<%= (typeof task !== 'undefined' && task && task.deadline) ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '' %>"
+            value="<%= (typeof task !== 'undefined' && task && task.deadline) ? formatDateOnlyTurkey(task.deadline) : '' %>"
           />
         </div>
         <div class="<%= typeof task !== 'undefined' && task ? 'col-md-3' : 'col-md-4' %> mb-3">

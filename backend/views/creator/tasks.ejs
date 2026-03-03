@@ -1,8 +1,20 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4"><%= t('myTasks') %></h1>
-  <a href="/creator/tasks/new" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle"></i> <%= t('createTask') %>
-  </a>
+  <div class="d-flex align-items-center gap-2">
+    <h1 class="h4 mb-0"><%= t('myTasks') %></h1>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+      <button type="button" class="btn btn-outline-secondary active" id="view-table-btn">
+        <i class="bi bi-table"></i>
+      </button>
+      <button type="button" class="btn btn-outline-secondary" id="view-card-btn">
+        <i class="bi bi-grid-3x3-gap"></i>
+      </button>
+    </div>
+    <a href="/creator/tasks/new" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle"></i> <%= t('createTask') %>
+    </a>
+  </div>
 </div>
 
 <form class="card card-body shadow-sm mb-3" method="get" id="filterForm">
@@ -63,12 +75,33 @@
 </div>
 <% } %>
 
+<%
+  const formatDateOnlyTurkey = (date) => {
+    if (!date) return '';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const turkeyOffset = 3 * 60;
+      const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+      const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+      const year = turkeyTime.getFullYear();
+      const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+      const day = String(turkeyTime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (err) {
+      return typeof date === 'string'
+        ? date.slice(0, 10)
+        : date.toISOString().slice(0, 10);
+    }
+  };
+%>
+
 <div class="card shadow-sm">
   <div class="card-body p-0">
     <% if (!tasks.length) { %>
     <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
     <% } else { %>
-    <div class="table-responsive">
+    <!-- Tablo görünümü -->
+    <div class="table-responsive" id="tasks-table-view">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
@@ -102,11 +135,11 @@
                 <%= t('status_' + task.status) %>
               </span>
             </td>
-            <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
-            <td><%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %></td>
+            <td><%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %></td>
+            <td><%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '-' %></td>
             <td class="text-end">
               <a href="/creator/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
-                Detay
+                <%= t('view') %>
               </a>
             </td>
           </tr>
@@ -114,7 +147,104 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Kart görünümü -->
+    <div class="p-3" id="tasks-card-view" style="display:none;">
+      <div class="row g-3">
+        <% tasks.forEach((task, index) => { %>
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card h-100 shadow-sm border-0" style="border-radius: 1rem;">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="small text-muted mb-1">#<%= index + 1 %></div>
+                  <h2 class="h6 mb-0"><%= task.title %></h2>
+                  <% if (task.task_subject && task.task_subject.trim()) { %>
+                  <div class="small text-muted mt-1"><%= task.task_subject %></div>
+                  <% } %>
+                </div>
+                <div class="text-end">
+                  <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                  <span class="badge bg-danger mb-1 d-block"><%= t('urgent') %></span>
+                  <% } %>
+                  <span class="badge status-<%= task.status %>">
+                    <%= t('status_' + task.status) %>
+                  </span>
+                </div>
+              </div>
+
+              <div class="mb-2 small text-muted">
+                <div>
+                  <strong><%= t('konuSorumlusu') %>:</strong>
+                  <span><%= task.konu_sorumlusu_username || task.assigned_username || '-' %></span>
+                </div>
+                <div>
+                  <strong><%= t('departman') %>:</strong>
+                  <span><%= task.departman || '-' %></span>
+                </div>
+              </div>
+
+              <div class="mb-3 small">
+                <div>
+                  <strong><%= t('deadline') %>:</strong>
+                  <span><%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %></span>
+                </div>
+                <div>
+                  <strong><%= t('completedAt') %>:</strong>
+                  <span><%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '-' %></span>
+                </div>
+              </div>
+
+              <div class="mt-auto d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                  <i class="bi bi-person-circle me-1"></i>
+                  <%= task.konu_sorumlusu_username || task.assigned_username || '-' %>
+                </span>
+                <a href="/creator/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
+                  <%= t('view') %>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
     <% } %>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tableView = document.getElementById('tasks-table-view');
+    const cardView = document.getElementById('tasks-card-view');
+    const tableBtn = document.getElementById('view-table-btn');
+    const cardBtn = document.getElementById('view-card-btn');
+
+    if (!tableView || !cardView || !tableBtn || !cardBtn) return;
+
+    function setView(mode) {
+      if (mode === 'card') {
+        tableView.style.display = 'none';
+        cardView.style.display = 'block';
+        cardBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+        localStorage.setItem('creatorTasksViewMode', 'card');
+      } else {
+        tableView.style.display = 'block';
+        cardView.style.display = 'none';
+        tableBtn.classList.add('active');
+        cardBtn.classList.remove('active');
+        localStorage.setItem('creatorTasksViewMode', 'table');
+      }
+    }
+
+    tableBtn.addEventListener('click', () => setView('table'));
+    cardBtn.addEventListener('click', () => setView('card'));
+
+    // İlk yüklemede son seçilen görünümü uygula
+    const savedMode = localStorage.getItem('creatorTasksViewMode') || 'table';
+    setView(savedMode);
+  });
+</script>
 

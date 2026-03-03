@@ -1,3 +1,23 @@
+<%
+  const formatDateOnlyTurkey = (date) => {
+    if (!date) return '';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const turkeyOffset = 3 * 60;
+      const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+      const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+      const year = turkeyTime.getFullYear();
+      const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+      const day = String(turkeyTime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (err) {
+      return typeof date === 'string'
+        ? date.slice(0, 10)
+        : date.toISOString().slice(0, 10);
+    }
+  };
+%>
+
 <script>
   // Sayfa yüklenmeden önce varsayılan görünümü belirle (FOUC önlemek için)
   (function() {
@@ -217,8 +237,8 @@
                 <%= t('status_' + task.status) %>
               </span>
             </td>
-            <td><%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %></td>
-            <td><%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %></td>
+            <td><%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %></td>
+            <td><%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '-' %></td>
             <td class="text-end">
               <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
                 <%= t('viewTask') %>
@@ -298,7 +318,7 @@
             <p class="mb-0 small">
               <i class="bi bi-calendar"></i> <strong><%= t('deadline') %>:</strong> 
               <span class="text-muted">
-                <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
+                <%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %>
               </span>
             </p>
           </div>

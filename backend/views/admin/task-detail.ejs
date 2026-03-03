@@ -24,6 +24,25 @@
   <div class="col-md-7">
     <div class="card shadow-sm mb-3">
       <div class="card-body">
+        <%
+          const formatDateOnlyTurkey = (date) => {
+            if (!date) return '';
+            try {
+              const dateObj = typeof date === 'string' ? new Date(date) : date;
+              const turkeyOffset = 3 * 60;
+              const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+              const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+              const year = turkeyTime.getFullYear();
+              const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+              const day = String(turkeyTime.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            } catch (err) {
+              return typeof date === 'string'
+                ? date.slice(0, 10)
+                : date.toISOString().slice(0, 10);
+            }
+          };
+        %>
         <!-- 1. Görev Başlığı (zaten başlıkta gösteriliyor) -->
         
         <!-- 2. İş Konusu -->
@@ -53,20 +72,20 @@
         <!-- 5. Oluşturma Tarihi -->
         <p class="mb-1">
           <strong><%= t('createdAt') || 'Oluşturma Tarihi' %>:</strong>
-          <%= task.created_at ? (typeof task.created_at === 'string' ? task.created_at.slice(0,10) : new Date(task.created_at).toISOString().slice(0,10)) : '-' %>
+          <%= task.created_at ? formatDateOnlyTurkey(task.created_at) : '-' %>
         </p>
         
         <!-- 6. Tahmini İş Bitiş Tarihi -->
         <p class="mb-1">
           <strong><%= t('deadline') %>:</strong>
-          <%= task.deadline ? (typeof task.deadline === 'string' ? task.deadline.slice(0,10) : new Date(task.deadline).toISOString().slice(0,10)) : '-' %>
+          <%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %>
         </p>
         
         <!-- 7. Bitiş Tarihi -->
         <% if (task.status === 'done' && task.completed_at) { %>
         <p class="mb-1">
           <strong><%= t('completedAt') %>:</strong>
-          <%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '-' %>
+          <%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '-' %>
         </p>
         <% } %>
         
@@ -121,7 +140,7 @@
                 name="completed_at"
                 id="completed_at"
                 class="form-control"
-                value="<%= task.completed_at ? (typeof task.completed_at === 'string' ? task.completed_at.slice(0,10) : new Date(task.completed_at).toISOString().slice(0,10)) : '' %>"
+                value="<%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '' %>"
                 style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;"
               />
               <div class="form-text mt-1" style="font-size: 0.75rem;">
