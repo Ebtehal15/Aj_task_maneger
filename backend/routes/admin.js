@@ -287,7 +287,9 @@ router.get('/tasks', async (req, res) => {
 // Reports page with filters
 router.get('/reports', async (req, res) => {
   const {
+    tab,
     userId,
+    userIds: userIdsRaw,
     status,
     from,
     to,
@@ -431,6 +433,14 @@ router.get('/reports', async (req, res) => {
     const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
     const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
     const tasksResult = await pool.query(sql, params);
+
+    // Kullanıcı Raporları: checkbox ile seçilen kullanıcı id'leri (userIds query param)
+    let selectedUserIds = [];
+    if (userIdsRaw !== undefined && userIdsRaw !== '' && userIdsRaw !== null) {
+      const arr = Array.isArray(userIdsRaw) ? userIdsRaw : String(userIdsRaw).split(',');
+      selectedUserIds = arr.map(id => parseInt(String(id).trim(), 10)).filter(n => !isNaN(n));
+    }
+    const selectedUserIdsParam = selectedUserIds.length ? selectedUserIds.join(',') : '';
     
     res.render('admin/reports', {
       pageTitle: req.t('reports'),
@@ -439,7 +449,10 @@ router.get('/reports', async (req, res) => {
       cities: citiesResult.rows,
       municipalities: municipalitiesResult.rows,
       regions: regionsResult.rows,
-      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes }
+      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes },
+      activeTab: tab === 'users' ? 'users' : 'reports',
+      selectedUserIds,
+      selectedUserIdsParam
     });
   } catch (err) {
     console.error(err);

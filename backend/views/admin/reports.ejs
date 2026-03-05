@@ -59,6 +59,22 @@
   </div>
 </div>
 
+<!-- Sekmeler: Raporlar | Kullanıcı Raporları -->
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link <%= (typeof activeTab === 'undefined' || activeTab !== 'users') ? 'active' : '' %>" href="/admin/reports" role="tab">
+      <i class="bi bi-funnel me-1"></i><%= t('reports') %>
+    </a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a class="nav-link <%= activeTab === 'users' ? 'active' : '' %>" href="/admin/reports?tab=users" role="tab">
+      <i class="bi bi-people me-1"></i><%= t('userReports') %>
+    </a>
+  </li>
+</ul>
+
+<!-- Raporlar sekmesi: filtre formu + görev listesi -->
+<div id="reports-tab-content" class="<%= activeTab === 'users' ? 'd-none' : '' %>">
 <form class="card card-body shadow-sm mb-3" method="get" action="/admin/reports" id="filterForm">
   <div class="row g-2 align-items-end">
     <% const selectedFilterTypes = (filters && Array.isArray(filters.filterTypes)) ? filters.filterTypes : []; %>
@@ -435,7 +451,140 @@
     }
   })();
 </script>
+</div>
+<!-- /reports-tab-content -->
 
+<!-- Kullanıcı Raporları sekmesi: checkbox ile kullanıcı seç, seçilenler buton olarak görünsün -->
+<div id="users-tab-content" class="<%= activeTab !== 'users' ? 'd-none' : '' %>">
+  <form method="get" action="/admin/reports" id="userReportsSelectForm" class="mb-4 d-flex flex-wrap align-items-center gap-2">
+    <input type="hidden" name="tab" value="users" />
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userSelectDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <i class="bi bi-people me-1"></i>
+        <span class="fw-semibold"><%= t('selectUsers') %></span>
+        <% if (typeof selectedUserIds !== 'undefined' && selectedUserIds.length) { %>
+          <span class="badge bg-primary ms-1"><%= selectedUserIds.length %></span>
+        <% } %>
+      </button>
+      <div class="dropdown-menu p-3 shadow-sm rounded-3" style="min-width: 260px;" aria-labelledby="userSelectDropdownBtn">
+        <% if (typeof users !== 'undefined' && users.length) { %>
+          <div class="row g-1">
+            <% users.forEach(u => { %>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input user-id-checkbox" type="checkbox" name="userIds" value="<%= u.id %>" id="user-cb-<%= u.id %>" <%= (typeof selectedUserIds !== 'undefined' && selectedUserIds.indexOf(Number(u.id)) !== -1) ? 'checked' : '' %>>
+                <label class="form-check-label" for="user-cb-<%= u.id %>"><%= u.username %></label>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+          <div class="text-muted small mt-2"><%= t('optional') %></div>
+        <% } else { %>
+          <p class="text-muted mb-0 small"><%= t('noTasks') %></p>
+        <% } %>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-warning btn-sm text-dark fw-semibold px-3" style="border-radius: 999px;">
+      <i class="bi bi-arrow-right-circle me-1"></i><%= t('showSelectedUsers') %>
+    </button>
+  </form>
+
+  <% if (typeof selectedUserIds !== 'undefined' && selectedUserIds.length && typeof users !== 'undefined' && users.length) { %>
+  <p class="text-muted mb-2"><%= t('selectUserForReport') %></p>
+  <div class="row g-3 mb-4">
+    <% users.forEach(u => { %>
+      <% if (selectedUserIds.indexOf(Number(u.id)) !== -1) { %>
+      <div class="col-6 col-md-4 col-lg-3">
+        <% const isActiveUser = (filters && Number(filters.userId) === Number(u.id)); %>
+        <a
+          href="/admin/reports?tab=users&userIds=<%= typeof selectedUserIdsParam !== 'undefined' ? encodeURIComponent(selectedUserIdsParam) : '' %><%= isActiveUser ? '' : '&userId=' + encodeURIComponent(u.id) + '&filterTypes=user' %>"
+          class="text-decoration-none text-reset d-block"
+        >
+          <div class="card border-0 h-100 user-pill-card <%= isActiveUser ? 'user-pill-card-active' : '' %>">
+            <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+              <div class="user-pill-avatar">
+                <%= (u.username || '?').charAt(0).toUpperCase() %>
+              </div>
+              <span class="fw-semibold text-dark" style="font-size: 0.9rem;"><%= u.username %></span>
+            </div>
+          </div>
+        </a>
+      </div>
+      <% } %>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <p class="text-muted mb-0"><%= t('selectUserForReport') %></p>
+  <% } %>
+</div>
+<!-- /users-tab-content -->
+
+<script>
+  // Kullanıcı Raporları: seçili kullanıcıları localStorage'da sakla ve sayfadan çıkıp gelsede koru
+  (function() {
+    const STORAGE_KEY = 'adminUserReportsSelectedIds';
+    const form = document.getElementById('userReportsSelectForm');
+    const checkboxes = document.querySelectorAll('.user-id-checkbox');
+    const isUsersTab = '<%= activeTab === 'users' ? '1' : '0' %>' === '1';
+    const hasServerSelected =
+      <%= (typeof selectedUserIds !== 'undefined' && selectedUserIds.length) ? 'true' : 'false' %>;
+    const serverSelectedParam = '<%= typeof selectedUserIdsParam !== 'undefined' ? selectedUserIdsParam : '' %>';
+
+    function getCheckedIds() {
+      const ids = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          const v = parseInt(cb.value, 10);
+          if (!isNaN(v)) ids.push(v);
+        }
+      });
+      return ids;
+    }
+
+    if (form) {
+      form.addEventListener('submit', function() {
+        const ids = getCheckedIds();
+        try {
+          localStorage.setItem(STORAGE_KEY, ids.join(','));
+        } catch (e) {
+          // ignore
+        }
+      });
+    }
+
+    // Eğer kullanıcı sekmesindeyiz ve server tarafında seçili kullanıcı yoksa,
+    // fakat localStorage'da daha önce seçilmiş kullanıcılar varsa otomatik uygula.
+    if (isUsersTab && !hasServerSelected) {
+      let stored = '';
+      try {
+        stored = localStorage.getItem(STORAGE_KEY) || '';
+      } catch (e) {
+        stored = '';
+      }
+      if (stored && stored.trim()) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', 'users');
+        url.searchParams.set('userIds', stored);
+        // Tek bir kullanıcı filtresi olmasın, sadece liste görünsün
+        url.searchParams.delete('userId');
+        window.location.replace(url.toString());
+      }
+    }
+
+    // Eğer server tarafında seçili kullanıcı listesi varsa, localStorage ile senkronize et
+    if (isUsersTab && hasServerSelected && serverSelectedParam) {
+      try {
+        localStorage.setItem(STORAGE_KEY, serverSelectedParam);
+      } catch (e) {
+        // ignore
+      }
+    }
+  })();
+</script>
+
+<!-- Görev listesi: Raporlar sekmesinde her zaman; Kullanıcı Raporları sekmesinde sadece kullanıcı seçildiyse -->
+<% const showTaskList = (typeof activeTab === 'undefined' || activeTab !== 'users') || (activeTab === 'users' && filters && filters.userId); %>
+<% if (showTaskList) { %>
 <!-- Tablo Görünümü -->
 <% if (typeof tasks !== 'undefined') { %>
 <div class="mb-2 small text-muted">
@@ -594,7 +743,7 @@
 </div>
 
 <script>
-  // Görünüm değiştirme
+  // Görünüm değiştirme (tablo/kart)
   (function() {
     const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
     const tableView = document.getElementById('tableView');
@@ -678,4 +827,38 @@
     });
   })();
 </script>
+<% } %>
+<!-- /showTaskList -->
+
+<style>
+  .user-pill-card {
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    cursor: pointer;
+  }
+  .user-pill-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.04), #ffffff);
+  }
+  .user-pill-card-active {
+    box-shadow: 0 0 0 2px #3b82f6;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), #ffffff);
+  }
+  .user-pill-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #facc15, #eab308);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #020617;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+</style>
 
