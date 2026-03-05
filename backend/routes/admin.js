@@ -428,7 +428,7 @@ router.get('/reports', async (req, res) => {
   `;
 
   try {
-    const usersResult = await pool.query('SELECT id, username FROM users ORDER BY username');
+    const usersResult = await pool.query('SELECT id, username, avatar FROM users ORDER BY username');
     const citiesResult = await pool.query('SELECT id, name FROM cities ORDER BY name');
     const municipalitiesResult = await pool.query('SELECT id, name FROM municipalities ORDER BY name');
     const regionsResult = await pool.query('SELECT id, name FROM regions ORDER BY name');
