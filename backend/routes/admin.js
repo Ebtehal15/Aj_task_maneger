@@ -505,7 +505,14 @@ router.get('/reports/export', async (req, res) => {
 
   // Only add filters if they are valid (not undefined, null, or empty string)
   if (userId && userId !== 'undefined' && userId !== 'null') {
-    where.push(`t.assigned_to = $${paramIndex}`);
+    // Rapor ekranındaki kullanıcı filtresiyle aynı mantık:
+    // Kullanıcı assigned_to, sorumlu_2, sorumlu_3 veya konu_sorumlusu alanlarından herhangi birinde yer alıyorsa dahil et
+    where.push(`(
+      t.assigned_to = $${paramIndex} 
+      OR t.sorumlu_2 = $${paramIndex} 
+      OR t.sorumlu_3 = $${paramIndex} 
+      OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex}::text)
+    )`);
     params.push(parseInt(userId));
     paramIndex++;
   }
