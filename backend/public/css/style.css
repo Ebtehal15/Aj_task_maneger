@@ -1376,7 +1376,7 @@ html[dir='rtl'] .tm-navbar .navbar-brand.flex-row-reverse {
 
 /* Status pills */
 .status-pending {
-  background-color: #3b82f6 !important;
+  background-color: #5da3ff !important;
   color: #ffffff !important;
 }
 
@@ -1386,13 +1386,37 @@ html[dir='rtl'] .tm-navbar .navbar-brand.flex-row-reverse {
 }
 
 .status-done {
-  background: linear-gradient(135deg, #111827, #020617);
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  background-color: #16a34a !important;
+  color: #ffffff !important;
 }
 
 .badge[class*='status-'] {
   padding: 0.4rem 0.75rem;
   font-weight: 600;
   border-radius: 999px;
+}
+
+/* Filtre butonları: Devam Eden = sarı, Beklemede = mavi (açık/koyu değil) */
+.btn-tm-pending,
+.btn-tm-pending:hover,
+.btn-group .btn.btn-tm-pending {
+  background-color: #5da3ff !important;
+  border-color: #5da3ff !important;
+  color: #ffffff !important;
+}
+.btn-outline-tm-pending,
+.btn-group .btn.btn-outline-tm-pending {
+  color: #5da3ff !important;
+  border-color: #5da3ff !important;
+  border-width: 1px !important;
+  background-color: transparent !important;
+}
+.btn-outline-tm-pending:hover,
+.btn-group .btn.btn-outline-tm-pending:hover {
+  background-color: #5da3ff !important;
+  border-color: #5da3ff !important;
+  color: #ffffff !important;
 }
 
 /* Task Card View Styles */

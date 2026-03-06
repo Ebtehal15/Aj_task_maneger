@@ -491,6 +491,51 @@
 
   <% if (typeof selectedUserIds !== 'undefined' && selectedUserIds.length && typeof users !== 'undefined' && users.length) { %>
   <p class="text-muted mb-2"><%= t('selectUserForReport') %></p>
+
+  <% 
+    const baseParams = [];
+    baseParams.push('tab=users');
+    if (typeof selectedUserIdsParam !== 'undefined' && selectedUserIdsParam) {
+      baseParams.push('userIds=' + encodeURIComponent(selectedUserIdsParam));
+    }
+    if (filters && filters.userId) {
+      baseParams.push('userId=' + encodeURIComponent(String(filters.userId)));
+    }
+    const baseQS = baseParams.join('&');
+    const currentStatus = (filters && filters.status) ? String(filters.status) : '';
+    const isStatusDone = currentStatus === 'done';
+    const isStatusInProgress = currentStatus === 'in_progress';
+    const isStatusPending = currentStatus === 'pending';
+    const isUrgent = !!(filters && (filters.urgent === 'true' || filters.urgent === true));
+  %>
+
+  <div class="btn-group btn-group-sm mb-3" role="group" aria-label="User status filters">
+    <a
+      href="/admin/reports?<%= baseQS %><%= isStatusDone ? '' : (baseQS ? '&' : '') + 'status=done' %>"
+      class="btn <%= isStatusDone ? 'btn-success' : 'btn-outline-success' %>"
+    >
+      <%= t('completedTasks') %>
+    </a>
+    <a
+      href="/admin/reports?<%= baseQS %><%= isStatusInProgress ? '' : (baseQS ? '&' : '') + 'status=in_progress' %>"
+      class="btn <%= isStatusInProgress ? 'btn-warning text-dark' : 'btn-outline-warning' %>"
+    >
+      <%= t('inProgressTasks') %>
+    </a>
+    <a
+      href="/admin/reports?<%= baseQS %><%= isStatusPending ? '' : (baseQS ? '&' : '') + 'status=pending' %>"
+      class="btn <%= isStatusPending ? 'btn-tm-pending' : 'btn-outline-tm-pending' %>"
+    >
+      <%= t('pendingTasks') %>
+    </a>
+    <a
+      href="/admin/reports?<%= baseQS %><%= isUrgent ? '' : (baseQS ? '&' : '') + 'urgent=true' %>"
+      class="btn <%= isUrgent ? 'btn-danger' : 'btn-outline-danger' %>"
+    >
+      <%= t('urgentTasks') %>
+    </a>
+  </div>
+
   <div class="row g-3 mb-4">
     <% users.forEach(u => { %>
       <% if (selectedUserIds.indexOf(Number(u.id)) !== -1) { %>
