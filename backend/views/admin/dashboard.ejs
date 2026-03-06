@@ -68,7 +68,7 @@
 <% if (typeof stats !== 'undefined' && stats) { %>
 <div class="row g-3 mb-4">
   <!-- Row 1: Toplam Görev ve Tamamlanan Görevler -->
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <a href="/admin/dashboard" class="text-decoration-none text-reset">
       <div class="card shadow-sm border-0 h-100" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
         <div class="card-body">
@@ -85,7 +85,7 @@
       </div>
     </a>
   </div>
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <a href="/admin/dashboard?status=done" class="text-decoration-none text-reset">
       <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #28a745 !important; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
         <div class="card-body">
@@ -104,7 +104,7 @@
   </div>
   
   <!-- Row 2: Beklemede Olan Görevler (koyu mavi) ve Devam Eden Görevler (sarı) -->
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <a href="/admin/dashboard?status=pending" class="text-decoration-none text-reset">
       <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #5da3ff !important; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
         <div class="card-body">
@@ -121,7 +121,7 @@
       </div>
     </a>
   </div>
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <a href="/admin/dashboard?status=in_progress" class="text-decoration-none text-reset">
       <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #facc15 !important; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
         <div class="card-body">
@@ -140,7 +140,7 @@
   </div>
   
   <!-- Row 3: Acil Görevler ve En Çok Görev Alan Personel -->
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <a href="/admin/dashboard?urgent=true" class="text-decoration-none text-reset">
       <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #dc3545 !important; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
         <div class="card-body">
@@ -160,7 +160,7 @@
   
   <!-- Row 4: En Çok Görev Alan Personel -->
   <% if (stats.mostAssignedUser) { %>
-  <div class="col-6 col-md-6">
+  <div class="col-6 col-md-4">
     <div class="card shadow-sm border-0 h-100 most-assigned-card" style="background: linear-gradient(135deg, rgba(250, 204, 21, 0.08) 0%, rgba(234, 179, 8, 0.05) 100%); border-left: 4px solid #facc15 !important; position: relative; overflow: hidden;">
       <div class="card-body p-3">
         <div class="d-flex align-items-start justify-content-between">
