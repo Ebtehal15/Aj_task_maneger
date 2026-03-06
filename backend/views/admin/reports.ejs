@@ -458,6 +458,8 @@
 <div id="users-tab-content" class="<%= activeTab !== 'users' ? 'd-none' : '' %>">
   <form method="get" action="/admin/reports" id="userReportsSelectForm" class="mb-4 d-flex flex-wrap align-items-center gap-2">
     <input type="hidden" name="tab" value="users" />
+    <% if (filters && filters.status) { %><input type="hidden" name="status" value="<%= filters.status %>" /><% } %>
+    <% if (filters && (filters.urgent === 'true' || filters.urgent === true)) { %><input type="hidden" name="urgent" value="true" /><% } %>
     <div class="dropdown">
       <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userSelectDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
         <i class="bi bi-people me-1"></i>
@@ -507,29 +509,31 @@
     const isStatusInProgress = currentStatus === 'in_progress';
     const isStatusPending = currentStatus === 'pending';
     const isUrgent = !!(filters && (filters.urgent === 'true' || filters.urgent === true));
+    const statusBaseQS = baseQS + (isUrgent ? '&urgent=true' : '');
+    const urgentBaseQS = baseQS + (currentStatus ? '&status=' + encodeURIComponent(currentStatus) : '');
   %>
 
   <div class="btn-group btn-group-sm mb-3" role="group" aria-label="User status filters">
     <a
-      href="/admin/reports?<%= baseQS %><%= isStatusDone ? '' : (baseQS ? '&' : '') + 'status=done' %>"
+      href="/admin/reports?<%= statusBaseQS %><%= isStatusDone ? '' : (statusBaseQS ? '&' : '') + 'status=done' %>"
       class="btn <%= isStatusDone ? 'btn-success' : 'btn-outline-success' %>"
     >
       <%= t('completedTasks') %>
     </a>
     <a
-      href="/admin/reports?<%= baseQS %><%= isStatusInProgress ? '' : (baseQS ? '&' : '') + 'status=in_progress' %>"
+      href="/admin/reports?<%= statusBaseQS %><%= isStatusInProgress ? '' : (statusBaseQS ? '&' : '') + 'status=in_progress' %>"
       class="btn <%= isStatusInProgress ? 'btn-warning text-dark' : 'btn-outline-warning' %>"
     >
       <%= t('inProgressTasks') %>
     </a>
     <a
-      href="/admin/reports?<%= baseQS %><%= isStatusPending ? '' : (baseQS ? '&' : '') + 'status=pending' %>"
+      href="/admin/reports?<%= statusBaseQS %><%= isStatusPending ? '' : (statusBaseQS ? '&' : '') + 'status=pending' %>"
       class="btn <%= isStatusPending ? 'btn-tm-pending' : 'btn-outline-tm-pending' %>"
     >
       <%= t('pendingTasks') %>
     </a>
     <a
-      href="/admin/reports?<%= baseQS %><%= isUrgent ? '' : (baseQS ? '&' : '') + 'urgent=true' %>"
+      href="/admin/reports?<%= urgentBaseQS %><%= isUrgent ? '' : (urgentBaseQS ? '&' : '') + 'urgent=true' %>"
       class="btn <%= isUrgent ? 'btn-danger' : 'btn-outline-danger' %>"
     >
       <%= t('urgentTasks') %>
@@ -540,9 +544,16 @@
     <% users.forEach(u => { %>
       <% if (selectedUserIds.indexOf(Number(u.id)) !== -1) { %>
       <div class="col-6 col-md-4 col-lg-3">
-        <% const isActiveUser = (filters && Number(filters.userId) === Number(u.id)); %>
+        <% 
+          const isActiveUser = (filters && Number(filters.userId) === Number(u.id));
+          let userCardQs = 'tab=users';
+          if (typeof selectedUserIdsParam !== 'undefined' && selectedUserIdsParam) userCardQs += '&userIds=' + encodeURIComponent(selectedUserIdsParam);
+          if (!isActiveUser) { userCardQs += '&userId=' + encodeURIComponent(u.id) + '&filterTypes=user'; }
+          if (filters && filters.status) userCardQs += '&status=' + encodeURIComponent(String(filters.status));
+          if (filters && (filters.urgent === 'true' || filters.urgent === true)) userCardQs += '&urgent=true';
+        %>
         <a
-          href="/admin/reports?tab=users&userIds=<%= typeof selectedUserIdsParam !== 'undefined' ? encodeURIComponent(selectedUserIdsParam) : '' %><%= isActiveUser ? '' : '&userId=' + encodeURIComponent(u.id) + '&filterTypes=user' %>"
+          href="/admin/reports?<%= userCardQs %>"
           class="text-decoration-none text-reset d-block"
         >
           <div class="card border-0 h-100 user-pill-card <%= isActiveUser ? 'user-pill-card-active' : '' %>">
