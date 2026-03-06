@@ -291,6 +291,7 @@ router.get('/reports', async (req, res) => {
     userId,
     userIds: userIdsRaw,
     status,
+    urgent,
     from,
     to,
     city,
@@ -350,6 +351,9 @@ router.get('/reports', async (req, res) => {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
     paramIndex++;
+  }
+  if (urgent && urgent !== 'undefined' && urgent !== 'null') {
+    where.push(`COALESCE(t.acil, false)::boolean = true`);
   }
   if (city) {
     where.push(`t.il = $${paramIndex}`);
@@ -449,7 +453,7 @@ router.get('/reports', async (req, res) => {
       cities: citiesResult.rows,
       municipalities: municipalitiesResult.rows,
       regions: regionsResult.rows,
-      filters: { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes },
+      filters: { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes },
       activeTab: tab === 'users' ? 'users' : 'reports',
       selectedUserIds,
       selectedUserIdsParam
@@ -497,7 +501,7 @@ router.post('/reports/upload-temp', async (req, res) => {
 
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv } = req.query;
+  const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv } = req.query;
 
   const params = [];
   const where = [];
@@ -520,6 +524,9 @@ router.get('/reports/export', async (req, res) => {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
     paramIndex++;
+  }
+  if (urgent && urgent !== 'undefined' && urgent !== 'null') {
+    where.push(`COALESCE(t.acil, false)::boolean = true`);
   }
   if (city && city !== 'undefined' && city !== 'null') {
     where.push(`t.il = $${paramIndex}`);
