@@ -769,7 +769,7 @@ router.post('/reports/upload-temp', async (req, res) => {
 
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv } = req.query;
+  const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, sort } = req.query;
 
   const params = [];
   const where = [];
@@ -849,6 +849,33 @@ router.get('/reports/export', async (req, res) => {
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
+  // Sıralama: ekrandaki mevcut sıralamaya göre (departman, konu sorumlusu, durum)
+  let orderBySql = 'ORDER BY t.created_at DESC';
+  if (sort === 'departman-asc') {
+    orderBySql = `
+      ORDER BY
+        t.departman ASC NULLS LAST,
+        t.created_at DESC
+    `;
+  } else if (sort === 'konu-asc') {
+    orderBySql = `
+      ORDER BY
+        ks.username ASC NULLS LAST,
+        t.created_at DESC
+    `;
+  } else if (sort === 'status-asc') {
+    orderBySql = `
+      ORDER BY
+        CASE t.status
+          WHEN 'pending' THEN 1
+          WHEN 'in_progress' THEN 2
+          WHEN 'done' THEN 3
+          ELSE 99
+        END,
+        t.created_at DESC
+    `;
+  }
+
   const sql = `
     SELECT t.*, 
            u.username AS assigned_username,
@@ -864,7 +891,7 @@ router.get('/reports/export', async (req, res) => {
       LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
     JOIN users c ON t.created_by = c.id
     ${whereSql}
-    ORDER BY t.created_at DESC
+    ${orderBySql}
   `;
 
   try {
