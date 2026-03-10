@@ -35,7 +35,7 @@ router.get('/tasks', async (req, res) => {
 
   // Kullanıcı rolü ise; kendisinin sorumlu olduğu TÜM görevleri göster:
   // assigned_to, sorumlu_2, sorumlu_3 veya konu_sorumlusu
-  if (req.user.role !== 'super_admin') {
+  if (req.user.role !== 'super_admin' && req.user.role !== 'system_admin') {
     where.push(`(t.assigned_to = $${paramIndex} OR t.sorumlu_2 = $${paramIndex} OR t.sorumlu_3 = $${paramIndex} OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = $${paramIndex +
       1}))`);
     params.push(req.user.id);
@@ -81,7 +81,7 @@ router.get('/tasks', async (req, res) => {
       pageTitle: req.t('userTasks'),
       tasks: result.rows,
       filters: { status, from, to },
-      isAdmin: req.user.role === 'super_admin'
+      isAdmin: req.user.role === 'super_admin' || req.user.role === 'system_admin'
     });
   } catch (err) {
     console.error(err);
@@ -96,7 +96,7 @@ router.get('/tasks/:id', async (req, res) => {
   try {
     // Admin ise tüm görevleri görebilir, değilse tüm sorumlular görebilir (assigned_to, sorumlu_2, sorumlu_3, konu_sorumlusu)
     let taskResult;
-    if (req.user.role === 'super_admin') {
+    if (req.user.role === 'super_admin' || req.user.role === 'system_admin') {
       taskResult = await pool.query(
         `SELECT t.*, c.username AS created_username, u.username AS assigned_username
          FROM tasks t
@@ -303,7 +303,7 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
           }
 
           // Notify all admins
-          const adminsResult = await client.query('SELECT id FROM users WHERE role = $1', ['super_admin']);
+          const adminsResult = await client.query("SELECT id FROM users WHERE role IN ('super_admin', 'system_admin')");
           for (const admin of adminsResult.rows) {
             userIdsToNotify.add(admin.id);
           }

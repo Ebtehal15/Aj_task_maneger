@@ -131,7 +131,7 @@ async function initSchema() {
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        role VARCHAR(50) NOT NULL CHECK(role IN ('super_admin','user','admin')),
+        role VARCHAR(50) NOT NULL CHECK(role IN ('super_admin','user','admin','system_admin')),
         email VARCHAR(255)
       )
     `);
@@ -149,7 +149,7 @@ async function initSchema() {
         ) THEN
           ALTER TABLE users DROP CONSTRAINT users_role_check;
         END IF;
-        ALTER TABLE users ADD CONSTRAINT users_role_check CHECK(role IN ('super_admin','user','admin'));
+        ALTER TABLE users ADD CONSTRAINT users_role_check CHECK(role IN ('super_admin','user','admin','system_admin'));
       EXCEPTION
         WHEN duplicate_object THEN NULL;
       END $$;
@@ -276,6 +276,12 @@ async function initSchema() {
                        WHERE table_name='tasks' AND column_name='task_subject') THEN
           ALTER TABLE tasks ADD COLUMN task_subject TEXT;
         END IF;
+        
+        -- Yönetici Takip (System admin only - Evet/Hayır)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tasks' AND column_name='yonetici_kontrol') THEN
+          ALTER TABLE tasks ADD COLUMN yonetici_kontrol BOOLEAN DEFAULT false;
+        END IF;
       END $$;
     `);
 
@@ -379,6 +385,25 @@ async function initSchema() {
     } catch (adminErr) {
       console.error('⚠️  Warning: Could not create default admin user:', adminErr.message);
       // Don't throw - app can still run, admin might exist
+    }
+
+    // Seed sistem yöneticisi (system_admin) - sadece kod tarafından atanır, tek kullanıcı
+    const SYSTEM_ADMIN_USERNAME = 'sysadmin';
+    const SYSTEM_ADMIN_PASSWORD = 'SysAdmin!2025';
+    try {
+      const sysAdminCheck = await client.query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['system_admin']);
+      if (parseInt(sysAdminCheck.rows[0].count) === 0) {
+        const passwordHash = bcrypt.hashSync(SYSTEM_ADMIN_PASSWORD, 10);
+        await client.query(
+          'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+          [SYSTEM_ADMIN_USERNAME, passwordHash, 'system_admin']
+        );
+        console.log('✅ Sistem yöneticisi oluşturuldu: kullanıcı adı=%s, şifre=%s (ilk girişte değiştirin)', SYSTEM_ADMIN_USERNAME, SYSTEM_ADMIN_PASSWORD);
+      } else {
+        console.log('ℹ️  Sistem yöneticisi kullanıcısı zaten mevcut');
+      }
+    } catch (sysAdminErr) {
+      console.error('⚠️  Warning: Could not create system admin user:', sysAdminErr.message);
     }
   } catch (err) {
     await client.query('ROLLBACK');

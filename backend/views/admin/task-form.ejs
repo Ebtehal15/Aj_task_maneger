@@ -48,7 +48,7 @@
         </div>
         <div class="col-md-6 mb-3">
           <label class="form-label"><%= t('konuSorumlusu') %></label>
-          <select name="konu_sorumlusu" id="konuSorumlusuSelect" class="form-select">
+          <select name="konu_sorumlusu" id="konuSorumlusuSelect" class="form-select tm-select-searchable">
             <option value=""><%= t('konuSorumlusu') %></option>
             <% users.forEach(u => { %>
             <option
@@ -69,7 +69,7 @@
       <div class="row">
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('sorumlu') %> 1</label>
-          <select name="assigned_to" class="form-select" required>
+          <select name="assigned_to" class="form-select tm-select-searchable" required>
             <option value=""><%= t('assignedTo') %></option>
             <% users.forEach(u => { %>
             <option
@@ -83,7 +83,7 @@
         </div>
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('sorumlu2') %></label>
-          <select name="sorumlu_2" class="form-select">
+          <select name="sorumlu_2" class="form-select tm-select-searchable">
             <option value=""><%= t('sorumlu2') %></option>
             <% users.forEach(u => { %>
             <option
@@ -97,7 +97,7 @@
         </div>
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('sorumlu3') %></label>
-          <select name="sorumlu_3" class="form-select">
+          <select name="sorumlu_3" class="form-select tm-select-searchable">
             <option value=""><%= t('sorumlu3') %></option>
             <% users.forEach(u => { %>
             <option
@@ -116,7 +116,7 @@
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('bolge') %></label>
           <div class="d-flex gap-2">
-            <select name="bolge" id="bolgeSelect" class="form-select flex-grow-1">
+            <select name="bolge" id="bolgeSelect" class="form-select flex-grow-1 tm-select-searchable">
               <option value=""><%= t('bolge') %></option>
               <% if (typeof regions !== 'undefined' && regions) { %>
                 <% regions.forEach(r => { %>
@@ -137,7 +137,7 @@
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('il') %></label>
           <div class="d-flex gap-2">
-            <select name="il" id="ilSelect" class="form-select flex-grow-1">
+            <select name="il" id="ilSelect" class="form-select flex-grow-1 tm-select-searchable">
               <option value=""><%= t('il') %></option>
               <% if (typeof cities !== 'undefined' && cities) { %>
                 <% cities.forEach(c => { %>
@@ -158,7 +158,7 @@
         <div class="col-md-4 mb-3">
           <label class="form-label"><%= t('belediye') %></label>
           <div class="d-flex gap-2">
-            <select name="belediye" id="belediyeSelect" class="form-select flex-grow-1">
+            <select name="belediye" id="belediyeSelect" class="form-select flex-grow-1 tm-select-searchable">
               <option value=""><%= t('belediye') %></option>
               <% if (typeof municipalities !== 'undefined' && municipalities) { %>
                 <% municipalities.forEach(m => { %>
@@ -182,7 +182,7 @@
       <div class="row">
         <div class="col-md-6 mb-3">
           <label class="form-label"><%= t('departman') %></label>
-          <select name="departman" class="form-select">
+          <select name="departman" class="form-select tm-select-searchable">
             <option value=""><%= t('departman') %></option>
             <option value="SAHA" <%= (typeof task !== 'undefined' && task && task.departman === 'SAHA') ? 'selected' : '' %>><%= t('departmanSaha') %></option>
             <option value="BELEDİYE" <%= (typeof task !== 'undefined' && task && task.departman === 'BELEDİYE') ? 'selected' : '' %>><%= t('departmanBelediye') %></option>
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
 
         if (result.success) {
-          // Add new user to all user dropdowns
+          // Add new user to all user dropdowns (native select)
           const allUserSelects = document.querySelectorAll('select[name="konu_sorumlusu"], select[name="assigned_to"], select[name="sorumlu_2"], select[name="sorumlu_3"]');
           
           allUserSelects.forEach(select => {
@@ -452,10 +452,18 @@ document.addEventListener('DOMContentLoaded', function() {
             option.value = result.userId;
             option.textContent = result.username;
             select.appendChild(option);
+            if (select.tomselect) {
+              select.tomselect.addOption({ value: result.userId, text: result.username });
+              select.tomselect.sync();
+            }
           });
           
           // Select the new user in konu_sorumlusu dropdown
-          konuSorumlusuSelect.value = result.userId;
+          if (konuSorumlusuSelect.tomselect) {
+            konuSorumlusuSelect.tomselect.setValue(result.userId);
+          } else {
+            konuSorumlusuSelect.value = result.userId;
+          }
           
           // Close modal and reset form
           addUserModal.hide();
@@ -508,9 +516,13 @@ document.addEventListener('DOMContentLoaded', function() {
             option.value = result.name;
             option.textContent = result.name;
             belediyeSelect.appendChild(option);
-            
-            // Select the new municipality
-            belediyeSelect.value = result.name;
+            if (belediyeSelect.tomselect) {
+              belediyeSelect.tomselect.addOption({ value: result.name, text: result.name });
+              belediyeSelect.tomselect.sync();
+              belediyeSelect.tomselect.setValue(result.name);
+            } else {
+              belediyeSelect.value = result.name;
+            }
             
             // Close modal and reset form
             addMunicipalityModal.hide();
@@ -564,9 +576,13 @@ document.addEventListener('DOMContentLoaded', function() {
             option.value = result.name;
             option.textContent = result.name;
             bolgeSelect.appendChild(option);
-            
-            // Select the new region
-            bolgeSelect.value = result.name;
+            if (bolgeSelect.tomselect) {
+              bolgeSelect.tomselect.addOption({ value: result.name, text: result.name });
+              bolgeSelect.tomselect.sync();
+              bolgeSelect.tomselect.setValue(result.name);
+            } else {
+              bolgeSelect.value = result.name;
+            }
             
             // Close modal and reset form
             addRegionModal.hide();
@@ -620,9 +636,13 @@ document.addEventListener('DOMContentLoaded', function() {
             option.value = result.name;
             option.textContent = result.name;
             ilSelect.appendChild(option);
-            
-            // Select the new city
-            ilSelect.value = result.name;
+            if (ilSelect.tomselect) {
+              ilSelect.tomselect.addOption({ value: result.name, text: result.name });
+              ilSelect.tomselect.sync();
+              ilSelect.tomselect.setValue(result.name);
+            } else {
+              ilSelect.value = result.name;
+            }
             
             // Close modal and reset form
             addCityModal.hide();
@@ -694,5 +714,37 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+  // Aranabilir seçim listeleri (Tom Select) - yazarak arama; placeholder başlıkla karışmasın
+  function initSearchableSelects() {
+    if (typeof TomSelect === 'undefined') return;
+    document.querySelectorAll('.tm-select-searchable').forEach(function(el) {
+      if (el.tomselect) return;
+      var emptyOpt = el.querySelector('option[value=""]');
+      var placeholder = (emptyOpt && emptyOpt.textContent) ? emptyOpt.textContent.trim() : '';
+      if (emptyOpt) emptyOpt.textContent = '';
+      var ts = new TomSelect(el, {
+        create: false,
+        sortField: { field: 'text', direction: 'asc' },
+        placeholder: placeholder,
+        allowEmptyOption: true,
+        maxOptions: null,
+        render: {
+          no_results: function() {
+            return '<div class="no-results">Sonuç bulunamadı</div>';
+          }
+        }
+      });
+      el.tomselect = ts;
+    });
+  }
+  if (typeof TomSelect !== 'undefined') {
+    initSearchableSelects();
+  } else {
+    window.addEventListener('load', function fn() {
+      if (typeof TomSelect !== 'undefined') { initSearchableSelects(); return; }
+      setTimeout(fn, 50);
+    });
+  }
 </script>
 

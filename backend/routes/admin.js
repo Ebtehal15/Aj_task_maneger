@@ -251,6 +251,99 @@ router.get('/my-tasks', async (req, res) => {
   }
 });
 
+// Yönetici Takip - sadece system_admin, yonetici_kontrol=true görevler
+router.get('/manager-control', async (req, res) => {
+  if (req.user.role !== 'system_admin') {
+    return res.redirect('/admin/dashboard');
+  }
+  const sql = `
+    SELECT t.*, 
+           u.username AS assigned_username, 
+           c.username AS created_username,
+           u2.username AS sorumlu_2_username,
+           u3.username AS sorumlu_3_username,
+           ks.username AS konu_sorumlusu_username,
+           COALESCE(t.acil, false)::boolean AS acil
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    JOIN users c ON t.created_by = c.id
+    LEFT JOIN users u2 ON t.sorumlu_2 = u2.id
+    LEFT JOIN users u3 ON t.sorumlu_3 = u3.id
+    LEFT JOIN users ks ON (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = ks.id::text)
+    WHERE COALESCE(t.yonetici_kontrol, false) = true
+    ORDER BY t.created_at DESC
+  `;
+  try {
+    const tasksResult = await pool.query(sql);
+    res.render('admin/manager-control', {
+      pageTitle: req.t('yoneticiKontrol'),
+      tasks: tasksResult.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// Görev Dağılımı - super_admin & system_admin
+router.get('/task-distribution', async (req, res) => {
+  if (!(req.user.role === 'super_admin' || req.user.role === 'system_admin')) {
+    return res.redirect('/admin/dashboard');
+  }
+
+  try {
+    const byUserResult = await pool.query(`
+      SELECT
+        u.id,
+        u.username,
+        COUNT(t.id)::int AS total,
+        COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
+        COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
+        COUNT(*) FILTER (
+          WHERE t.status <> 'done'
+            AND t.deadline IS NOT NULL
+            AND (t.deadline::date < CURRENT_DATE)
+        )::int AS overdue,
+        COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
+      FROM users u
+      LEFT JOIN tasks t ON t.assigned_to = u.id
+      WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
+      GROUP BY u.id, u.username
+      ORDER BY
+        (COUNT(t.id) > 0) DESC,
+        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
+        COUNT(*) FILTER (WHERE t.status = 'done') DESC,
+        COUNT(t.id) DESC,
+        u.username ASC
+    `);
+
+    const totalsResult = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE status = 'in_progress')::int AS in_progress,
+        COUNT(*) FILTER (WHERE status = 'done')::int AS done,
+        COUNT(*) FILTER (
+          WHERE status <> 'done'
+            AND deadline IS NOT NULL
+            AND (deadline::date < CURRENT_DATE)
+        )::int AS overdue,
+        COUNT(*) FILTER (WHERE COALESCE(acil, false)::boolean = true)::int AS urgent
+      FROM tasks
+    `);
+
+    res.render('admin/task-distribution', {
+      pageTitle: req.t('taskDistribution'),
+      rows: byUserResult.rows,
+      totals: totalsResult.rows?.[0] || { total: 0, pending: 0, in_progress: 0, done: 0, overdue: 0, urgent: 0 }
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
 router.get('/tasks', async (req, res) => {
   console.log(`📋 Admin tasks page accessed - user: ${req.user ? req.user.username : 'null'}, sessionId: ${req.sessionID}`);
 
@@ -863,10 +956,17 @@ router.post('/cities/quick-add', async (req, res) => {
   }
 });
 
+// system_admin (System Administrator) rolü sadece veritabanında manuel atanır; arayüzden atanamaz.
+// Atamak için: UPDATE users SET role = 'system_admin' WHERE id = <kullanici_id>;
+const ALLOWED_ROLES_FROM_UI = ['user', 'admin', 'super_admin'];
+
 router.post('/users/quick-add', async (req, res) => {
   const { username, email, password, role } = req.body;
   if (!username || !password || !role) {
     return res.json({ success: false, error: 'Username, password and role are required' });
+  }
+  if (!ALLOWED_ROLES_FROM_UI.includes(role)) {
+    return res.json({ success: false, error: 'Bu rol arayüzden atanamaz.' });
   }
   try {
     const passwordHash = bcrypt.hashSync(password, 10);
@@ -885,6 +985,9 @@ router.post('/users', avatarUpload.single('avatar'), async (req, res) => {
   const { username, email, password, role } = req.body;
   if (!username || !password || !role) {
     return res.redirect('/admin/users');
+  }
+  if (!ALLOWED_ROLES_FROM_UI.includes(role)) {
+    return res.redirect('/admin/users?error=invalid_role');
   }
   try {
   const passwordHash = bcrypt.hashSync(password, 10);
@@ -925,6 +1028,12 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
 
   if (!username || !role) {
     return res.redirect(`/admin/users/${userId}/edit`);
+  }
+  const currentUserResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+  const currentRole = currentUserResult.rows[0]?.role;
+  const roleAllowed = ALLOWED_ROLES_FROM_UI.includes(role) || (role === 'system_admin' && currentRole === 'system_admin');
+  if (!roleAllowed) {
+    return res.redirect(`/admin/users/${userId}/edit?error=invalid_role`);
   }
 
   try {
@@ -1539,7 +1648,7 @@ router.post('/tasks/:id', async (req, res) => {
 // Update task with note and files (admin)
 router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, res) => {
   const taskId = req.params.id;
-  const { status, note, completed_at } = req.body;
+  const { status, note, completed_at, yonetici_kontrol } = req.body;
   const allowed = ['pending', 'in_progress', 'done'];
   if (!allowed.includes(status)) {
     return res.redirect(`/admin/tasks/${taskId}`);
@@ -1548,6 +1657,14 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Yönetici Takip: sadece system_admin güncelleyebilir
+    if (req.user.role === 'system_admin' && typeof yonetici_kontrol !== 'undefined') {
+      await client.query(
+        'UPDATE tasks SET yonetici_kontrol = $1 WHERE id = $2',
+        [yonetici_kontrol === 'evet', taskId]
+      );
+    }
 
     // Update task status and set completed_at when status is 'done'
     if (status === 'done') {

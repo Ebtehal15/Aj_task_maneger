@@ -148,6 +148,17 @@
               </div>
             </div>
             
+            <% if (currentUser && currentUser.role === 'system_admin') { %>
+            <div class="col-md-12">
+              <label class="form-label fw-semibold" style="font-size: 0.875rem;">
+                <i class="bi bi-shield-check me-1"></i><%= t('yoneticiKontrol') %>
+              </label>
+              <select name="yonetici_kontrol" class="form-select" style="border-radius: 8px; border: 2px solid #e5e7eb; font-size: 0.875rem;">
+                <option value="hayir" <%= !task.yonetici_kontrol ? 'selected' : '' %>><%= t('yoneticiKontrolHayir') %></option>
+                <option value="evet" <%= task.yonetici_kontrol ? 'selected' : '' %>><%= t('yoneticiKontrolEvet') %></option>
+              </select>
+            </div>
+            <% } %>
             <div class="col-md-12">
               <label class="form-label fw-semibold" style="font-size: 0.875rem;">
                 <i class="bi bi-chat-left-text me-1"></i>Not / Açıklama

@@ -1,0 +1,79 @@
+<%
+  const formatDateOnlyTurkey = (date) => {
+    if (!date) return '';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const turkeyOffset = 3 * 60;
+      const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+      const turkeyTime = new Date(utc + (turkeyOffset * 60000));
+      const year = turkeyTime.getFullYear();
+      const month = String(turkeyTime.getMonth() + 1).padStart(2, '0');
+      const day = String(turkeyTime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (err) {
+      return typeof date === 'string'
+        ? date.slice(0, 10)
+        : date.toISOString().slice(0, 10);
+    }
+  };
+%>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><i class="bi bi-shield-check me-2"></i><%= t('yoneticiKontrol') %></h1>
+  <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <% if (!tasks || !tasks.length) { %>
+    <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th><%= t('taskTitle') %></th>
+            <th><%= t('konuSorumlusu') %></th>
+            <th><%= t('departman') %></th>
+            <th><%= t('status') %></th>
+            <th><%= t('deadline') %></th>
+            <th><%= t('completedAt') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% tasks.forEach((task, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td>
+              <div><strong><%= task.title %></strong></div>
+              <% if (task.task_subject && task.task_subject.trim()) { %>
+              <div class="small text-muted mt-1"><%= task.task_subject %></div>
+              <% } %>
+              <% if (task.acil === true || task.acil === 'true' || task.acil === 't') { %>
+                <span class="badge bg-danger ms-2"><%= t('urgent') %></span>
+              <% } %>
+            </td>
+            <td><%= task.konu_sorumlusu_username || task.assigned_username || '-' %></td>
+            <td><%= task.departman || '-' %></td>
+            <td>
+              <span class="badge status-<%= task.status %>">
+                <%= t('status_' + task.status) %>
+              </span>
+            </td>
+            <td><%= task.deadline ? formatDateOnlyTurkey(task.deadline) : '-' %></td>
+            <td><%= task.completed_at ? formatDateOnlyTurkey(task.completed_at) : '-' %></td>
+            <td class="text-end">
+              <a href="/admin/tasks/<%= task.id %>" class="btn btn-sm btn-outline-primary">
+                <%= t('view') %>
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>

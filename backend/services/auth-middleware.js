@@ -52,8 +52,11 @@ function ensureRole(role) {
     if (role === 'admin' && req.user.role === 'admin') {
       return next();
     }
-    // Eğer role 'super_admin' ise ve kullanıcının role'ü 'super_admin' ise izin ver
-    if (role === 'super_admin' && req.user.role === 'super_admin') {
+    // super_admin veya system_admin (System Administrator - sadece kod/DB ile atanır)
+    if (role === 'super_admin' && (req.user.role === 'super_admin' || req.user.role === 'system_admin')) {
+      return next();
+    }
+    if (role === 'system_admin' && req.user.role === 'system_admin') {
       return next();
     }
     // Diğer durumlarda role kontrolü yap

@@ -57,17 +57,17 @@
           </div>
           <div class="mb-3">
             <label class="form-label"><%= t('role') %></label>
-            <select name="role" class="form-select">
-              <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>
-                <%= t('role_user') %>
-              </option>
-              <option value="super_admin" <%= user.role === 'super_admin' ? 'selected' : '' %>>
-                <%= t('role_super_admin') %>
-              </option>
-              <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>
-                <%= t('role_admin') %>
-              </option>
-            </select>
+            <% if (user.role === 'system_admin') { %>
+              <input type="hidden" name="role" value="system_admin" />
+              <p class="form-control-plaintext mb-0"><%= t('role_system_admin') %></p>
+              <small class="text-muted"><%= t('role_system_admin_hint') %></small>
+            <% } else { %>
+              <select name="role" class="form-select">
+                <option value="user" <%= user.role === 'user' ? 'selected' : '' %>><%= t('role_user') %></option>
+                <option value="super_admin" <%= user.role === 'super_admin' ? 'selected' : '' %>><%= t('role_super_admin') %></option>
+                <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>><%= t('role_admin') %></option>
+              </select>
+            <% } %>
           </div>
           <div class="mb-3">
             <label class="form-label">Profil Fotoğrafı</label>

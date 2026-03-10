@@ -74,7 +74,7 @@
               <% } %>
             <div>
               <div><strong><%= u.username %></strong></div>
-              <div class="small text-muted text-uppercase"><%= u.role %></div>
+              <div class="small text-muted text-uppercase"><%= u.role === 'system_admin' ? t('role_system_admin') : (u.role === 'super_admin' ? t('role_super_admin') : (u.role === 'admin' ? t('role_admin') : t('role_user'))) %></div>
             </div>
           </div>
           <div class="d-flex gap-2">

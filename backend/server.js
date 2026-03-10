@@ -201,7 +201,7 @@ app.use((req, res) => {
   console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
   let dashboardUrl = '/';
   if (req.user) {
-    if (req.user.role === 'super_admin') dashboardUrl = '/admin/dashboard';
+    if (req.user.role === 'super_admin' || req.user.role === 'system_admin') dashboardUrl = '/admin/dashboard';
     else if (req.user.role === 'admin') dashboardUrl = '/creator/tasks';
     else dashboardUrl = '/user/tasks';
   }
@@ -221,7 +221,7 @@ app.use((err, req, res, next) => {
   console.error('Stack:', err.stack);
   let dashboardUrl = '/';
   if (req.user) {
-    if (req.user.role === 'super_admin') dashboardUrl = '/admin/dashboard';
+    if (req.user.role === 'super_admin' || req.user.role === 'system_admin') dashboardUrl = '/admin/dashboard';
     else if (req.user.role === 'admin') dashboardUrl = '/creator/tasks';
     else dashboardUrl = '/user/tasks';
   }
