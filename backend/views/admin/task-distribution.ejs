@@ -6,6 +6,7 @@
   const overdueAll = totals?.overdue ?? 0;
   const urgentAll = totals?.urgent ?? 0;
   const completionAll = totalAll > 0 ? Math.round((doneAll / totalAll) * 100) : 0;
+  const completionAllBarClass = completionAll > 50 ? 'tm-progress__bar--green' : (completionAll === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red');
 %>
 
 <div class="d-flex justify-content-between align-items-center mb-3 td-header">
@@ -59,7 +60,7 @@
         </div>
         <div class="tm-kpi-sub w-100">
           <div class="tm-progress w-100" aria-label="<%= t('completionRate') %>">
-            <div class="tm-progress__bar" style="width: <%= completionAll %>%"></div>
+            <div class="tm-progress__bar <%= completionAllBarClass %>" style="width: <%= completionAll %>%"></div>
           </div>
         </div>
       </div>
@@ -143,7 +144,7 @@
               </div>
 
               <div class="tm-progress" aria-label="<%= t('completionRate') %>">
-                <div class="tm-progress__bar" style="width: <%= completion %>%;"></div>
+                <div class="tm-progress__bar <%= completion > 50 ? 'tm-progress__bar--green' : (completion === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= completion %>%;"></div>
               </div>
 
               <div class="tm-user-card__details">
@@ -266,7 +267,7 @@
                 <td class="text-center" style="min-width: 160px;">
                   <div class="d-flex align-items-center gap-2 justify-content-center">
                     <div class="tm-progress" style="width: 110px;">
-                      <div class="tm-progress__bar" style="width: <%= completion %>%;"></div>
+                      <div class="tm-progress__bar <%= completion > 50 ? 'tm-progress__bar--green' : (completion === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= completion %>%;"></div>
                     </div>
                     <span class="fw-bold"><%= completion %>%</span>
                   </div>
