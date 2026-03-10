@@ -769,7 +769,7 @@ router.post('/reports/upload-temp', async (req, res) => {
 
 // Export tasks to Excel
 router.get('/reports/export', async (req, res) => {
-  const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, sort } = req.query;
+  const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, sort, columns: columnsRaw } = req.query;
 
   const params = [];
   const where = [];
@@ -902,8 +902,8 @@ router.get('/reports/export', async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Görevler');
 
-    // Define columns
-    worksheet.columns = [
+    // Define all possible columns
+    const allColumns = [
       { header: 'TARİH', key: 'tarih', width: 12 },
       { header: 'KONU SORUMLUSU', key: 'konu_sorumlusu', width: 15 },
       { header: 'SORUMLU 1', key: 'sorumlu_1', width: 15 },
@@ -920,6 +920,23 @@ router.get('/reports/export', async (req, res) => {
       { header: 'ARŞİV', key: 'arsiv', width: 10 },
       { header: 'DURUM', key: 'durum', width: 15 }
     ];
+
+    let selectedColumns = [];
+    if (typeof columnsRaw === 'string' && columnsRaw.trim()) {
+      selectedColumns = columnsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let columnsToUse = allColumns;
+    if (selectedColumns.length) {
+      const colSet = new Set(selectedColumns);
+      columnsToUse = allColumns.filter(col => colSet.has(col.key));
+      // Eğer kullanıcı tüm kolonları kaldırmışsa, güvenli olarak hepsini kullan
+      if (!columnsToUse.length) {
+        columnsToUse = allColumns;
+      }
+    }
+
+    worksheet.columns = columnsToUse;
 
     // Style header row
     worksheet.getRow(1).font = { bold: true, size: 11 };

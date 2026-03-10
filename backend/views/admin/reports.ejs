@@ -46,6 +46,85 @@
       <i class="bi bi-file-earmark-excel"></i>
       <%= t('exportExcel') %>
     </a>
+    <div class="dropdown">
+      <button
+        class="btn btn-outline-secondary btn-sm dropdown-toggle"
+        type="button"
+        id="excelColumnsDropdown"
+        data-bs-toggle="dropdown"
+        data-bs-auto-close="outside"
+        aria-expanded="false"
+        title="Excel kolonlarını seç"
+      >
+        <i class="bi bi-columns-gap"></i>
+      </button>
+      <div class="dropdown-menu p-3 shadow-sm" style="min-width: 220px;">
+        <div class="mb-2 small text-muted fw-semibold">Excel kolonları</div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="tarih" id="excel-col-tarih">
+          <label class="form-check-label" for="excel-col-tarih">Tarih</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="konu_sorumlusu" id="excel-col-konu-sorumlusu">
+          <label class="form-check-label" for="excel-col-konu-sorumlusu">Konu sorumlusu</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="sorumlu_1" id="excel-col-sorumlu-1">
+          <label class="form-check-label" for="excel-col-sorumlu-1">Sorumlu 1</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="sorumlu_2" id="excel-col-sorumlu-2">
+          <label class="form-check-label" for="excel-col-sorumlu-2">Sorumlu 2</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="sorumlu_3" id="excel-col-sorumlu-3">
+          <label class="form-check-label" for="excel-col-sorumlu-3">Sorumlu 3</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="bolge" id="excel-col-bolge">
+          <label class="form-check-label" for="excel-col-bolge">Bölge</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="il" id="excel-col-il">
+          <label class="form-check-label" for="excel-col-il">İl</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="belediye" id="excel-col-belediye">
+          <label class="form-check-label" for="excel-col-belediye">Belediye</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="departman" id="excel-col-departman">
+          <label class="form-check-label" for="excel-col-departman">Departman</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="konu" id="excel-col-konu">
+          <label class="form-check-label" for="excel-col-konu">Konu</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="is_konusu" id="excel-col-is-konu">
+          <label class="form-check-label" for="excel-col-is-konu">İş konusu</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="verilen_is_tarihi" id="excel-col-verilen">
+          <label class="form-check-label" for="excel-col-verilen">Verilen iş tarihi</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="tahmini_is_bitis_tarihi" id="excel-col-tahmini">
+          <label class="form-check-label" for="excel-col-tahmini">Tahmini iş bitiş tarihi</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="arsiv" id="excel-col-arsiv">
+          <label class="form-check-label" for="excel-col-arsiv">Arşiv</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input excel-col-checkbox" type="checkbox" value="durum" id="excel-col-durum">
+          <label class="form-check-label" for="excel-col-durum">Durum</label>
+        </div>
+        <div class="mt-2 small text-muted">
+          Seçili kolonlar Excel'e aktarılır. Hiçbiri seçilmezse tüm kolonlar gider.
+        </div>
+      </div>
+    </div>
     <div class="btn-group" role="group" aria-label="View toggle">
       <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="table" title="Tablo Görünümü">
         <i class="bi bi-table"></i>
@@ -863,8 +942,48 @@
       });
     });
 
-    // Excel export: mevcut sıralamayı da gönder
+    // Excel export: mevcut sıralama ve kolon seçimlerini gönder
     const exportBtn = document.getElementById('exportExcelBtn');
+    const excelColCheckboxes = document.querySelectorAll('.excel-col-checkbox');
+    const EXCEL_COL_STORAGE_KEY = 'reportsExcelColumns';
+
+    function getSelectedExcelColumns() {
+      return Array.from(excelColCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    }
+
+    // Sayfa yüklenirken kolon seçimlerini localStorage'dan yükle
+    if (excelColCheckboxes.length) {
+      try {
+        const raw = localStorage.getItem(EXCEL_COL_STORAGE_KEY);
+        if (raw && raw.trim()) {
+          const selected = raw.split(',').map(s => s.trim()).filter(Boolean);
+          const selectedSet = new Set(selected);
+          excelColCheckboxes.forEach(cb => {
+            cb.checked = selectedSet.size ? selectedSet.has(cb.value) : true;
+          });
+        } else {
+          // İlk kullanım: hepsini seçili yap
+          excelColCheckboxes.forEach(cb => { cb.checked = true; });
+        }
+      } catch (e) {
+        excelColCheckboxes.forEach(cb => { cb.checked = true; });
+      }
+
+      // Değiştikçe localStorage'a yaz
+      excelColCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+          const cols = getSelectedExcelColumns();
+          try {
+            localStorage.setItem(EXCEL_COL_STORAGE_KEY, cols.join(','));
+          } catch (e) {
+            // ignore
+          }
+        });
+      });
+    }
+
     if (exportBtn) {
       exportBtn.addEventListener('click', function() {
         try {
@@ -875,6 +994,12 @@
             url.searchParams.set('sort', currentSort);
           } else {
             url.searchParams.delete('sort');
+          }
+          const cols = getSelectedExcelColumns();
+          if (cols && cols.length) {
+            url.searchParams.set('columns', cols.join(','));
+          } else {
+            url.searchParams.delete('columns');
           }
           this.setAttribute('href', url.toString());
         } catch (e) {
