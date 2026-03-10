@@ -573,7 +573,8 @@ router.get('/reports', async (req, res) => {
     arsiv,
     filterTypes: filterTypesRaw,
     // Backward-compat: older UI used a single filterType
-    filterType
+    filterType,
+    overdue
   } = req.query;
 
   let filterTypes = [];
@@ -598,6 +599,11 @@ router.get('/reports', async (req, res) => {
     if (from_completed || to_completed) filterTypes.push('completed_date');
     if (departman) filterTypes.push('department');
     if (arsiv) filterTypes.push('archive');
+    // Overdue özel filtresi: UI'da tarih ve durum filtrelerini de göster
+    if (overdue === 'true') {
+      if (!filterTypes.includes('status')) filterTypes.push('status');
+      if (!filterTypes.includes('date')) filterTypes.push('date');
+    }
   }
 
   const params = [];
@@ -619,6 +625,11 @@ router.get('/reports', async (req, res) => {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
     paramIndex++;
+  }
+  // Overdue: tamamlanmamış ve deadline tarihi bugün'den küçük olan görevler
+  if (overdue === 'true') {
+    where.push(`t.status <> 'done'`);
+    where.push(`t.deadline IS NOT NULL AND t.deadline::date < CURRENT_DATE`);
   }
   if (urgent && urgent !== 'undefined' && urgent !== 'null') {
     where.push(`COALESCE(t.acil, false)::boolean = true`);

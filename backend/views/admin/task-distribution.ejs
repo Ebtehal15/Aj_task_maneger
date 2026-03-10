@@ -41,8 +41,8 @@
           <div class="tm-kpi-icon"><i class="bi bi-stack"></i></div>
         </div>
         <div class="tm-kpi-sub">
-          <span class="tm-pill"><i class="bi bi-check2-circle"></i> <%= doneAll %> <%= t('status_done') %></span>
-          <span class="tm-pill"><i class="bi bi-hourglass-split"></i> <%= pendingAll + inProgressAll %> <%= t('status_in_progress') %>/<%= t('status_pending') %></span>
+          <span class="tm-pill"><i class="bi bi-check2-circle"></i> <%= doneAll %></span>
+          <span class="tm-pill"><i class="bi bi-hourglass-split"></i> <%= pendingAll + inProgressAll %></span>
         </div>
       </div>
     </div>
@@ -68,21 +68,22 @@
   </div>
 
   <div class="tm-kpi-col">
-    <div class="tm-kpi-card tm-kpi-accent--red">
-      <div class="tm-kpi-card__body">
-        <div class="tm-kpi-card__top">
-          <div>
-            <div class="tm-kpi-card__label"><%= t('overdueTasks') %></div>
-            <div class="tm-kpi-card__value"><%= overdueAll %></div>
+    <a href="/admin/reports?overdue=true" class="text-decoration-none text-reset">
+      <div class="tm-kpi-card tm-kpi-accent--red" style="cursor: pointer;">
+        <div class="tm-kpi-card__body">
+          <div class="tm-kpi-card__top">
+            <div>
+              <div class="tm-kpi-card__label"><%= t('overdueTasks') %></div>
+              <div class="tm-kpi-card__value"><%= overdueAll %></div>
+            </div>
+            <div class="tm-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
           </div>
-          <div class="tm-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
-        </div>
-        <div class="tm-kpi-sub">
-          <span class="tm-pill tm-pill--red"><i class="bi bi-clock-history"></i> <%= overdueAll %></span>
-          <span class="tm-pill"><i class="bi bi-info-circle"></i> <%= t('status_in_progress') %>/<%= t('status_pending') %></span>
+          <div class="tm-kpi-sub">
+            <span class="tm-pill tm-pill--red"><i class="bi bi-clock-history"></i> <%= overdueAll %></span>
+          </div>
         </div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="tm-kpi-col">
@@ -310,25 +311,32 @@
 
     function toggleCard(el) {
       var isCollapsed = el.classList.contains('tm-user-card--collapsed');
-      el.classList.toggle('tm-user-card--collapsed', !(!isCollapsed));
-      el.classList.toggle('tm-user-card--expanded', !isCollapsed);
-      el.setAttribute('aria-expanded', String(!isCollapsed));
+      if (isCollapsed) {
+        el.classList.remove('tm-user-card--collapsed');
+        el.classList.add('tm-user-card--expanded');
+        el.setAttribute('aria-expanded', 'true');
+      } else {
+        el.classList.add('tm-user-card--collapsed');
+        el.classList.remove('tm-user-card--expanded');
+        el.setAttribute('aria-expanded', 'false');
+      }
     }
 
-    // Expand/collapse user cards (cards view)
-    cards.addEventListener('click', function (e) {
-      var card = e.target && e.target.closest ? e.target.closest('.tm-user-card') : null;
-      if (!card) return;
-      toggleCard(card);
-    });
+    // Expand/collapse user cards (cards view) – kartın kendisine tıklayınca
+    var cardNodes = cards.querySelectorAll('.tm-user-card');
+    cardNodes.forEach(function(card) {
+      card.addEventListener('click', function (e) {
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'a' || tag === 'button') return;
+        toggleCard(card);
+      });
 
-    cards.addEventListener('keydown', function (e) {
-      var key = e.key || e.code;
-      if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
-      var card = e.target && e.target.closest ? e.target.closest('.tm-user-card') : null;
-      if (!card) return;
-      e.preventDefault();
-      toggleCard(card);
+      card.addEventListener('keydown', function (e) {
+        var key = e.key || e.code;
+        if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
+        e.preventDefault();
+        toggleCard(card);
+      });
     });
   })();
 </script>
