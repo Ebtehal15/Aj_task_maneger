@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
 const bcrypt = require('bcryptjs');
 const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
@@ -340,6 +341,180 @@ router.get('/task-distribution', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// Görev Dağılımı PDF (sadece system_admin)
+router.get('/task-distribution/pdf', async (req, res) => {
+  if (req.user.role !== 'system_admin') {
+    return res.redirect('/admin/dashboard');
+  }
+
+  try {
+    const byUserResult = await pool.query(`
+      SELECT
+        u.username,
+        COUNT(t.id)::int AS total,
+        COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
+        COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
+        COUNT(*) FILTER (
+          WHERE t.status <> 'done'
+            AND t.deadline IS NOT NULL
+            AND (t.deadline::date < CURRENT_DATE)
+        )::int AS overdue,
+        COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
+      FROM users u
+      LEFT JOIN tasks t ON t.assigned_to = u.id
+      WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
+      GROUP BY u.id, u.username
+      ORDER BY
+        (COUNT(t.id) > 0) DESC,
+        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
+        COUNT(*) FILTER (WHERE t.status = 'done') DESC,
+        COUNT(t.id) DESC,
+        u.username ASC
+    `);
+
+    const totalsResult = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE status = 'in_progress')::int AS in_progress,
+        COUNT(*) FILTER (WHERE status = 'done')::int AS done,
+        COUNT(*) FILTER (
+          WHERE status <> 'done'
+            AND deadline IS NOT NULL
+            AND (deadline::date < CURRENT_DATE)
+        )::int AS overdue,
+        COUNT(*) FILTER (WHERE COALESCE(acil, false)::boolean = true)::int AS urgent
+      FROM tasks
+    `);
+
+    const rows = byUserResult.rows;
+    const totals = totalsResult.rows?.[0] || { total: 0, pending: 0, in_progress: 0, done: 0, overdue: 0, urgent: 0 };
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+
+    // Try to use a Unicode font (same logic as pdfHelper)
+    const candidateFonts = [
+      // Project fonts
+      path.join(__dirname, '..', 'public', 'fonts', 'NotoNaskhArabic-Regular.ttf'),
+      path.join(__dirname, '..', 'public', 'fonts', 'NotoSansArabic-Regular.ttf'),
+      path.join(__dirname, '..', 'public', 'fonts', 'NotoSans-Regular.ttf'),
+      path.join(__dirname, '..', 'public', 'fonts', 'Inter-Regular.ttf'),
+      path.join(__dirname, '..', 'public', 'fonts', 'Roboto-Regular.ttf'),
+      // Windows fonts (local dev)
+      'C:\\Windows\\Fonts\\segoeui.ttf',
+      'C:\\Windows\\Fonts\\calibri.ttf',
+      'C:\\Windows\\Fonts\\tahoma.ttf',
+      'C:\\Windows\\Fonts\\arial.ttf',
+    ];
+
+    let fontSet = false;
+    for (const fontPath of candidateFonts) {
+      try {
+        if (fs.existsSync(fontPath)) {
+          doc.font(fontPath);
+          fontSet = true;
+          break;
+        }
+      } catch (e) {
+        // ignore and try next
+      }
+    }
+
+    if (!fontSet) {
+      doc.font('Helvetica');
+    }
+    const fileName = `gorev_dagilimi_${new Date().toISOString().slice(0,10)}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+
+    doc.pipe(res);
+
+    const t = req.t || ((key) => key);
+
+    doc.fontSize(20).fillColor('#111827').text(t('taskDistribution'), { align: 'left' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).fillColor('#6B7280').text(new Date().toLocaleString('tr-TR'), { align: 'left' });
+    doc.moveDown(1);
+
+    // Summary
+    doc.fontSize(12).fillColor('#111827').text(`${t('totalTasks')}: ${totals.total}`);
+    doc.text(`${t('completedTasks')}: ${totals.done}`);
+    doc.text(`${t('pendingTasks')}: ${totals.pending}`);
+    doc.text(`${t('inProgressTasks')}: ${totals.in_progress}`);
+    doc.text(`${t('overdueTasks')}: ${totals.overdue}`);
+    doc.text(`${t('urgentTasks')}: ${totals.urgent}`);
+    doc.moveDown(1.5);
+
+    // Table header
+    const startX = doc.x;
+    const headers = [
+      '#',
+      t('personnel'),
+      t('totalTasks'),
+      t('status_pending'),
+      t('status_in_progress'),
+      t('status_done'),
+      t('overdueTasks'),
+      t('urgentTasks'),
+      t('completionRate'),
+    ];
+    const colWidths = [20, 110, 45, 45, 45, 45, 50, 50, 60];
+
+    doc.fontSize(10).fillColor('#111827').font('Helvetica-Bold');
+    headers.forEach((h, i) => {
+      doc.text(h, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), doc.y, {
+        width: colWidths[i],
+        align: i === 1 ? 'left' : 'center',
+      });
+    });
+    doc.moveDown(0.5);
+
+    doc.moveTo(startX, doc.y).lineTo(startX + colWidths.reduce((a, b) => a + b, 0), doc.y).lineWidth(1).strokeColor('#D1D5DB').stroke();
+    doc.moveDown(0.4);
+
+    doc.font('Helvetica').fillColor('#111827');
+
+    let index = 1;
+    rows.forEach((r) => {
+      if (doc.y > doc.page.height - 60) {
+        doc.addPage();
+      }
+      const total = r.total || 0;
+      const done = r.done || 0;
+      const completion = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      const values = [
+        String(index),
+        r.username,
+        String(total),
+        String(r.pending || 0),
+        String(r.in_progress || 0),
+        String(done),
+        String(r.overdue || 0),
+        String(r.urgent || 0),
+        `${completion}%`,
+      ];
+
+      values.forEach((val, i) => {
+        doc.text(val, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), doc.y, {
+          width: colWidths[i],
+          align: i === 1 ? 'left' : 'center',
+        });
+      });
+
+      doc.moveDown(0.3);
+      index += 1;
+    });
+
+    doc.end();
+  } catch (err) {
+    console.error('Error generating task distribution PDF:', err);
     res.sendStatus(500);
   }
 });
@@ -1011,9 +1186,16 @@ router.get('/users/:id/edit', async (req, res) => {
     if (result.rows.length === 0) {
       return res.sendStatus(404);
     }
+    const targetUser = result.rows[0];
+    // system_admin kullanıcıları sadece system_admin tarafından ve system admin sayfasından düzenlenebilir
+    if (targetUser.role === 'system_admin') {
+      if (req.user.role !== 'system_admin' || req.query.context !== 'system-admins') {
+        return res.redirect('/admin/users?error=system_admin_edit_restricted');
+      }
+    }
     res.render('admin/user-edit', {
       pageTitle: 'Edit User',
-      user: result.rows[0]
+      user: targetUser
     });
   } catch (err) {
     console.error(err);
@@ -1031,6 +1213,14 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
   }
   const currentUserResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
   const currentRole = currentUserResult.rows[0]?.role;
+
+  // system_admin kullanıcıları sadece system_admin tarafından ve system admin sayfasından güncellenebilir
+  if (currentRole === 'system_admin') {
+    if (req.user.role !== 'system_admin' || req.query.context !== 'system-admins') {
+      return res.redirect('/admin/users?error=system_admin_edit_restricted');
+    }
+  }
+
   const roleAllowed = ALLOWED_ROLES_FROM_UI.includes(role) || (role === 'system_admin' && currentRole === 'system_admin');
   if (!roleAllowed) {
     return res.redirect(`/admin/users/${userId}/edit?error=invalid_role`);
@@ -1084,6 +1274,11 @@ router.post('/users/:id/delete', async (req, res) => {
   }
   
   try {
+    const roleResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const targetRole = roleResult.rows[0]?.role;
+    if (targetRole === 'system_admin') {
+      return res.json({ success: false, error: 'system_admin users can only be managed from System Admin page' });
+    }
     // Check if user has assigned tasks
     const tasksResult = await pool.query('SELECT COUNT(*) as count FROM tasks WHERE assigned_to = $1', [userId]);
     if (tasksResult.rows[0].count > 0) {
@@ -1105,6 +1300,23 @@ router.post('/users/:id/delete', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.json({ success: false, error: err.message || 'Error deleting user' });
+  }
+});
+
+// System Admins page - only system_admin can access/manage
+router.get('/system-admins', async (req, res) => {
+  if (req.user.role !== 'system_admin') {
+    return res.redirect('/admin/dashboard');
+  }
+  try {
+    const usersResult = await pool.query('SELECT id, username, email, role, avatar FROM users WHERE role = $1 ORDER BY username ASC', ['system_admin']);
+    res.render('admin/system-admins', {
+      pageTitle: req.t('systemAdminsPageTitle'),
+      users: usersResult.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
   }
 });
 

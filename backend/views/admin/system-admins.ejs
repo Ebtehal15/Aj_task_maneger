@@ -1,0 +1,40 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4"><%= t('systemAdminsPageTitle') %></h1>
+  <a href="/admin/users" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-2 p-md-3">
+    <% if (!users || !users.length) { %>
+      <p class="mb-0 text-muted"><%= t('noUsers') %></p>
+    <% } else { %>
+      <ul class="list-group">
+        <% users.forEach(u => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <% if (u.avatar) { %>
+                <img src="/<%= u.avatar %>" alt="<%= u.username %>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #facc15;" />
+              <% } else { %>
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #facc15, #eab308); display: flex; align-items: center; justify-content: center; color: #020617; font-weight: 700; font-size: 1.2rem;">
+                  <%= u.username.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              <div>
+                <div><strong><%= u.username %></strong></div>
+                <div class="small text-muted text-uppercase"><%= t('role_system_admin') %></div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="/admin/users/<%= u.id %>/edit?context=system-admins" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+                <span class="d-none d-md-inline ms-1"><%= t('edit') %></span>
+              </a>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>
+

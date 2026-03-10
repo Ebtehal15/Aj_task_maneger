@@ -207,6 +207,12 @@
                 <span><%= t('yoneticiKontrol') %></span>
               </a>
             </li>
+            <li class="tm-sidebar-item">
+              <a href="/admin/system-admins" class="tm-sidebar-link">
+                <i class="bi bi-person-lock"></i>
+                <span><%= t('systemAdminsPageTitle') %></span>
+              </a>
+            </li>
             <% } %>
             <% } %>
             <% if (currentUser.role === 'admin') { %>
