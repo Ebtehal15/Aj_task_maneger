@@ -970,6 +970,24 @@ router.get('/reports/export', async (req, res) => {
           pattern: 'solid',
           fgColor: { argb: 'FFFFC000' }
         };
+      } else if (task.departman === 'LİSANS') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF4B183' } // soft orange
+        };
+      } else if (task.departman === 'GENEL') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD9D9D9' } // light grey
+        };
+      } else if (task.departman === 'İNSAN KAYNAKLARI') {
+        departmanCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFB4C6E7' } // light purple/blue
+        };
       }
 
       // Color code durum column
