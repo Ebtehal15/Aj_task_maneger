@@ -650,6 +650,19 @@
 <div class="mb-2 small text-muted">
   <strong><%= t('resultsCount') %>:</strong> <%= tasks.length %>
 </div>
+<div class="d-flex justify-content-end mb-2">
+  <div class="input-group input-group-sm" style="max-width: 320px;">
+    <span class="input-group-text">
+      <i class="bi bi-sort-alpha-down"></i>
+    </span>
+    <select id="reportsSortSelect" class="form-select">
+      <option value="none">Sıralama yok</option>
+      <option value="status-asc">Duruma göre (Beklemede &gt; Devam eden &gt; Tamamlanmış)</option>
+      <option value="departman-asc">Departmana göre (A-Z)</option>
+      <option value="konu-asc">Konu sorumlusuna göre (A-Z)</option>
+    </select>
+  </div>
+</div>
 <% } %>
 <div class="card shadow-sm task-view-container d-none" id="tableView" data-view="table">
   <div class="card-body p-0">
@@ -657,14 +670,23 @@
     <p class="p-3 mb-0 text-muted"><%= t('noTasks') %></p>
     <% } else { %>
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
+      <table class="table table-hover align-middle mb-0" id="reportsTable">
         <thead class="table-light">
           <tr>
-            <th>#</th>
+            <th style="width: 40px;">#</th>
             <th><%= t('taskTitle') %></th>
-            <th><%= t('konuSorumlusu') %></th>
-            <th><%= t('departman') %></th>
-            <th><%= t('status') %></th>
+            <th class="sortable-column" data-sort-field="konu">
+              <%= t('konuSorumlusu') %>
+              <span class="sort-indicator"></span>
+            </th>
+            <th class="sortable-column" data-sort-field="departman">
+              <%= t('departman') %>
+              <span class="sort-indicator"></span>
+            </th>
+            <th class="sortable-column" data-sort-field="status">
+              <%= t('status') %>
+              <span class="sort-indicator"></span>
+            </th>
             <th><%= t('deadline') %></th>
             <th><%= t('completedAt') %></th>
             <th><%= t('createdBy') %></th>
@@ -686,7 +708,7 @@
             </td>
             <td><%= task.konu_sorumlusu_username || task.assigned_username || '-' %></td>
             <td><%= task.departman || '-' %></td>
-            <td>
+            <td data-status="<%= task.status %>">
               <span class="badge status-<%= task.status %>">
                 <%= t('status_' + task.status) %>
               </span>
@@ -707,6 +729,141 @@
     <% } %>
   </div>
 </div>
+
+<script>
+  // Raporlar tablosunda departman, konu sorumlusu veya başlığa göre sıralama
+  (function() {
+    const sortSelect = document.getElementById('reportsSortSelect');
+    const table = document.getElementById('reportsTable');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    // İlk yüklemede orijinal sıralamayı kaydet
+    const originalRows = Array.from(tbody.querySelectorAll('tr'));
+    originalRows.forEach((row, idx) => {
+      row.setAttribute('data-original-index', String(idx));
+    });
+
+    function getCellText(row, index, isTitleCell = false) {
+      const cell = row.children[index];
+      if (!cell) return '';
+      if (isTitleCell) {
+        const strong = cell.querySelector('strong');
+        if (strong && strong.textContent) return strong.textContent.trim();
+      }
+      return (cell.textContent || '').trim();
+    }
+
+    function resort(value) {
+      if (!value && sortSelect) {
+        value = sortSelect.value;
+      }
+      // Sıralamayı kaldır (orijinal sıraya dön)
+      if (!value || value === 'none') {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+          const aIdx = parseInt(a.getAttribute('data-original-index') || '0', 10);
+          const bIdx = parseInt(b.getAttribute('data-original-index') || '0', 10);
+          return aIdx - bIdx;
+        });
+        rows.forEach((row, idx) => {
+          const indexCell = row.children[0];
+          if (indexCell) indexCell.textContent = String(idx + 1);
+          tbody.appendChild(row);
+        });
+
+        // Tüm kolonlardaki ok işaretlerini temizle
+        const headers = table.querySelectorAll('th.sortable-column');
+        headers.forEach(th => {
+          const indicator = th.querySelector('.sort-indicator');
+          if (indicator) indicator.textContent = '';
+        });
+        return;
+      }
+
+      const [field] = value.split('-'); // departman-asc, konu-asc
+      const dir = 'asc';
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      let columnIndex = 0;
+      let isTitleCell = false;
+
+      // Kolon indexleri: #, Başlık, Konu Sorumlusu, Departman, Durum, Deadline, Completed, CreatedBy, Aksiyon
+      if (field === 'konu') {
+        columnIndex = 2;
+      } else if (field === 'departman') {
+        columnIndex = 3;
+      } else if (field === 'status') {
+        columnIndex = 4;
+      }
+
+      rows.sort((a, b) => {
+        // Duruma göre özel sıralama: pending -> in_progress -> done
+        if (field === 'status') {
+          const order = { pending: 1, in_progress: 2, done: 3 };
+          const aStatus = (a.children[columnIndex].getAttribute('data-status') || '').toString();
+          const bStatus = (b.children[columnIndex].getAttribute('data-status') || '').toString();
+          const aVal = order[aStatus] || 99;
+          const bVal = order[bStatus] || 99;
+          if (aVal === bVal) return 0;
+          return aVal < bVal ? -1 : 1;
+        }
+
+        const aText = getCellText(a, columnIndex, isTitleCell).toLocaleUpperCase('tr-TR');
+        const bText = getCellText(b, columnIndex, isTitleCell).toLocaleUpperCase('tr-TR');
+
+        if (aText === bText) return 0;
+        const cmp = aText < bText ? -1 : 1;
+        return cmp;
+      });
+
+      // Sıralanmış satırları tekrar tbody içine ekle
+      rows.forEach((row, idx) => {
+        // İlk kolon (sıra numarası) güncel olsun
+        const indexCell = row.children[0];
+        if (indexCell) indexCell.textContent = String(idx + 1);
+        tbody.appendChild(row);
+      });
+
+      // Seçili kolon başlığındaki ok işaretini güncelle
+      const headers = table.querySelectorAll('th.sortable-column');
+      headers.forEach(th => {
+        const indicator = th.querySelector('.sort-indicator');
+        if (!indicator) return;
+        const fieldAttr = th.getAttribute('data-sort-field');
+        indicator.textContent = fieldAttr === field ? '▲' : '';
+      });
+    }
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function() {
+        resort(this.value);
+      });
+    }
+
+    // Kolon başlıklarına tıklayarak sıralama
+    const headerColumns = table.querySelectorAll('th.sortable-column');
+    headerColumns.forEach(th => {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', function() {
+        const field = this.getAttribute('data-sort-field');
+        if (!field) return;
+        let newValue = field + '-asc';
+        if (sortSelect) {
+          const current = sortSelect.value;
+          // Aynı kolona tekrar tıklanırsa sıralamayı kaldır
+          if (current === field + '-asc') {
+            newValue = 'none';
+          }
+          sortSelect.value = newValue;
+        }
+        resort(newValue);
+      });
+    });
+  })();
+</script>
 
 <!-- Card Görünümü -->
 <div class="task-view-container" id="cardView" data-view="card">
