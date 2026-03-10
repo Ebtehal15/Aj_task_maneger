@@ -314,8 +314,8 @@ router.get('/task-distribution', async (req, res) => {
       ORDER BY
         (COUNT(t.id) > 0) DESC,
         COUNT(*) FILTER (WHERE t.status = 'done') DESC,
-        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
         COUNT(t.id) DESC,
+        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
         u.username ASC
     `);
 
