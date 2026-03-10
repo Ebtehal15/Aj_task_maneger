@@ -202,12 +202,6 @@
             </li>
             <% if (currentUser.role === 'system_admin') { %>
             <li class="tm-sidebar-item">
-              <a href="/admin/manager-control" class="tm-sidebar-link">
-                <i class="bi bi-shield-check"></i>
-                <span><%= t('yoneticiKontrol') %></span>
-              </a>
-            </li>
-            <li class="tm-sidebar-item">
               <a href="/admin/system-admins" class="tm-sidebar-link">
                 <i class="bi bi-person-lock"></i>
                 <span><%= t('systemAdminsPageTitle') %></span>
@@ -223,6 +217,13 @@
               </a>
             </li>
             <% } %>
+            <!-- Yönetici Takip: tüm roller için göster -->
+            <li class="tm-sidebar-item">
+              <a href="/admin/manager-control" class="tm-sidebar-link">
+                <i class="bi bi-shield-check"></i>
+                <span><%= t('yoneticiKontrol') %></span>
+              </a>
+            </li>
             <% } %>
           </ul>
         </nav>

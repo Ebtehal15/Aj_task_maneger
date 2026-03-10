@@ -252,11 +252,8 @@ router.get('/my-tasks', async (req, res) => {
   }
 });
 
-// Yönetici Takip - sadece system_admin, yonetici_kontrol=true görevler
+// Yönetici Takip - tüm giriş yapmış kullanıcılar, yonetici_kontrol=true görevler
 router.get('/manager-control', async (req, res) => {
-  if (req.user.role !== 'system_admin') {
-    return res.redirect('/admin/dashboard');
-  }
   const sql = `
     SELECT t.*, 
            u.username AS assigned_username, 
