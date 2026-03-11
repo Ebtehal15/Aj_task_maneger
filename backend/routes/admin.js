@@ -305,7 +305,13 @@ router.get('/task-distribution', async (req, res) => {
         )::int AS overdue,
         COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
       FROM users u
-      LEFT JOIN tasks t ON t.assigned_to = u.id
+      LEFT JOIN tasks t
+        ON (
+          t.assigned_to = u.id
+          OR t.sorumlu_2 = u.id
+          OR t.sorumlu_3 = u.id
+          OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
+        )
       WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
       GROUP BY u.id, u.username
       ORDER BY
@@ -363,7 +369,13 @@ router.get('/task-distribution/pdf', async (req, res) => {
         )::int AS overdue,
         COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
       FROM users u
-      LEFT JOIN tasks t ON t.assigned_to = u.id
+      LEFT JOIN tasks t
+        ON (
+          t.assigned_to = u.id
+          OR t.sorumlu_2 = u.id
+          OR t.sorumlu_3 = u.id
+          OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
+        )
       WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
       GROUP BY u.id, u.username
       ORDER BY
