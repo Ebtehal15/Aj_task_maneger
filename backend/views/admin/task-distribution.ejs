@@ -152,19 +152,23 @@
                 <div class="tm-user-card__divider"></div>
                 <div class="tm-metric-grid">
                   <div class="tm-metric">
-                    <div class="tm-metric__left">
-                      <span class="tm-metric__icon"><i class="bi bi-stack"></i></span>
-                      <span class="tm-metric__label"><%= t('totalTasks') %></span>
-                    </div>
-                    <span class="tm-metric__value"><%= total %></span>
+                    <a href="/admin/reports?userId=<%= r.id %>" class="tm-metric__link text-decoration-none text-reset">
+                      <div class="tm-metric__left">
+                        <span class="tm-metric__icon"><i class="bi bi-stack"></i></span>
+                        <span class="tm-metric__label"><%= t('totalTasks') %></span>
+                      </div>
+                      <span class="tm-metric__value"><%= total %></span>
+                    </a>
                   </div>
 
                   <div class="tm-metric">
-                    <div class="tm-metric__left">
-                      <span class="tm-metric__icon"><i class="bi bi-hourglass"></i></span>
-                      <span class="tm-metric__label"><%= t('status_pending') %></span>
-                    </div>
-                    <span class="tm-metric__value"><%= r.pending %></span>
+                    <a href="/admin/reports?userId=<%= r.id %>&status=pending" class="tm-metric__link text-decoration-none text-reset">
+                      <div class="tm-metric__left">
+                        <span class="tm-metric__icon"><i class="bi bi-hourglass"></i></span>
+                        <span class="tm-metric__label"><%= t('status_pending') %></span>
+                      </div>
+                      <span class="tm-metric__value"><%= r.pending %></span>
+                    </a>
                   </div>
 
                   <div class="tm-metric">
@@ -184,11 +188,13 @@
                   </div>
 
                   <div class="tm-metric tm-metric--red">
-                    <div class="tm-metric__left">
-                      <span class="tm-metric__icon"><i class="bi bi-clock-history"></i></span>
-                      <span class="tm-metric__label"><%= t('overdueTasks') %></span>
-                    </div>
-                    <span class="tm-metric__value"><%= overdue %></span>
+                    <a href="/admin/reports?userId=<%= r.id %>&overdue=true" class="tm-metric__link text-decoration-none text-reset">
+                      <div class="tm-metric__left">
+                        <span class="tm-metric__icon"><i class="bi bi-clock-history"></i></span>
+                        <span class="tm-metric__label"><%= t('overdueTasks') %></span>
+                      </div>
+                      <span class="tm-metric__value"><%= overdue %></span>
+                    </a>
                   </div>
 
                   <div class="tm-metric tm-metric--amber">
@@ -247,13 +253,21 @@
                     <span class="tm-td-muted"><%= done %></span>/<span class="tm-td-muted"><%= total %></span> <%= t('status_done') %>
                   </div>
                 </td>
-                <td class="text-center fw-semibold"><%= total %></td>
-                <td class="text-center"><span class="tm-pill"><i class="bi bi-hourglass"></i> <%= r.pending %></span></td>
+                <td class="text-center fw-semibold">
+                  <a href="/admin/reports?userId=<%= r.id %>" class="text-decoration-none text-reset"><%= total %></a>
+                </td>
+                <td class="text-center">
+                  <a href="/admin/reports?userId=<%= r.id %>&status=pending" class="text-decoration-none text-reset">
+                    <span class="tm-pill"><i class="bi bi-hourglass"></i> <%= r.pending %></span>
+                  </a>
+                </td>
                 <td class="text-center"><span class="tm-pill"><i class="bi bi-play-circle"></i> <%= r.in_progress %></span></td>
                 <td class="text-center"><span class="tm-pill tm-pill--green"><i class="bi bi-check-circle"></i> <%= done %></span></td>
                 <td class="text-center">
                   <% if (overdue > 0) { %>
-                    <span class="tm-pill tm-pill--red"><i class="bi bi-clock-history"></i> <%= overdue %></span>
+                    <a href="/admin/reports?userId=<%= r.id %>&overdue=true" class="text-decoration-none text-reset">
+                      <span class="tm-pill tm-pill--red"><i class="bi bi-clock-history"></i> <%= overdue %></span>
+                    </a>
                   <% } else { %>
                     <span class="tm-pill"><i class="bi bi-check2"></i> 0</span>
                   <% } %>
