@@ -122,7 +122,9 @@ const sessionConfig = {
   store: new pgSession({
     pool: sessionPool,
     tableName: 'session',
-    createTableIfMissing: true
+    createTableIfMissing: true,
+    // 20 dakika sonra session DB'den de düşsün (saniye cinsinden)
+    ttl: 20 * 60
   }),
   secret: process.env.SESSION_SECRET || 'super-secret-demo-key-change-in-production',
   resave: false,
@@ -130,7 +132,7 @@ const sessionConfig = {
   name: 'connect.sid', // Explicit session cookie name
   proxy: IS_PROD,
   cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 20 * 60 * 1000, // 20 minutes
     // In production use secure cookies (requires trust proxy). In local dev allow HTTP.
     secure: IS_PROD,
     httpOnly: true,
