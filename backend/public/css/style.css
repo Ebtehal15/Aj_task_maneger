@@ -897,6 +897,49 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
   font-weight: 600;
 }
 
+/* Task distribution - horizontal bar chart */
+.tm-bar-chart {
+  margin-top: 0.5rem;
+}
+
+.tm-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.tm-bar-row-label {
+  flex: 0 0 140px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tm-bar-row-track {
+  flex: 1;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  height: 10px;
+}
+
+.tm-bar-row-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.tm-bar-row-value {
+  flex: 0 0 32px;
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
 .tm-user-card__rate {
   display: flex;
   align-items: center;

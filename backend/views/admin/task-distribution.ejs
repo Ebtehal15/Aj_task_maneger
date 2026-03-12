@@ -105,6 +105,18 @@
   </div>
 </div>
 
+<% if (rows && rows.length) { %>
+  <div class="card shadow-sm tm-kpi-card mb-3">
+    <div class="card-body">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-steps text-primary"></i>
+        <span>En Çok Görev Tamamlayanlar</span>
+      </h2>
+      <div id="tdDoneChart" class="tm-bar-chart"></div>
+    </div>
+  </div>
+<% } %>
+
 <% if (!rows || !rows.length) { %>
   <div class="card shadow-sm tm-kpi-card">
     <div class="card-body">
@@ -320,6 +332,62 @@
 
 <script>
   (function () {
+    // Horizontal bar chart - most completed tasks
+    (function () {
+      var container = document.getElementById('tdDoneChart');
+      if (!container) return;
+      var data = <%- JSON.stringify(rows || []) %>;
+      if (!data || !data.length) return;
+
+      // En çok görev tamamlayanlara göre, TÜM kullanıcıları sırala (büyükten küçüğe)
+      var items = data
+        .map(function (r) {
+          return {
+            name: r.username || '',
+            done: Number(r.done || 0)
+          };
+        })
+        .sort(function (a, b) {
+          if (b.done !== a.done) return b.done - a.done;
+          return (a.name || '').localeCompare(b.name || '', 'tr');
+        });
+
+      if (!items.length) {
+        container.innerHTML = '<p class="text-muted small mb-0">Henüz tamamlanan görev yok.</p>';
+        return;
+      }
+
+      var maxDone = items[0].done || 1;
+      items.forEach(function (item, idx) {
+        var row = document.createElement('div');
+        row.className = 'tm-bar-row';
+
+        var label = document.createElement('div');
+        label.className = 'tm-bar-row-label';
+        label.textContent = (idx + 1) + '. ' + (item.name || '');
+
+        var track = document.createElement('div');
+        track.className = 'tm-bar-row-track';
+
+        var fill = document.createElement('div');
+        fill.className = 'tm-bar-row-fill';
+        var width = Math.max(8, (item.done / maxDone) * 100);
+        fill.style.width = width + '%';
+
+        track.appendChild(fill);
+
+        var value = document.createElement('div');
+        value.className = 'tm-bar-row-value';
+        value.textContent = item.done;
+
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(value);
+
+        container.appendChild(row);
+      });
+    })();
+
     var cards = document.getElementById('tdCardsView');
     var table = document.getElementById('tdTableView');
     var btnCards = document.getElementById('tdViewCardsBtn');
