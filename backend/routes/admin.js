@@ -316,9 +316,19 @@ router.get('/task-distribution', async (req, res) => {
       GROUP BY u.id, u.username
       ORDER BY
         (COUNT(t.id) > 0) DESC,
+        (
+          (
+            COUNT(*) FILTER (WHERE t.status = 'done')
+            -
+            COUNT(*) FILTER (
+              WHERE t.status <> 'done'
+                AND t.deadline IS NOT NULL
+                AND (t.deadline::date < CURRENT_DATE)
+            )
+          )::float / NULLIF(COUNT(t.id), 0)
+        ) DESC,
         COUNT(*) FILTER (WHERE t.status = 'done') DESC,
         COUNT(t.id) DESC,
-        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
         u.username ASC
     `);
 
