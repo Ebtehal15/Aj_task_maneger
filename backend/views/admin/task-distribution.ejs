@@ -108,11 +108,23 @@
 <% if (rows && rows.length) { %>
   <div class="card shadow-sm tm-kpi-card mb-3">
     <div class="card-body">
-      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+      <h2 class="h6 mb-2 d-flex align-items-center gap-2">
         <i class="bi bi-bar-chart-steps text-primary"></i>
         <span>En Çok Görev Tamamlayanlar</span>
       </h2>
       <div id="tdDoneChart" class="tm-bar-chart"></div>
+      <hr class="my-3" />
+      <h2 class="h6 mb-2 d-flex align-items-center gap-2">
+        <i class="bi bi-clock-history text-danger"></i>
+        <span>En Çok Geciken Görevi Olanlar</span>
+      </h2>
+      <div id="tdOverdueChart" class="tm-bar-chart"></div>
+      <hr class="my-3" />
+      <h2 class="h6 mb-2 d-flex align-items-center gap-2">
+        <i class="bi bi-lightning-charge text-warning"></i>
+        <span>En Çok Acil Görevi Olanlar</span>
+      </h2>
+      <div id="tdUrgentChart" class="tm-bar-chart"></div>
     </div>
   </div>
 <% } %>
@@ -332,86 +344,109 @@
 
 <script>
   (function () {
-    // Horizontal bar chart - most completed tasks
+    // Generic horizontal bar chart renderer
     (function () {
-      var container = document.getElementById('tdDoneChart');
-      if (!container) return;
-      var data = <%- JSON.stringify(rows || []) %>;
-      if (!data || !data.length) return;
+      var rawData = <%- JSON.stringify(rows || []) %>;
+      if (!rawData || !rawData.length) return;
 
-      // En çok görev tamamlayanlara göre, TÜM kullanıcıları sırala (büyükten küçüğe)
-      var items = data
-        .map(function (r) {
-          return {
-            name: r.username || '',
-            done: Number(r.done || 0)
-          };
-        })
-        .sort(function (a, b) {
-          if (b.done !== a.done) return b.done - a.done;
-          return (a.name || '').localeCompare(b.name || '', 'tr');
+      function renderBarChart(opts) {
+        var container = document.getElementById(opts.containerId);
+        if (!container) return;
+
+        var items = rawData
+          .map(function (r) {
+            return {
+              name: r.username || '',
+              value: Number(opts.selector(r) || 0)
+            };
+          })
+          .filter(function (x) { return x.value > 0; })
+          .sort(function (a, b) {
+            if (b.value !== a.value) return b.value - a.value;
+            return (a.name || '').localeCompare(b.name || '', 'tr');
+          });
+
+        if (!items.length) {
+          container.innerHTML = '<p class="text-muted small mb-0">Henüz veri yok.</p>';
+          return;
+        }
+
+        var maxVal = items[0].value || 1;
+        var MAX_VISIBLE = 5;
+        var hiddenRows = [];
+
+        items.forEach(function (item, idx) {
+          var row = document.createElement('div');
+          row.className = 'tm-bar-row';
+
+          var label = document.createElement('div');
+          label.className = 'tm-bar-row-label';
+          label.textContent = (idx + 1) + '. ' + (item.name || '');
+
+          var track = document.createElement('div');
+          track.className = 'tm-bar-row-track';
+
+          var fill = document.createElement('div');
+          fill.className = opts.fillClass || 'tm-bar-row-fill';
+          var width = Math.max(8, (item.value / maxVal) * 100);
+          fill.style.width = width + '%';
+
+          track.appendChild(fill);
+
+          var value = document.createElement('div');
+          value.className = 'tm-bar-row-value';
+          value.textContent = item.value;
+
+          row.appendChild(label);
+          row.appendChild(track);
+          row.appendChild(value);
+
+          if (idx < MAX_VISIBLE) {
+            container.appendChild(row);
+          } else {
+            row.style.display = 'none';
+            hiddenRows.push(row);
+            container.appendChild(row);
+          }
         });
 
-      if (!items.length) {
-        container.innerHTML = '<p class="text-muted small mb-0">Henüz tamamlanan görev yok.</p>';
-        return;
+        if (hiddenRows.length) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-sm btn-outline-secondary mt-2';
+          btn.textContent = 'Fazlasını Göster';
+          var expanded = false;
+          btn.addEventListener('click', function () {
+            expanded = !expanded;
+            hiddenRows.forEach(function (row) {
+              row.style.display = expanded ? 'flex' : 'none';
+            });
+            btn.textContent = expanded ? 'Daha Az Göster' : 'Fazlasını Göster';
+          });
+          container.appendChild(btn);
+        }
       }
 
-      var maxDone = items[0].done || 1;
-
-      var MAX_VISIBLE = 5;
-      var hiddenRows = [];
-
-      items.forEach(function (item, idx) {
-        var row = document.createElement('div');
-        row.className = 'tm-bar-row';
-
-        var label = document.createElement('div');
-        label.className = 'tm-bar-row-label';
-        label.textContent = (idx + 1) + '. ' + (item.name || '');
-
-        var track = document.createElement('div');
-        track.className = 'tm-bar-row-track';
-
-        var fill = document.createElement('div');
-        fill.className = 'tm-bar-row-fill';
-        var width = Math.max(8, (item.done / maxDone) * 100);
-        fill.style.width = width + '%';
-
-        track.appendChild(fill);
-
-        var value = document.createElement('div');
-        value.className = 'tm-bar-row-value';
-        value.textContent = item.done;
-
-        row.appendChild(label);
-        row.appendChild(track);
-        row.appendChild(value);
-
-        if (idx < MAX_VISIBLE) {
-          container.appendChild(row);
-        } else {
-          row.style.display = 'none';
-          hiddenRows.push(row);
-          container.appendChild(row);
-        }
+      // Tamamlanan görevler
+      renderBarChart({
+        containerId: 'tdDoneChart',
+        selector: function (r) { return r.done; },
+        fillClass: 'tm-bar-row-fill'
       });
 
-      if (hiddenRows.length) {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-sm btn-outline-secondary mt-2';
-        btn.textContent = 'Fazlasını Göster';
-        var expanded = false;
-        btn.addEventListener('click', function () {
-          expanded = !expanded;
-          hiddenRows.forEach(function (row) {
-            row.style.display = expanded ? 'flex' : 'none';
-          });
-          btn.textContent = expanded ? 'Daha Az Göster' : 'Fazlasını Göster';
-        });
-        container.appendChild(btn);
-      }
+      // Geciken görevler
+      renderBarChart({
+        containerId: 'tdOverdueChart',
+        selector: function (r) { return r.overdue; },
+        fillClass: 'tm-bar-row-fill--overdue'
+      });
+
+      // Acil görevler
+      renderBarChart({
+        containerId: 'tdUrgentChart',
+        selector: function (r) { return r.urgent; },
+        fillClass: 'tm-bar-row-fill--urgent'
+      });
     })();
 
     var cards = document.getElementById('tdCardsView');

@@ -932,6 +932,16 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
   background: linear-gradient(90deg, #3b82f6, #2563eb);
 }
 
+.tm-bar-row-fill--overdue {
+  height: 100%;
+  background: linear-gradient(90deg, #f97373, #ef4444);
+}
+
+.tm-bar-row-fill--urgent {
+  height: 100%;
+  background: linear-gradient(90deg, #fb923c, #f97316);
+}
+
 .tm-bar-row-value {
   flex: 0 0 32px;
   text-align: right;
