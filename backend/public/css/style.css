@@ -2099,6 +2099,47 @@ html[dir='rtl'] .tm-navbar .navbar-brand.flex-row-reverse {
   font-size: 0.875rem;
 }
 
+/* Task detail header - long title handling */
+.task-detail-header {
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.task-detail-title {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.task-detail-title-text {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.task-detail-actions {
+  flex-shrink: 0;
+}
+
+/* Task detail header mobile override:
+   keep title + buttons on a single row */
+@media (max-width: 768px) {
+  .task-detail-header {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .task-detail-header .task-detail-title {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .task-detail-header .task-detail-actions {
+    margin-left: 0.5rem;
+  }
+}
+
 .task-card .card-footer {
   padding: 0.75rem 1rem;
 }
