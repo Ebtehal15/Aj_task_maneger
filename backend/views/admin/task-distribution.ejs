@@ -358,6 +358,10 @@
       }
 
       var maxDone = items[0].done || 1;
+
+      var MAX_VISIBLE = 5;
+      var hiddenRows = [];
+
       items.forEach(function (item, idx) {
         var row = document.createElement('div');
         row.className = 'tm-bar-row';
@@ -384,8 +388,30 @@
         row.appendChild(track);
         row.appendChild(value);
 
-        container.appendChild(row);
+        if (idx < MAX_VISIBLE) {
+          container.appendChild(row);
+        } else {
+          row.style.display = 'none';
+          hiddenRows.push(row);
+          container.appendChild(row);
+        }
       });
+
+      if (hiddenRows.length) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-outline-secondary mt-2';
+        btn.textContent = 'Fazlasını Göster';
+        var expanded = false;
+        btn.addEventListener('click', function () {
+          expanded = !expanded;
+          hiddenRows.forEach(function (row) {
+            row.style.display = expanded ? 'flex' : 'none';
+          });
+          btn.textContent = expanded ? 'Daha Az Göster' : 'Fazlasını Göster';
+        });
+        container.appendChild(btn);
+      }
     })();
 
     var cards = document.getElementById('tdCardsView');
