@@ -55,7 +55,11 @@ async function getAllForUser(userId) {
   try {
     const pool = getDb();
     const result = await pool.query(
-      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+      `SELECT n.*, t.title AS task_title
+       FROM notifications n
+       LEFT JOIN tasks t ON t.id = n.related_task_id
+       WHERE n.user_id = $1
+       ORDER BY n.created_at DESC`,
       [userId]
     );
     return result.rows;

@@ -143,11 +143,14 @@
         <%
           const total = r.total ?? 0;
           const done = r.done ?? 0;
-          const completion = total > 0 ? Math.round((done / total) * 100) : 0;
           const overdue = r.overdue ?? 0;
           const urgent = r.urgent ?? 0;
-          // Başarı oranı: (tamamlanan - geciken) / toplam, 0-100 arası
-          const successRaw = total > 0 ? ((done - overdue) / total) * 100 : 0;
+          // Başarı oranı: tamamlanma oranı * hacim faktörü
+          // - Tamamlanma oranı: done / total
+          // - Hacim faktörü: done / (done + 5)  -> daha çok görev tamamlayanlar daha yüksek puan alır
+          const completionRatio = total > 0 ? (done / total) : 0;
+          const volumeFactor = done > 0 ? (done / (done + 5)) : 0;
+          const successRaw = completionRatio * volumeFactor * 100;
           const success = Math.max(0, Math.min(100, Math.round(successRaw)));
           const initial = (r.username || '?').toString().trim().charAt(0).toUpperCase();
         %>
@@ -270,10 +273,11 @@
               <%
                 const total = r.total ?? 0;
                 const done = r.done ?? 0;
-                const completion = total > 0 ? Math.round((done / total) * 100) : 0;
                 const overdue = r.overdue ?? 0;
                 const urgent = r.urgent ?? 0;
-                const successRaw = total > 0 ? ((done - overdue) / total) * 100 : 0;
+                const completionRatio = total > 0 ? (done / total) : 0;
+                const volumeFactor = done > 0 ? (done / (done + 5)) : 0;
+                const successRaw = completionRatio * volumeFactor * 100;
                 const success = Math.max(0, Math.min(100, Math.round(successRaw)));
                 const rank = idx + 1;
                 const rankClass = rank === 1 ? 'tm-rank tm-rank--1' : rank === 2 ? 'tm-rank tm-rank--2' : rank === 3 ? 'tm-rank tm-rank--3' : '';

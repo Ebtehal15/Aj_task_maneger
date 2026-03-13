@@ -1,5 +1,6 @@
 <%
-  function translateNotification(msg, t) {
+  function translateNotification(notification, t) {
+    const msg = notification && notification.message ? notification.message : '';
     // "Yeni görev atandı (by {by}): {title}"
     if (msg.startsWith('Yeni görev atandı')) {
       const match = msg.match(/^Yeni görev atandı \(by (.+?)\):\s*(.+)$/);
@@ -40,9 +41,12 @@
         template = t('notification_task_updated_simple');
       }
       
+      const titleFromDb = notification && notification.task_title ? notification.task_title : '';
+      const title = titleFromDb || (id ? '#' + id : '');
+
       return template
         .replace('{by}', by)
-        .replace('{id}', id)
+        .replace('{title}', title)
         .replace('{status}', status)
         .replace('{note}', note)
         .replace('{fileCount}', fileCount);
@@ -79,7 +83,7 @@
             <span class="me-2" style="width: 8px; height: 8px;"></span>
             <% } %>
             <div>
-              <div><%= translateNotification(n.message, t) %></div>
+              <div><%= translateNotification(n, t) %></div>
               <% 
                 const formatDateForTurkey = (date) => {
                   if (!date) return '-';

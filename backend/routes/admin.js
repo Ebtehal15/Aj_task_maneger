@@ -317,15 +317,10 @@ router.get('/task-distribution', async (req, res) => {
       ORDER BY
         (COUNT(t.id) > 0) DESC,
         (
-          (
-            COUNT(*) FILTER (WHERE t.status = 'done')
-            -
-            COUNT(*) FILTER (
-              WHERE t.status <> 'done'
-                AND t.deadline IS NOT NULL
-                AND (t.deadline::date < CURRENT_DATE)
-            )
-          )::float / NULLIF(COUNT(t.id), 0)
+          -- başarı skoru: (done/total) * (done / (done + 5))
+          (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0))
+          *
+          (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF((COUNT(*) FILTER (WHERE t.status = 'done') + 5), 0))
         ) DESC,
         COUNT(*) FILTER (WHERE t.status = 'done') DESC,
         COUNT(t.id) DESC,
