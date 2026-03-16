@@ -38,7 +38,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
     />
-    <link rel="stylesheet" href="/public/css/style.css?v=3.5" />
+    <link rel="stylesheet" href="/public/css/style.css?v=3.6" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2/dist/css/tom-select.css" crossorigin="anonymous" />
   </head>
   <body class="tm-body">
@@ -186,6 +186,12 @@
               <a href="/admin/reports" class="tm-sidebar-link">
                 <i class="bi bi-file-earmark-text"></i>
                 <span><%= t('reports') %></span>
+              </a>
+            </li>
+            <li class="tm-sidebar-item">
+              <a href="/admin/reports?overdue=true" class="tm-sidebar-link">
+                <i class="bi bi-clock-history"></i>
+                <span><%= t('overdueTasks') %></span>
               </a>
             </li>
             <li class="tm-sidebar-item">

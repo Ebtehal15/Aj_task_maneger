@@ -591,6 +591,13 @@ router.get('/reports', async (req, res) => {
     overdue
   } = req.query;
 
+  const activeTab =
+    tab === 'users'
+      ? 'users'
+      : tab === 'charts'
+      ? 'charts'
+      : 'reports';
+
   let filterTypes = [];
   if (typeof filterTypesRaw === 'string' && filterTypesRaw.trim()) {
     filterTypes = filterTypesRaw
@@ -747,7 +754,7 @@ router.get('/reports', async (req, res) => {
       municipalities: municipalitiesResult.rows,
       regions: regionsResult.rows,
       filters: { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes, overdue },
-      activeTab: tab === 'users' ? 'users' : 'reports',
+      activeTab,
       selectedUserIds,
       selectedUserIdsParam
     });

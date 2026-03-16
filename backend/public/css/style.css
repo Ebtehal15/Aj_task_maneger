@@ -929,17 +929,198 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
 
 .tm-bar-row-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  background: linear-gradient(90deg, #3b82f6, #2563eb) !important;
+  transition: width 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tm-bar-row-fill--overdue {
   height: 100%;
-  background: linear-gradient(90deg, #f97373, #ef4444);
+  background: linear-gradient(90deg, #f97373, #ef4444) !important;
 }
 
 .tm-bar-row-fill--urgent {
   height: 100%;
-  background: linear-gradient(90deg, #fb923c, #f97316);
+  background: linear-gradient(90deg, #fb923c, #f97316) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-bar-row-fill {
+    transition: none !important;
+  }
+}
+
+/* Pie chart (pasta grafiği) */
+.tm-pie-chart-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding: 0.25rem 0 0.25rem 0.35rem;
+}
+
+/* Pasta grafiklerini aynı hizada tut */
+#chart-overdue-by-status-pie,
+#chart-overdue-by-department-pie {
+  margin-left: 0;
+}
+
+@media (min-width: 769px) {
+  #chart-overdue-by-status-pie,
+  #chart-overdue-by-department-pie {
+    margin-left: 1.25rem;
+  }
+}
+
+.tm-pie-modern {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  margin-top: 0.15rem;
+}
+
+.tm-pie-modern-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: conic-gradient(#e5e7eb 0deg 360deg);
+}
+
+.tm-pie-modern-center {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tm-pie-modern-total {
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #111827;
+}
+
+.tm-pie-modern-total-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.tm-pie-modern-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 165px;
+  font-size: 0.82rem;
+  margin-top: 0.55rem;
+}
+
+.tm-pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.35rem 0.5rem;
+}
+
+.tm-pie-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.tm-pie-legend-color--pending {
+  background: #facc15;
+}
+
+.tm-pie-legend-color--inprogress {
+  background: #3b82f6;
+}
+
+.tm-pie-legend-label {
+  flex: 1 1 auto;
+  color: #4b5563;
+}
+
+.tm-pie-legend-percent {
+  color: #475569;
+  min-width: 36px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.tm-pie-legend-value {
+  min-width: 18px;
+  text-align: right;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Konu başlıklarına göre gecikme listesi */
+.tm-overdue-topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.tm-overdue-topic-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.55rem 0.75rem;
+}
+
+.tm-overdue-topic-title {
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .tm-pie-chart-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding-left: 0;
+  }
+
+  #chart-overdue-by-status-pie,
+  #chart-overdue-by-department-pie {
+    margin-left: 0;
+  }
+
+  .tm-pie-modern {
+    width: 190px;
+    height: 190px;
+  }
+
+  .tm-pie-modern-center {
+    width: 124px;
+    height: 124px;
+  }
 }
 
 .tm-bar-row-value {

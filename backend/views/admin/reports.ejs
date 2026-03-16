@@ -18,6 +18,8 @@
   };
 %>
 
+<% const isOverdueView = filters && (filters.overdue === 'true' || filters.overdue === true); %>
+
 <script>
   // Sayfa yüklenmeden önce varsayılan görünümü belirle (FOUC önlemek için)
   (function() {
@@ -32,7 +34,16 @@
 </script>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4"><%= t('reports') %></h1>
+  <div class="d-flex align-items-center gap-2">
+    <h1 class="h4 mb-0">
+      <%= isOverdueView ? t('overdueTasks') : t('reports') %>
+    </h1>
+    <% if (isOverdueView) { %>
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="border-radius: 999px;">
+        <i class="bi bi-clock-history me-1"></i><%= t('overdueTasks') %>
+      </span>
+    <% } %>
+  </div>
   <div class="d-flex gap-2 align-items-center">
     <a id="exportExcelBtn" href="/admin/reports/export<%
       const validFilters = {};
@@ -138,23 +149,46 @@
   </div>
 </div>
 
-<!-- Sekmeler: Raporlar | Kullanıcı Raporları -->
+<!-- Sekmeler: Raporlar | Kullanıcı Raporları | Grafikler -->
 <ul class="nav nav-tabs mb-3" role="tablist">
   <li class="nav-item" role="presentation">
-    <a class="nav-link <%= (typeof activeTab === 'undefined' || activeTab !== 'users') ? 'active' : '' %>" href="/admin/reports" role="tab">
+    <a
+      class="nav-link <%= (typeof activeTab === 'undefined' || activeTab !== 'users') ? 'active' : '' %>"
+      href="/admin/reports<%= isOverdueView ? '?overdue=true' : '' %>"
+      data-tab="reports"
+      role="tab"
+    >
       <i class="bi bi-funnel me-1"></i><%= t('reports') %>
     </a>
   </li>
   <li class="nav-item" role="presentation">
-    <a class="nav-link <%= activeTab === 'users' ? 'active' : '' %>" href="/admin/reports?tab=users" role="tab">
+    <a
+      class="nav-link <%= activeTab === 'users' ? 'active' : '' %>"
+      href="/admin/reports?tab=users<%= isOverdueView ? '&overdue=true' : '' %>"
+      data-tab="users"
+      role="tab"
+    >
       <i class="bi bi-people me-1"></i><%= t('userReports') %>
+    </a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link <%= activeTab === 'charts' ? 'active' : '' %>"
+      href="/admin/reports?tab=charts<%= isOverdueView ? '&overdue=true' : '' %>"
+      data-tab="charts"
+      role="tab"
+    >
+      <i class="bi bi-bar-chart-line me-1"></i><%= t('charts') %>
     </a>
   </li>
 </ul>
 
 <!-- Raporlar sekmesi: filtre formu + görev listesi -->
-<div id="reports-tab-content" class="<%= activeTab === 'users' ? 'd-none' : '' %>">
+<div id="reports-tab-content" class="<%= (activeTab === 'users' || activeTab === 'charts') ? 'd-none' : '' %>">
 <form class="card card-body shadow-sm mb-3" method="get" action="/admin/reports" id="filterForm">
+  <% if (isOverdueView) { %>
+    <input type="hidden" name="overdue" value="true" />
+  <% } %>
   <div class="row g-2 align-items-end">
     <% const selectedFilterTypes = (filters && Array.isArray(filters.filterTypes)) ? filters.filterTypes : []; %>
     <div class="col-md-3">
@@ -525,7 +559,12 @@
         } catch (e) {
           // ignore
         }
-        window.location.href = '/admin/reports';
+        const isOverdue = <%= isOverdueView ? 'true' : 'false' %>;
+        if (isOverdue) {
+          window.location.href = '/admin/reports?overdue=true';
+        } else {
+          window.location.href = '/admin/reports';
+        }
       });
     }
   })();
@@ -658,13 +697,182 @@
 </div>
 <!-- /users-tab-content -->
 
+<!-- Grafikler sekmesi -->
+<div id="charts-tab-content" class="<%= activeTab === 'charts' ? '' : 'd-none' %>">
+  <% if (typeof tasks === 'undefined' || !tasks.length) { %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h6 mb-2 d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-steps text-primary"></i>
+          <span><%= t('charts') %></span>
+        </h2>
+        <p class="mb-0 small text-muted"><%= t('noTasks') %></p>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="card shadow-sm mb-3 tm-kpi-card">
+      <div class="card-body">
+        <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-steps text-primary"></i>
+          <span><%= isOverdueView ? 'Geciken Görevler için Grafikler' : t('charts') %></span>
+        </h2>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-pie-chart-fill text-danger"></i>
+              <span>Duruma göre dağılım (pasta)</span>
+            </h3>
+            <div id="chart-overdue-by-status-pie" class="tm-pie-chart-wrapper">
+              <div class="tm-pie-modern">
+                <div class="tm-pie-modern-ring"></div>
+                <div class="tm-pie-modern-center">
+                  <div class="tm-pie-modern-total">0</div>
+                  <div class="tm-pie-modern-total-label">Toplam</div>
+                </div>
+              </div>
+              <div class="tm-pie-modern-legend">
+                <div class="tm-pie-legend-item">
+                  <span class="tm-pie-legend-color tm-pie-legend-color--pending"></span>
+                  <span class="tm-pie-legend-label">Beklemede</span>
+                  <span class="tm-pie-legend-percent" data-status-percent="pending">%0</span>
+                  <span class="tm-pie-legend-value" data-status="pending">0</span>
+                </div>
+                <div class="tm-pie-legend-item">
+                  <span class="tm-pie-legend-color tm-pie-legend-color--inprogress"></span>
+                  <span class="tm-pie-legend-label">Devam eden</span>
+                  <span class="tm-pie-legend-percent" data-status-percent="in_progress">%0</span>
+                  <span class="tm-pie-legend-value" data-status="in_progress">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-building text-teal"></i>
+              <span>Departmana göre dağılım (pasta)</span>
+            </h3>
+            <div id="chart-overdue-by-department-pie" class="tm-pie-chart-wrapper">
+              <div class="tm-pie-modern">
+                <div class="tm-pie-modern-ring"></div>
+                <div class="tm-pie-modern-center">
+                  <div class="tm-pie-modern-total">0</div>
+                  <div class="tm-pie-modern-total-label">Toplam</div>
+                </div>
+              </div>
+              <div class="tm-pie-modern-legend" data-department-legend>
+                <div class="tm-pie-legend-item">
+                  <span class="tm-pie-legend-color"></span>
+                  <span class="tm-pie-legend-label">Yükleniyor...</span>
+                  <span class="tm-pie-legend-percent">%0</span>
+                  <span class="tm-pie-legend-value">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-person-lines-fill text-primary"></i>
+              <span>Kişiye göre geciken görevler</span>
+            </h3>
+            <div id="chart-overdue-by-user" class="tm-bar-chart"></div>
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-person-badge text-indigo"></i>
+              <span>Konu sorumlusuna göre geciken görevler</span>
+            </h3>
+            <div id="chart-overdue-by-subject" class="tm-bar-chart"></div>
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-lightning-charge text-danger"></i>
+              <span>Acil &amp; geciken görevler (kişiye göre)</span>
+            </h3>
+            <div id="chart-overdue-urgent-by-user" class="tm-bar-chart"></div>
+          </div>
+          <div class="col-12">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-journal-text text-primary"></i>
+              <span>Konu başlıklarına göre gecikme günü</span>
+            </h3>
+            <div id="overdue-topic-days-list" class="tm-overdue-topic-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+<!-- /charts-tab-content -->
+
+<script>
+  // Sekmelerin (Raporlar / Kullanıcı Raporları / Grafikler) URL'deki ?tab parametresine göre çalışması
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab') || 'reports';
+
+    const reportsLink = document.querySelector('a[data-tab="reports"]');
+    const usersLink = document.querySelector('a[data-tab="users"]');
+    const chartsLink = document.querySelector('a[data-tab="charts"]');
+
+    const reportsContent = document.getElementById('reports-tab-content');
+    const usersContent = document.getElementById('users-tab-content');
+    const chartsContent = document.getElementById('charts-tab-content');
+
+    function setActive(link, isActive) {
+      if (!link) return;
+      if (isActive) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    }
+
+    function setVisible(el, isVisible) {
+      if (!el) return;
+      if (isVisible) {
+        el.classList.remove('d-none');
+      } else {
+        el.classList.add('d-none');
+      }
+    }
+
+    if (tab === 'users') {
+      setActive(reportsLink, false);
+      setActive(usersLink, true);
+      setActive(chartsLink, false);
+
+      setVisible(reportsContent, false);
+      setVisible(usersContent, true);
+      setVisible(chartsContent, false);
+    } else if (tab === 'charts') {
+      setActive(reportsLink, false);
+      setActive(usersLink, false);
+      setActive(chartsLink, true);
+
+      setVisible(reportsContent, false);
+      setVisible(usersContent, false);
+      setVisible(chartsContent, true);
+    } else {
+      // varsayılan: raporlar
+      setActive(reportsLink, true);
+      setActive(usersLink, false);
+      setActive(chartsLink, false);
+
+      setVisible(reportsContent, true);
+      setVisible(usersContent, false);
+      setVisible(chartsContent, false);
+    }
+  })();
+</script>
+
 <script>
   // Kullanıcı Raporları: seçili kullanıcıları localStorage'da sakla ve sayfadan çıkıp gelsede koru
   (function() {
     const STORAGE_KEY = 'adminUserReportsSelectedIds';
     const form = document.getElementById('userReportsSelectForm');
     const checkboxes = document.querySelectorAll('.user-id-checkbox');
-    const isUsersTab = '<%= activeTab === 'users' ? '1' : '0' %>' === '1';
+    const isUsersTab = "<%= activeTab === 'users' ? '1' : '0' %>" === '1';
     const hasServerSelected =
       <%= (typeof selectedUserIds !== 'undefined' && selectedUserIds.length) ? 'true' : 'false' %>;
     const serverSelectedParam = '<%= typeof selectedUserIdsParam !== 'undefined' ? selectedUserIdsParam : '' %>';
@@ -721,8 +929,456 @@
   })();
 </script>
 
-<!-- Görev listesi: Raporlar sekmesinde her zaman; Kullanıcı Raporları sekmesinde sadece kullanıcı seçildiyse -->
-<% const showTaskList = (typeof activeTab === 'undefined' || activeTab !== 'users') || (activeTab === 'users' && filters && filters.userId); %>
+<script>
+  // Grafikler sekmesi: geciken görevlerden basit bar chart'lar üret
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const isChartsTab = (params.get('tab') || 'reports') === 'charts';
+    if (!isChartsTab) return;
+
+    const tasks = <%- JSON.stringify(tasks || []) %>;
+    if (!Array.isArray(tasks) || !tasks.length) return;
+
+    function easeOutCubic(x) {
+      return 1 - Math.pow(1 - x, 3);
+    }
+
+    function animateConicGradient(ringEl, segments, durationMs) {
+      if (!ringEl || !Array.isArray(segments) || !segments.length) return;
+
+      const start = performance.now();
+
+      function render(progress) {
+        let angleStart = 0;
+        const gradientParts = segments.map(seg => {
+          const finalAngle = seg.angle || 0;
+          const currentAngle = finalAngle * progress;
+          const angleEnd = angleStart + currentAngle;
+          const part = `${seg.color} ${angleStart}deg ${angleEnd}deg`;
+          angleStart = angleEnd;
+          return part;
+        });
+        ringEl.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+      }
+
+      function step(now) {
+        const raw = Math.min((now - start) / durationMs, 1);
+        const eased = easeOutCubic(raw);
+        render(eased);
+        if (raw < 1) requestAnimationFrame(step);
+      }
+
+      // 0 derece başlangıç
+      render(0);
+      requestAnimationFrame(step);
+    }
+
+    function aggregateBy(tasks, key) {
+      const map = new Map();
+      tasks.forEach(t => {
+        // Sadece geciken görevler sayfasında zaten filtreli geliyor;
+        // genel raporlarda da kullanılırsa, deadline < bugün ve done olmayanları say.
+        const isDone = t.status === 'done';
+        const hasDeadline = !!t.deadline;
+        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
+        const isOverdue =
+          hasDeadline &&
+          !isDone &&
+          !Number.isNaN(deadlineDate.getTime()) &&
+          deadlineDate < new Date();
+
+        if (!isOverdue) return;
+
+        const label = (t[key] || '').trim() || 'Diğer';
+        map.set(label, (map.get(label) || 0) + 1);
+      });
+      return Array.from(map.entries())
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 15);
+    }
+
+    function aggregateUrgentOverdueByUser(tasks) {
+      const map = new Map();
+      tasks.forEach(t => {
+        const isDone = t.status === 'done';
+        const acil =
+          t.acil === true ||
+          t.acil === 'true' ||
+          t.acil === 't' ||
+          t.acil === 1 ||
+          t.acil === '1';
+
+        const hasDeadline = !!t.deadline;
+        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
+        const isOverdue =
+          hasDeadline &&
+          !isDone &&
+          !Number.isNaN(deadlineDate.getTime()) &&
+          deadlineDate < new Date();
+
+        if (!isOverdue || !acil) return;
+
+        const label = (t.assigned_username || '').trim() || 'Diğer';
+        map.set(label, (map.get(label) || 0) + 1);
+      });
+      return Array.from(map.entries())
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 15);
+    }
+
+    function renderBarChart(containerId, items, { overdue = false, urgent = false } = {}) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      if (!items.length) {
+        container.innerHTML =
+          '<p class="small text-muted mb-0">Gösterilecek veri yok.</p>';
+        return;
+      }
+
+      const maxVal = Math.max(...items.map(i => i.value));
+      const moreThanFive = items.length > 5;
+      const visibleItems = items.slice(0, 5);
+
+      function createRows(list) {
+        return list
+          .map(item => {
+            const widthPercent = maxVal > 0 ? (item.value / maxVal) * 100 : 0;
+            const classes = [
+              'tm-bar-row-fill',
+              overdue ? 'tm-bar-row-fill--overdue' : '',
+              urgent ? 'tm-bar-row-fill--urgent' : ''
+            ]
+              .filter(Boolean)
+              .join(' ');
+            return `
+              <div class="tm-bar-row">
+                <div class="tm-bar-row-label" title="${item.label}">
+                  ${item.label}
+                </div>
+                <div class="tm-bar-row-track">
+                  <div class="${classes}" style="width: ${widthPercent}%"></div>
+                </div>
+                <div class="tm-bar-row-value">${item.value}</div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      let html = `<div class="tm-bar-chart-body" data-expanded="false">${createRows(
+        visibleItems
+      )}</div>`;
+
+      if (moreThanFive) {
+        html += `
+          <button type="button" class="btn btn-link btn-sm px-0 mt-2 tm-bar-chart-toggle">
+            Fazlasını Göster
+          </button>
+        `;
+      }
+
+      container.innerHTML = html;
+
+      function animateBarsWhenVisible(targetEl) {
+        if (!targetEl) return;
+        const fills = targetEl.querySelectorAll('.tm-bar-row-fill');
+        if (!fills.length) return;
+
+        const reduceMotion = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        fills.forEach(fill => {
+          const target = fill.style.width;
+          fill.style.width = reduceMotion ? target : '0%';
+          fill.setAttribute('data-target-width', target);
+        });
+
+        const run = () => {
+          fills.forEach((fill, idx) => {
+            const target = fill.getAttribute('data-target-width') || '0%';
+            if (reduceMotion) {
+              fill.style.width = target;
+              return;
+            }
+            setTimeout(() => {
+              fill.style.width = target;
+            }, idx * 70);
+          });
+        };
+
+        if (reduceMotion) {
+          run();
+          return;
+        }
+
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver(
+            entries => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  run();
+                  observer.disconnect();
+                }
+              });
+            },
+            { threshold: 0.25 }
+          );
+          observer.observe(targetEl);
+        } else {
+          requestAnimationFrame(run);
+        }
+      }
+
+      animateBarsWhenVisible(container);
+
+      if (moreThanFive) {
+        const bodyEl = container.querySelector('.tm-bar-chart-body');
+        const toggleBtn = container.querySelector('.tm-bar-chart-toggle');
+        if (toggleBtn && bodyEl) {
+          toggleBtn.addEventListener('click', () => {
+            const expanded = bodyEl.getAttribute('data-expanded') === 'true';
+            if (expanded) {
+              bodyEl.innerHTML = createRows(visibleItems);
+              animateBarsWhenVisible(bodyEl);
+              bodyEl.setAttribute('data-expanded', 'false');
+              toggleBtn.textContent = 'Fazlasını Göster';
+            } else {
+              bodyEl.innerHTML = createRows(items);
+              animateBarsWhenVisible(bodyEl);
+              bodyEl.setAttribute('data-expanded', 'true');
+              toggleBtn.textContent = 'Daha Az Göster';
+            }
+          });
+        }
+      }
+    }
+
+    const overdueByUser = aggregateBy(tasks, 'assigned_username');
+    const overdueBySubject = aggregateBy(tasks, 'konu_sorumlusu_username');
+    const overdueByDepartment = aggregateBy(tasks, 'departman');
+    const overdueUrgentByUser = aggregateUrgentOverdueByUser(tasks);
+
+    // Pasta grafiği için durumlara göre say
+    const statusCounts = tasks.reduce(
+      (acc, t) => {
+        const isDone = t.status === 'done';
+        const hasDeadline = !!t.deadline;
+        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
+        const isOverdue =
+          hasDeadline &&
+          !isDone &&
+          !Number.isNaN(deadlineDate.getTime()) &&
+          deadlineDate < new Date();
+        if (!isOverdue) return acc;
+
+        if (t.status === 'pending') acc.pending += 1;
+        if (t.status === 'in_progress') acc.in_progress += 1;
+        return acc;
+      },
+      { pending: 0, in_progress: 0 }
+    );
+
+    function renderStatusPie() {
+      const wrap = document.getElementById('chart-overdue-by-status-pie');
+      if (!wrap) return;
+
+      const total = statusCounts.pending + statusCounts.in_progress;
+      const ringEl = wrap.querySelector('.tm-pie-modern-ring');
+      const centerValEl = wrap.querySelector('.tm-pie-modern-total');
+      const pendingEl = wrap.querySelector(
+        '.tm-pie-legend-value[data-status="pending"]'
+      );
+      const inProgEl = wrap.querySelector(
+        '.tm-pie-legend-value[data-status="in_progress"]'
+      );
+      const pendingPercentEl = wrap.querySelector(
+        '.tm-pie-legend-percent[data-status-percent="pending"]'
+      );
+      const inProgPercentEl = wrap.querySelector(
+        '.tm-pie-legend-percent[data-status-percent="in_progress"]'
+      );
+
+      if (centerValEl) centerValEl.textContent = String(total);
+      if (pendingEl) pendingEl.textContent = String(statusCounts.pending);
+      if (inProgEl) inProgEl.textContent = String(statusCounts.in_progress);
+      const pendingPct = total ? Math.round((statusCounts.pending / total) * 100) : 0;
+      const inProgPct = total ? Math.round((statusCounts.in_progress / total) * 100) : 0;
+      if (pendingPercentEl) pendingPercentEl.textContent = `%${pendingPct}`;
+      if (inProgPercentEl) inProgPercentEl.textContent = `%${inProgPct}`;
+
+      if (!ringEl) return;
+      if (!total) {
+        ringEl.style.background =
+          'conic-gradient(#e5e7eb 0deg 360deg)';
+        return;
+      }
+
+      const pendingDeg = (statusCounts.pending / total) * 360;
+      const inProgDeg = 360 - pendingDeg;
+      animateConicGradient(
+        ringEl,
+        [
+          { color: '#facc15', angle: pendingDeg },
+          { color: '#3b82f6', angle: inProgDeg }
+        ],
+        900
+      );
+    }
+
+    function renderDepartmentPie(items) {
+      const wrap = document.getElementById('chart-overdue-by-department-pie');
+      if (!wrap) return;
+
+      const ringEl = wrap.querySelector('.tm-pie-modern-ring');
+      const totalEl = wrap.querySelector('.tm-pie-modern-total');
+      const legendEl = wrap.querySelector('[data-department-legend]');
+      if (!ringEl || !totalEl || !legendEl) return;
+
+      const palette = [
+        '#3b82f6',
+        '#22c55e',
+        '#f59e0b',
+        '#ef4444',
+        '#a855f7',
+        '#14b8a6',
+        '#f97316'
+      ];
+
+      // Çok fazla departman varsa ilk 6 + Diğer yap
+      const normalized = (items || []).slice().sort((a, b) => b.value - a.value);
+      const top = normalized.slice(0, 6);
+      const rest = normalized.slice(6);
+      if (rest.length) {
+        const restTotal = rest.reduce((sum, it) => sum + it.value, 0);
+        top.push({ label: 'Diğer', value: restTotal });
+      }
+
+      const total = top.reduce((sum, it) => sum + it.value, 0);
+      totalEl.textContent = String(total);
+
+      if (!total) {
+        ringEl.style.background = 'conic-gradient(#e5e7eb 0deg 360deg)';
+        legendEl.innerHTML = `
+          <div class="tm-pie-legend-item">
+            <span class="tm-pie-legend-color" style="background:#e5e7eb"></span>
+            <span class="tm-pie-legend-label">Veri yok</span>
+            <span class="tm-pie-legend-percent">%0</span>
+            <span class="tm-pie-legend-value">0</span>
+          </div>
+        `;
+        return;
+      }
+
+      let angleStart = 0;
+      const gradientParts = [];
+      const legendRows = [];
+      const segments = [];
+
+      top.forEach((it, idx) => {
+        const color = palette[idx % palette.length];
+        const percent = Math.round((it.value / total) * 100);
+        const angle = (it.value / total) * 360;
+        const angleEnd = angleStart + angle;
+
+        gradientParts.push(`${color} ${angleStart}deg ${angleEnd}deg`);
+        segments.push({ color, angle });
+        legendRows.push(`
+          <div class="tm-pie-legend-item">
+            <span class="tm-pie-legend-color" style="background:${color}"></span>
+            <span class="tm-pie-legend-label">${it.label || 'Diğer'}</span>
+            <span class="tm-pie-legend-percent">%${percent}</span>
+            <span class="tm-pie-legend-value">${it.value}</span>
+          </div>
+        `);
+
+        angleStart = angleEnd;
+      });
+
+      ringEl.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+      animateConicGradient(ringEl, segments, 1000);
+      legendEl.innerHTML = legendRows.join('');
+    }
+
+    function renderOverdueTopicDays() {
+      const container = document.getElementById('overdue-topic-days-list');
+      if (!container) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const rows = tasks
+        .map(t => {
+          if (!t || t.status === 'done' || !t.deadline) return null;
+          const deadline = new Date(t.deadline);
+          if (Number.isNaN(deadline.getTime())) return null;
+          deadline.setHours(0, 0, 0, 0);
+
+          const diffMs = today.getTime() - deadline.getTime();
+          const overdueDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          if (overdueDays <= 0) return null;
+
+          return {
+            title: (t.title || 'Başlıksız görev').trim(),
+            overdueDays
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.overdueDays - a.overdueDays);
+
+      if (!rows.length) {
+        container.innerHTML =
+          '<p class="small text-muted mb-0">Geciken konu başlığı bulunamadı.</p>';
+        return;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      const topRows = rows.slice(0, 20);
+      container.innerHTML = topRows
+        .map(row => {
+          return `
+            <div class="d-flex align-items-center justify-content-between gap-2 border rounded-3 px-2 py-2 bg-light mb-2">
+              <div class="small fw-semibold text-truncate" style="min-width: 0;" title="${escapeHtml(row.title)}">
+                ${escapeHtml(row.title)}
+              </div>
+              <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} gün gecikme</span>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    renderBarChart('chart-overdue-by-user', overdueByUser, { overdue: true });
+    renderBarChart('chart-overdue-by-subject', overdueBySubject, {
+      overdue: true
+    });
+    renderDepartmentPie(overdueByDepartment);
+    renderBarChart('chart-overdue-urgent-by-user', overdueUrgentByUser, {
+      overdue: true,
+      urgent: true
+    });
+
+    renderStatusPie();
+    renderOverdueTopicDays();
+  })();
+</script>
+
+<!-- Görev listesi: 
+     - Raporlar sekmesinde her zaman
+     - Kullanıcı Raporları sekmesinde sadece kullanıcı seçildiyse
+     - Grafikler sekmesinde gösterilmez -->
+<% const showTaskList =
+  (typeof activeTab === 'undefined' || (activeTab !== 'users' && activeTab !== 'charts')) ||
+  (activeTab === 'users' && filters && filters.userId); %>
 <% if (showTaskList) { %>
 <!-- Tablo Görünümü -->
 <% if (typeof tasks !== 'undefined') { %>
