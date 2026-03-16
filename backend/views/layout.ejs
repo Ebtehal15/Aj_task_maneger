@@ -38,7 +38,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
     />
-    <link rel="stylesheet" href="/public/css/style.css?v=3.4" />
+    <link rel="stylesheet" href="/public/css/style.css?v=3.5" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2/dist/css/tom-select.css" crossorigin="anonymous" />
   </head>
   <body class="tm-body">
@@ -736,33 +736,34 @@
     })();
   </script>
   <script>
-    // Register service worker for PWA install (Android Chrome, desktop, etc.)
+    // Service worker:
+    // - LOCALHOST'ta PWA için aktif
+    // - PROD ortamında (Render vb.) kayıt yapmaz, varsa eski kayıtları temizler
     (function() {
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          const isHttps = window.location.protocol === 'https:';
-          if (!isLocalhost && !isHttps) {
-            console.log('Service worker registration skipped (requires HTTPS in production).');
-            console.log('Current protocol:', window.location.protocol);
+          
+          // PROD: mevcut service worker kayıtlarını temizle ve çık
+          if (!isLocalhost) {
+            navigator.serviceWorker.getRegistrations()
+              .then(function(registrations) {
+                registrations.forEach(function(reg) {
+                  console.log('Unregistering service worker in production:', reg.scope);
+                  reg.unregister();
+                });
+              })
+              .catch(function(err) {
+                console.error('Service worker unregister failed:', err);
+              });
             return;
           }
+
+          // LOCALHOST: sw.js kaydet (PWA geliştirme/test için)
           navigator.serviceWorker.register('/sw.js')
             .then(function(reg) {
-              console.log('Service worker registered:', reg.scope);
+              console.log('Service worker registered (localhost):', reg.scope);
               console.log('Service worker active:', reg.active);
-              // Check if manifest is accessible
-              fetch('/manifest.json')
-                .then(res => {
-                  console.log('Manifest.json accessible:', res.ok);
-                  return res.json();
-                })
-                .then(manifest => {
-                  console.log('Manifest.json content:', manifest);
-                })
-                .catch(err => {
-                  console.error('Manifest.json error:', err);
-                });
             })
             .catch(function(err) {
               console.error('Service worker registration failed:', err);
