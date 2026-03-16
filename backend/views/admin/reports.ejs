@@ -19,6 +19,65 @@
 %>
 
 <% const isOverdueView = filters && (filters.overdue === 'true' || filters.overdue === true); %>
+<%
+  const I18N_FALLBACKS = {
+    tr: {
+      overdueCharts: 'Geciken Görevler için Grafikler',
+      statusDistributionPie: 'Duruma göre dağılım (pasta)',
+      departmentDistributionPie: 'Departmana göre dağılım (pasta)',
+      overdueByUserChart: 'Kişiye göre geciken görevler',
+      overdueBySubjectOwnerChart: 'Konu sorumlusuna göre geciken görevler',
+      urgentOverdueByUserChart: 'Acil & geciken görevler (kişiye göre)',
+      overdueByTopicDaysChart: 'Konu başlıklarına göre gecikme günü',
+      noData: 'Veri yok',
+      other: 'Diğer',
+      loading: 'Yükleniyor...',
+      untitledTask: 'Başlıksız görev',
+      noOverdueTopicFound: 'Geciken konu başlığı bulunamadı.',
+      subjectOwnerLabel: 'Konu sorumlusu',
+      daysOverdueSuffix: 'gün gecikme'
+    },
+    en: {
+      overdueCharts: 'Charts for Overdue Tasks',
+      statusDistributionPie: 'Status Distribution (Pie)',
+      departmentDistributionPie: 'Department Distribution (Pie)',
+      overdueByUserChart: 'Overdue Tasks by User',
+      overdueBySubjectOwnerChart: 'Overdue Tasks by Subject Owner',
+      urgentOverdueByUserChart: 'Urgent & Overdue Tasks (by User)',
+      overdueByTopicDaysChart: 'Overdue Days by Topic Titles',
+      noData: 'No data',
+      other: 'Other',
+      loading: 'Loading...',
+      untitledTask: 'Untitled task',
+      noOverdueTopicFound: 'No overdue topic titles found.',
+      subjectOwnerLabel: 'Subject owner',
+      daysOverdueSuffix: 'days overdue'
+    },
+    ar: {
+      overdueCharts: 'رسوم المهام المتأخرة',
+      statusDistributionPie: 'توزيع الحالات (دائري)',
+      departmentDistributionPie: 'توزيع الأقسام (دائري)',
+      overdueByUserChart: 'المهام المتأخرة حسب المستخدم',
+      overdueBySubjectOwnerChart: 'المهام المتأخرة حسب مسؤول الموضوع',
+      urgentOverdueByUserChart: 'المهام العاجلة والمتأخرة (حسب المستخدم)',
+      overdueByTopicDaysChart: 'أيام التأخير حسب عناوين المواضيع',
+      noData: 'لا توجد بيانات',
+      other: 'أخرى',
+      loading: 'جاري التحميل...',
+      untitledTask: 'مهمة بدون عنوان',
+      noOverdueTopicFound: 'لا توجد عناوين مواضيع متأخرة.',
+      subjectOwnerLabel: 'مسؤول الموضوع',
+      daysOverdueSuffix: 'يوم تأخير'
+    }
+  };
+
+  const tSafe = (key) => {
+    const value = t(key);
+    if (value !== key) return value;
+    const currentLang = (typeof lang === 'string' && I18N_FALLBACKS[lang]) ? lang : 'tr';
+    return I18N_FALLBACKS[currentLang][key] || I18N_FALLBACKS.en[key] || key;
+  };
+%>
 
 <script>
   // Sayfa yüklenmeden önce varsayılan görünümü belirle (FOUC önlemek için)
@@ -714,14 +773,14 @@
       <div class="card-body">
         <h2 class="h6 mb-3 d-flex align-items-center gap-2">
           <i class="bi bi-bar-chart-steps text-primary"></i>
-          <span><%= isOverdueView ? 'Geciken Görevler için Grafikler' : t('charts') %></span>
+          <span><%= isOverdueView ? tSafe('overdueCharts') : t('charts') %></span>
         </h2>
 
         <div class="row g-3">
           <div class="col-md-6">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-pie-chart-fill text-danger"></i>
-              <span>Duruma göre dağılım (pasta)</span>
+              <span><%= tSafe('statusDistributionPie') %></span>
             </h3>
             <div id="chart-overdue-by-status-pie" class="tm-pie-chart-wrapper">
               <div class="tm-pie-modern">
@@ -734,13 +793,13 @@
               <div class="tm-pie-modern-legend">
                 <div class="tm-pie-legend-item">
                   <span class="tm-pie-legend-color tm-pie-legend-color--pending"></span>
-                  <span class="tm-pie-legend-label">Beklemede</span>
+                  <span class="tm-pie-legend-label"><%= t('status_pending') %></span>
                   <span class="tm-pie-legend-percent" data-status-percent="pending">%0</span>
                   <span class="tm-pie-legend-value" data-status="pending">0</span>
                 </div>
                 <div class="tm-pie-legend-item">
                   <span class="tm-pie-legend-color tm-pie-legend-color--inprogress"></span>
-                  <span class="tm-pie-legend-label">Devam eden</span>
+                  <span class="tm-pie-legend-label"><%= t('status_in_progress') %></span>
                   <span class="tm-pie-legend-percent" data-status-percent="in_progress">%0</span>
                   <span class="tm-pie-legend-value" data-status="in_progress">0</span>
                 </div>
@@ -750,7 +809,7 @@
           <div class="col-md-6">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-building text-teal"></i>
-              <span>Departmana göre dağılım (pasta)</span>
+              <span><%= tSafe('departmentDistributionPie') %></span>
             </h3>
             <div id="chart-overdue-by-department-pie" class="tm-pie-chart-wrapper">
               <div class="tm-pie-modern">
@@ -763,7 +822,7 @@
               <div class="tm-pie-modern-legend" data-department-legend>
                 <div class="tm-pie-legend-item">
                   <span class="tm-pie-legend-color"></span>
-                  <span class="tm-pie-legend-label">Yükleniyor...</span>
+                  <span class="tm-pie-legend-label"><%= t('loading') %></span>
                   <span class="tm-pie-legend-percent">%0</span>
                   <span class="tm-pie-legend-value">0</span>
                 </div>
@@ -773,28 +832,28 @@
           <div class="col-md-6">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-person-lines-fill text-primary"></i>
-              <span>Kişiye göre geciken görevler</span>
+              <span><%= tSafe('overdueByUserChart') %></span>
             </h3>
             <div id="chart-overdue-by-user" class="tm-bar-chart"></div>
           </div>
           <div class="col-md-6">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-person-badge text-indigo"></i>
-              <span>Konu sorumlusuna göre geciken görevler</span>
+              <span><%= tSafe('overdueBySubjectOwnerChart') %></span>
             </h3>
             <div id="chart-overdue-by-subject" class="tm-bar-chart"></div>
           </div>
           <div class="col-md-6">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-lightning-charge text-danger"></i>
-              <span>Acil &amp; geciken görevler (kişiye göre)</span>
+              <span><%= tSafe('urgentOverdueByUserChart') %></span>
             </h3>
             <div id="chart-overdue-urgent-by-user" class="tm-bar-chart"></div>
           </div>
           <div class="col-12">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-journal-text text-primary"></i>
-              <span>Konu başlıklarına göre gecikme günü</span>
+              <span><%= tSafe('overdueByTopicDaysChart') %></span>
             </h3>
             <div id="overdue-topic-days-list" class="tm-overdue-topic-list"></div>
           </div>
@@ -937,6 +996,17 @@
     if (!isChartsTab) return;
 
     const tasks = <%- JSON.stringify(tasks || []) %>;
+    const i18n = <%- JSON.stringify({
+      noData: tSafe('noData'),
+      other: tSafe('other'),
+      statusPending: t('status_pending'),
+      statusInProgress: t('status_in_progress'),
+      loading: tSafe('loading'),
+      untitledTask: tSafe('untitledTask'),
+      noOverdueTopicFound: tSafe('noOverdueTopicFound'),
+      subjectOwnerLabel: tSafe('subjectOwnerLabel'),
+      daysOverdueSuffix: tSafe('daysOverdueSuffix')
+    }) %>;
     if (!Array.isArray(tasks) || !tasks.length) return;
 
     function easeOutCubic(x) {
@@ -989,7 +1059,7 @@
 
         if (!isOverdue) return;
 
-        const label = (t[key] || '').trim() || 'Diğer';
+        const label = (t[key] || '').trim() || i18n.other;
         map.set(label, (map.get(label) || 0) + 1);
       });
       return Array.from(map.entries())
@@ -1019,7 +1089,7 @@
 
         if (!isOverdue || !acil) return;
 
-        const label = (t.assigned_username || '').trim() || 'Diğer';
+        const label = (t.assigned_username || '').trim() || i18n.other;
         map.set(label, (map.get(label) || 0) + 1);
       });
       return Array.from(map.entries())
@@ -1033,7 +1103,7 @@
       if (!container) return;
       if (!items.length) {
         container.innerHTML =
-          '<p class="small text-muted mb-0">Gösterilecek veri yok.</p>';
+          `<p class="small text-muted mb-0">${i18n.noData}</p>`;
         return;
       }
 
@@ -1252,7 +1322,7 @@
       const rest = normalized.slice(6);
       if (rest.length) {
         const restTotal = rest.reduce((sum, it) => sum + it.value, 0);
-        top.push({ label: 'Diğer', value: restTotal });
+        top.push({ label: i18n.other, value: restTotal });
       }
 
       const total = top.reduce((sum, it) => sum + it.value, 0);
@@ -1263,7 +1333,7 @@
         legendEl.innerHTML = `
           <div class="tm-pie-legend-item">
             <span class="tm-pie-legend-color" style="background:#e5e7eb"></span>
-            <span class="tm-pie-legend-label">Veri yok</span>
+            <span class="tm-pie-legend-label">${i18n.noData}</span>
             <span class="tm-pie-legend-percent">%0</span>
             <span class="tm-pie-legend-value">0</span>
           </div>
@@ -1287,7 +1357,7 @@
         legendRows.push(`
           <div class="tm-pie-legend-item">
             <span class="tm-pie-legend-color" style="background:${color}"></span>
-            <span class="tm-pie-legend-label">${it.label || 'Diğer'}</span>
+            <span class="tm-pie-legend-label">${it.label || i18n.other}</span>
             <span class="tm-pie-legend-percent">%${percent}</span>
             <span class="tm-pie-legend-value">${it.value}</span>
           </div>
@@ -1321,7 +1391,7 @@
 
           return {
             id: t.id,
-            title: (t.title || 'Başlıksız görev').trim(),
+            title: (t.title || i18n.untitledTask).trim(),
             konuSorumlusu: (t.konu_sorumlusu_username || t.assigned_username || '-').trim(),
             overdueDays
           };
@@ -1331,7 +1401,7 @@
 
       if (!rows.length) {
         container.innerHTML =
-          '<p class="small text-muted mb-0">Geciken konu başlığı bulunamadı.</p>';
+          `<p class="small text-muted mb-0">${i18n.noOverdueTopicFound}</p>`;
         return;
       }
 
@@ -1358,11 +1428,11 @@
                 >
                   ${escapeHtml(row.title)}
                 </a>
-                <span class="small text-muted text-truncate" style="min-width: 0;" title="Konu sorumlusu: ${escapeHtml(row.konuSorumlusu)}">
-                  Konu sorumlusu: ${escapeHtml(row.konuSorumlusu)}
+                <span class="small text-muted text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
+                  ${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}
                 </span>
               </div>
-              <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} gün gecikme</span>
+              <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
             </div>
           `;
         })
