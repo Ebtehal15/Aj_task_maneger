@@ -1320,7 +1320,9 @@
           if (overdueDays <= 0) return null;
 
           return {
+            id: t.id,
             title: (t.title || 'Başlıksız görev').trim(),
+            konuSorumlusu: (t.konu_sorumlusu_username || t.assigned_username || '-').trim(),
             overdueDays
           };
         })
@@ -1347,8 +1349,18 @@
         .map(row => {
           return `
             <div class="d-flex align-items-center justify-content-between gap-2 border rounded-3 px-2 py-2 bg-light mb-2">
-              <div class="small fw-semibold text-truncate" style="min-width: 0;" title="${escapeHtml(row.title)}">
-                ${escapeHtml(row.title)}
+              <div class="d-flex flex-column" style="min-width: 0;">
+                <a
+                  href="/admin/tasks/${row.id}"
+                  class="small fw-semibold text-truncate text-decoration-none text-dark"
+                  style="min-width: 0;"
+                  title="${escapeHtml(row.title)}"
+                >
+                  ${escapeHtml(row.title)}
+                </a>
+                <span class="small text-muted text-truncate" style="min-width: 0;" title="Konu sorumlusu: ${escapeHtml(row.konuSorumlusu)}">
+                  Konu sorumlusu: ${escapeHtml(row.konuSorumlusu)}
+                </span>
               </div>
               <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} gün gecikme</span>
             </div>
