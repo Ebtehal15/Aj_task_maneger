@@ -195,6 +195,12 @@
               </a>
             </li>
             <li class="tm-sidebar-item">
+              <a href="/admin/reports?tab=charts" class="tm-sidebar-link">
+                <i class="bi bi-bar-chart-line"></i>
+                <span><%= t('charts') %></span>
+              </a>
+            </li>
+            <li class="tm-sidebar-item">
               <a href="/admin/users" class="tm-sidebar-link">
                 <i class="bi bi-people"></i>
                 <span><%= t('usersPageTitle') %></span>
@@ -743,36 +749,20 @@
   </script>
   <script>
     // Service worker:
-    // - LOCALHOST'ta PWA için aktif
-    // - PROD ortamında (Render vb.) kayıt yapmaz, varsa eski kayıtları temizler
+    // - Local geliştirmede cache/network karışıklığı yaşamamak için kayıt yapma
+    // - Varsa eski service worker kayıtlarını temizle
     (function() {
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          
-          // PROD: mevcut service worker kayıtlarını temizle ve çık
-          if (!isLocalhost) {
-            navigator.serviceWorker.getRegistrations()
-              .then(function(registrations) {
-                registrations.forEach(function(reg) {
-                  console.log('Unregistering service worker in production:', reg.scope);
-                  reg.unregister();
-                });
-              })
-              .catch(function(err) {
-                console.error('Service worker unregister failed:', err);
+          navigator.serviceWorker.getRegistrations()
+            .then(function(registrations) {
+              registrations.forEach(function(reg) {
+                console.log('Unregistering service worker:', reg.scope);
+                reg.unregister();
               });
-            return;
-          }
-
-          // LOCALHOST: sw.js kaydet (PWA geliştirme/test için)
-          navigator.serviceWorker.register('/sw.js')
-            .then(function(reg) {
-              console.log('Service worker registered (localhost):', reg.scope);
-              console.log('Service worker active:', reg.active);
             })
             .catch(function(err) {
-              console.error('Service worker registration failed:', err);
+              console.error('Service worker unregister failed:', err);
             });
         });
       } else {

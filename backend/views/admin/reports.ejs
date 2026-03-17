@@ -23,11 +23,31 @@
   const I18N_FALLBACKS = {
     tr: {
       overdueCharts: 'Geciken Görevler için Grafikler',
+      advancedChartsOverview: 'Profesyonel Grafik Paneli',
+      chartsInsightSubtitle: 'Filtrelenmiş görev verilerinden canlı operasyon içgörüleri',
+      totalTasksKpi: 'Toplam Görev',
+      openTasksKpi: 'Açık Görev',
+      completedTasksKpi: 'Tamamlanan',
+      overdueTasksKpi: 'Geciken',
+      urgentTasksKpi: 'Acil',
+      dueSoonTasksKpi: 'Yaklaşan (3 gün)',
       statusDistributionPie: 'Duruma göre dağılım (pasta)',
       departmentDistributionPie: 'Departmana göre dağılım (pasta)',
+      openByUserChart: 'Kişiye göre açık görev dağılımı',
+      completedByUserChart: 'Kişiye göre tamamlanan görev dağılımı',
       overdueByUserChart: 'Kişiye göre geciken görevler',
       overdueBySubjectOwnerChart: 'Konu sorumlusuna göre geciken görevler',
       urgentOverdueByUserChart: 'Acil & geciken görevler (kişiye göre)',
+      dueSoonByUserChart: 'Yaklaşan deadline (3 gün) - kişiye göre',
+      overdueBucketChart: 'Gecikme yaşına göre dağılım',
+      createdVsCompletedTrend: 'Aylık açılan / tamamlanan trend',
+      topPerformersTitle: 'Top 3 Performans',
+      topPerformersSubtitle: 'Tamamlama, zamanında teslim ve gecikme oranına göre',
+      performanceScore: 'Performans skoru',
+      completionRate: 'Tamamlama oranı',
+      onTimeRate: 'Zamanında teslim',
+      overdueRate: 'Gecikme oranı',
+      totalAssigned: 'Atanan görev',
       overdueByTopicDaysChart: 'Konu başlıklarına göre gecikme günü',
       noData: 'Veri yok',
       other: 'Diğer',
@@ -35,15 +55,39 @@
       untitledTask: 'Başlıksız görev',
       noOverdueTopicFound: 'Geciken konu başlığı bulunamadı.',
       subjectOwnerLabel: 'Konu sorumlusu',
-      daysOverdueSuffix: 'gün gecikme'
+      daysOverdueSuffix: 'gün gecikme',
+      showMore: 'Fazlasını Göster',
+      showLess: 'Daha Az Göster',
+      monthCreated: 'Açılan',
+      monthCompleted: 'Tamamlanan'
     },
     en: {
       overdueCharts: 'Charts for Overdue Tasks',
+      advancedChartsOverview: 'Professional Analytics Panel',
+      chartsInsightSubtitle: 'Live operational insights from filtered tasks',
+      totalTasksKpi: 'Total Tasks',
+      openTasksKpi: 'Open Tasks',
+      completedTasksKpi: 'Completed',
+      overdueTasksKpi: 'Overdue',
+      urgentTasksKpi: 'Urgent',
+      dueSoonTasksKpi: 'Due Soon (3 days)',
       statusDistributionPie: 'Status Distribution (Pie)',
       departmentDistributionPie: 'Department Distribution (Pie)',
+      openByUserChart: 'Open Tasks by User',
+      completedByUserChart: 'Completed Tasks by User',
       overdueByUserChart: 'Overdue Tasks by User',
       overdueBySubjectOwnerChart: 'Overdue Tasks by Subject Owner',
       urgentOverdueByUserChart: 'Urgent & Overdue Tasks (by User)',
+      dueSoonByUserChart: 'Due Soon (3 days) by User',
+      overdueBucketChart: 'Overdue Aging Buckets',
+      createdVsCompletedTrend: 'Monthly Created vs Completed Trend',
+      topPerformersTitle: 'Top 3 Performers',
+      topPerformersSubtitle: 'Based on completion, on-time delivery and overdue rate',
+      performanceScore: 'Performance score',
+      completionRate: 'Completion rate',
+      onTimeRate: 'On-time delivery',
+      overdueRate: 'Overdue rate',
+      totalAssigned: 'Assigned tasks',
       overdueByTopicDaysChart: 'Overdue Days by Topic Titles',
       noData: 'No data',
       other: 'Other',
@@ -51,15 +95,39 @@
       untitledTask: 'Untitled task',
       noOverdueTopicFound: 'No overdue topic titles found.',
       subjectOwnerLabel: 'Subject owner',
-      daysOverdueSuffix: 'days overdue'
+      daysOverdueSuffix: 'days overdue',
+      showMore: 'Show More',
+      showLess: 'Show Less',
+      monthCreated: 'Created',
+      monthCompleted: 'Completed'
     },
     ar: {
       overdueCharts: 'رسوم المهام المتأخرة',
+      advancedChartsOverview: 'لوحة تحليلات احترافية',
+      chartsInsightSubtitle: 'رؤى تشغيلية مباشرة من بيانات المهام المفلترة',
+      totalTasksKpi: 'إجمالي المهام',
+      openTasksKpi: 'المهام المفتوحة',
+      completedTasksKpi: 'المكتملة',
+      overdueTasksKpi: 'المتأخرة',
+      urgentTasksKpi: 'العاجلة',
+      dueSoonTasksKpi: 'المستحقة قريباً (3 أيام)',
       statusDistributionPie: 'توزيع الحالات (دائري)',
       departmentDistributionPie: 'توزيع الأقسام (دائري)',
+      openByUserChart: 'المهام المفتوحة حسب المستخدم',
+      completedByUserChart: 'المهام المكتملة حسب المستخدم',
       overdueByUserChart: 'المهام المتأخرة حسب المستخدم',
       overdueBySubjectOwnerChart: 'المهام المتأخرة حسب مسؤول الموضوع',
       urgentOverdueByUserChart: 'المهام العاجلة والمتأخرة (حسب المستخدم)',
+      dueSoonByUserChart: 'المهام المستحقة قريباً (3 أيام) حسب المستخدم',
+      overdueBucketChart: 'توزيع عمر التأخير',
+      createdVsCompletedTrend: 'اتجاه المهام المفتوحة مقابل المكتملة شهرياً',
+      topPerformersTitle: 'أفضل 3 أداءً',
+      topPerformersSubtitle: 'حسب الإكمال والتسليم في الوقت ونسبة التأخير',
+      performanceScore: 'نقاط الأداء',
+      completionRate: 'نسبة الإكمال',
+      onTimeRate: 'التسليم في الوقت',
+      overdueRate: 'نسبة التأخير',
+      totalAssigned: 'المهام المسندة',
       overdueByTopicDaysChart: 'أيام التأخير حسب عناوين المواضيع',
       noData: 'لا توجد بيانات',
       other: 'أخرى',
@@ -67,7 +135,11 @@
       untitledTask: 'مهمة بدون عنوان',
       noOverdueTopicFound: 'لا توجد عناوين مواضيع متأخرة.',
       subjectOwnerLabel: 'مسؤول الموضوع',
-      daysOverdueSuffix: 'يوم تأخير'
+      daysOverdueSuffix: 'يوم تأخير',
+      showMore: 'عرض المزيد',
+      showLess: 'عرض أقل',
+      monthCreated: 'مفتوحة',
+      monthCompleted: 'مكتملة'
     }
   };
 
@@ -769,15 +841,60 @@
       </div>
     </div>
   <% } else { %>
-    <div class="card shadow-sm mb-3 tm-kpi-card">
+    <% if (!isOverdueView) { %>
+    <div class="card shadow-sm mb-3 tm-kpi-card tm-charts-hero">
       <div class="card-body">
-        <h2 class="h6 mb-3 d-flex align-items-center gap-2">
-          <i class="bi bi-bar-chart-steps text-primary"></i>
-          <span><%= isOverdueView ? tSafe('overdueCharts') : t('charts') %></span>
+        <h2 class="h5 mb-1 d-flex align-items-center gap-2">
+          <i class="bi bi-graph-up-arrow text-primary"></i>
+          <span><%= isOverdueView ? tSafe('overdueCharts') : tSafe('advancedChartsOverview') %></span>
         </h2>
+        <p class="small text-muted mb-3"><%= tSafe('chartsInsightSubtitle') %></p>
+        <div class="row g-2 tm-metric-grid">
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--total">
+              <div class="tm-metric-title"><%= tSafe('totalTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-total-tasks">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--open">
+              <div class="tm-metric-title"><%= tSafe('openTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-open-tasks">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--completed">
+              <div class="tm-metric-title"><%= tSafe('completedTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-completed-tasks">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--overdue">
+              <div class="tm-metric-title"><%= tSafe('overdueTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-overdue-tasks">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--urgent">
+              <div class="tm-metric-title"><%= tSafe('urgentTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-urgent-tasks">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="tm-metric-card tm-metric-card--soon">
+              <div class="tm-metric-title"><%= tSafe('dueSoonTasksKpi') %></div>
+              <div class="tm-metric-value" id="kpi-due-soon-tasks">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
 
-        <div class="row g-3">
-          <div class="col-md-6">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-pie-chart-fill text-danger"></i>
               <span><%= tSafe('statusDistributionPie') %></span>
@@ -803,10 +920,23 @@
                   <span class="tm-pie-legend-percent" data-status-percent="in_progress">%0</span>
                   <span class="tm-pie-legend-value" data-status="in_progress">0</span>
                 </div>
+                <% if (!isOverdueView) { %>
+                  <div class="tm-pie-legend-item">
+                    <span class="tm-pie-legend-color tm-pie-legend-color--done"></span>
+                    <span class="tm-pie-legend-label"><%= t('status_done') %></span>
+                    <span class="tm-pie-legend-percent" data-status-percent="done">%0</span>
+                    <span class="tm-pie-legend-value" data-status="done">0</span>
+                  </div>
+                <% } %>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
+        </div>
+      </div>
+      <% if (!isOverdueView) { %>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-building text-teal"></i>
               <span><%= tSafe('departmentDistributionPie') %></span>
@@ -829,28 +959,103 @@
               </div>
             </div>
           </div>
-          <div class="col-md-6">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-person-workspace text-primary"></i>
+              <span><%= tSafe('openByUserChart') %></span>
+            </h3>
+            <div id="chart-open-by-user" class="tm-bar-chart"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-check2-circle text-success"></i>
+              <span><%= tSafe('completedByUserChart') %></span>
+            </h3>
+            <div id="chart-completed-by-user" class="tm-bar-chart"></div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-person-lines-fill text-primary"></i>
               <span><%= tSafe('overdueByUserChart') %></span>
             </h3>
             <div id="chart-overdue-by-user" class="tm-bar-chart"></div>
           </div>
-          <div class="col-md-6">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-person-badge text-indigo"></i>
               <span><%= tSafe('overdueBySubjectOwnerChart') %></span>
             </h3>
             <div id="chart-overdue-by-subject" class="tm-bar-chart"></div>
           </div>
-          <div class="col-md-6">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-lightning-charge text-danger"></i>
               <span><%= tSafe('urgentOverdueByUserChart') %></span>
             </h3>
             <div id="chart-overdue-urgent-by-user" class="tm-bar-chart"></div>
           </div>
-          <div class="col-12">
+        </div>
+      </div>
+      <% if (!isOverdueView) { %>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-hourglass-split text-warning"></i>
+              <span><%= tSafe('dueSoonByUserChart') %></span>
+            </h3>
+            <div id="chart-due-soon-by-user" class="tm-bar-chart"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="h6 mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-activity text-primary"></i>
+              <span><%= tSafe('createdVsCompletedTrend') %></span>
+            </h3>
+            <div id="chart-created-completed-trend" class="tm-trend-chart"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="h6 mb-1 d-flex align-items-center gap-2">
+              <i class="bi bi-trophy-fill text-warning"></i>
+              <span><%= tSafe('topPerformersTitle') %></span>
+            </h3>
+            <p class="small text-muted mb-3"><%= tSafe('topPerformersSubtitle') %></p>
+            <div id="top-performers-board" class="tm-top-performers-board"></div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
             <h3 class="h6 mb-2 d-flex align-items-center gap-2">
               <i class="bi bi-journal-text text-primary"></i>
               <span><%= tSafe('overdueByTopicDaysChart') %></span>
@@ -989,10 +1194,11 @@
 </script>
 
 <script>
-  // Grafikler sekmesi: geciken görevlerden basit bar chart'lar üret
+  // Grafikler sekmesi: profesyonel KPI + çoklu grafik senaryoları
   (function() {
     const params = new URLSearchParams(window.location.search);
     const isChartsTab = (params.get('tab') || 'reports') === 'charts';
+    const isOverdueMode = <%= isOverdueView ? 'true' : 'false' %>;
     if (!isChartsTab) return;
 
     const tasks = <%- JSON.stringify(tasks || []) %>;
@@ -1002,13 +1208,86 @@
       statusLabel: t('status'),
       statusPending: t('status_pending'),
       statusInProgress: t('status_in_progress'),
+      statusDone: t('status_done'),
       loading: tSafe('loading'),
       untitledTask: tSafe('untitledTask'),
       noOverdueTopicFound: tSafe('noOverdueTopicFound'),
       subjectOwnerLabel: tSafe('subjectOwnerLabel'),
-      daysOverdueSuffix: tSafe('daysOverdueSuffix')
+      daysOverdueSuffix: tSafe('daysOverdueSuffix'),
+      showMore: tSafe('showMore'),
+      showLess: tSafe('showLess'),
+      monthCreated: tSafe('monthCreated'),
+      monthCompleted: tSafe('monthCompleted'),
+      performanceScore: tSafe('performanceScore'),
+      completionRate: tSafe('completionRate'),
+      onTimeRate: tSafe('onTimeRate'),
+      overdueRate: tSafe('overdueRate'),
+      totalAssigned: tSafe('totalAssigned')
     }) %>;
     if (!Array.isArray(tasks) || !tasks.length) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    function parseDate(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function isDone(task) {
+      return task && task.status === 'done';
+    }
+
+    function isOpen(task) {
+      return task && !isDone(task);
+    }
+
+    function isUrgent(task) {
+      return (
+        task &&
+        (task.acil === true ||
+          task.acil === 'true' ||
+          task.acil === 't' ||
+          task.acil === 1 ||
+          task.acil === '1')
+      );
+    }
+
+    function getOverdueDays(task) {
+      if (!task || isDone(task)) return 0;
+      const deadline = parseDate(task.deadline);
+      if (!deadline) return 0;
+      const diffMs = today.getTime() - deadline.getTime();
+      return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    function isOverdue(task) {
+      return getOverdueDays(task) > 0;
+    }
+
+    function isDueSoon(task, dayLimit = 3) {
+      if (!task || isDone(task)) return false;
+      const deadline = parseDate(task.deadline);
+      if (!deadline) return false;
+      const diffDays = Math.floor((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= dayLimit;
+    }
+
+    function safeLabel(value) {
+      return (String(value || '').trim() || i18n.other);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     function easeOutCubic(x) {
       return 1 - Math.pow(1 - x, 3);
@@ -1044,23 +1323,11 @@
       requestAnimationFrame(step);
     }
 
-    function aggregateBy(tasks, key) {
+    function aggregateBy(tasks, key, predicate) {
       const map = new Map();
       tasks.forEach(t => {
-        // Sadece geciken görevler sayfasında zaten filtreli geliyor;
-        // genel raporlarda da kullanılırsa, deadline < bugün ve done olmayanları say.
-        const isDone = t.status === 'done';
-        const hasDeadline = !!t.deadline;
-        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
-        const isOverdue =
-          hasDeadline &&
-          !isDone &&
-          !Number.isNaN(deadlineDate.getTime()) &&
-          deadlineDate < new Date();
-
-        if (!isOverdue) return;
-
-        const label = (t[key] || '').trim() || i18n.other;
+        if (typeof predicate === 'function' && !predicate(t)) return;
+        const label = safeLabel(t[key]);
         map.set(label, (map.get(label) || 0) + 1);
       });
       return Array.from(map.entries())
@@ -1069,37 +1336,32 @@
         .slice(0, 15);
     }
 
-    function aggregateUrgentOverdueByUser(tasks) {
-      const map = new Map();
-      tasks.forEach(t => {
-        const isDone = t.status === 'done';
-        const acil =
-          t.acil === true ||
-          t.acil === 'true' ||
-          t.acil === 't' ||
-          t.acil === 1 ||
-          t.acil === '1';
+    function renderKpis() {
+      const kpis = {
+        total: tasks.length,
+        open: tasks.filter(isOpen).length,
+        completed: tasks.filter(isDone).length,
+        overdue: tasks.filter(isOverdue).length,
+        urgent: tasks.filter(isUrgent).length,
+        dueSoon: tasks.filter(t => isDueSoon(t, 3)).length
+      };
 
-        const hasDeadline = !!t.deadline;
-        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
-        const isOverdue =
-          hasDeadline &&
-          !isDone &&
-          !Number.isNaN(deadlineDate.getTime()) &&
-          deadlineDate < new Date();
+      const idMap = {
+        total: 'kpi-total-tasks',
+        open: 'kpi-open-tasks',
+        completed: 'kpi-completed-tasks',
+        overdue: 'kpi-overdue-tasks',
+        urgent: 'kpi-urgent-tasks',
+        dueSoon: 'kpi-due-soon-tasks'
+      };
 
-        if (!isOverdue || !acil) return;
-
-        const label = (t.assigned_username || '').trim() || i18n.other;
-        map.set(label, (map.get(label) || 0) + 1);
+      Object.keys(idMap).forEach(key => {
+        const el = document.getElementById(idMap[key]);
+        if (el) el.textContent = String(kpis[key] || 0);
       });
-      return Array.from(map.entries())
-        .map(([label, value]) => ({ label, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 15);
     }
 
-    function renderBarChart(containerId, items, { overdue = false, urgent = false } = {}) {
+    function renderBarChart(containerId, items, { variant = 'default' } = {}) {
       const container = document.getElementById(containerId);
       if (!container) return;
       if (!items.length) {
@@ -1116,13 +1378,7 @@
         return list
           .map(item => {
             const widthPercent = maxVal > 0 ? (item.value / maxVal) * 100 : 0;
-            const classes = [
-              'tm-bar-row-fill',
-              overdue ? 'tm-bar-row-fill--overdue' : '',
-              urgent ? 'tm-bar-row-fill--urgent' : ''
-            ]
-              .filter(Boolean)
-              .join(' ');
+            const classes = `tm-bar-row-fill tm-bar-row-fill--${variant}`;
             return `
               <div class="tm-bar-row">
                 <div class="tm-bar-row-label" title="${item.label}">
@@ -1145,7 +1401,7 @@
       if (moreThanFive) {
         html += `
           <button type="button" class="btn btn-link btn-sm px-0 mt-2 tm-bar-chart-toggle">
-            Fazlasını Göster
+            ${i18n.showMore}
           </button>
         `;
       }
@@ -1214,48 +1470,44 @@
               bodyEl.innerHTML = createRows(visibleItems);
               animateBarsWhenVisible(bodyEl);
               bodyEl.setAttribute('data-expanded', 'false');
-              toggleBtn.textContent = 'Fazlasını Göster';
+              toggleBtn.textContent = i18n.showMore;
             } else {
               bodyEl.innerHTML = createRows(items);
               animateBarsWhenVisible(bodyEl);
               bodyEl.setAttribute('data-expanded', 'true');
-              toggleBtn.textContent = 'Daha Az Göster';
+              toggleBtn.textContent = i18n.showLess;
             }
           });
         }
       }
     }
 
-    const overdueByUser = aggregateBy(tasks, 'assigned_username');
-    const overdueBySubject = aggregateBy(tasks, 'konu_sorumlusu_username');
-    const overdueByDepartment = aggregateBy(tasks, 'departman');
-    const overdueUrgentByUser = aggregateUrgentOverdueByUser(tasks);
+    const openByUser = aggregateBy(tasks, 'assigned_username', t => isOpen(t));
+    const completedByUser = aggregateBy(tasks, 'assigned_username', t => isDone(t));
+    const overdueByUser = aggregateBy(tasks, 'assigned_username', t => isOverdue(t));
+    const overdueBySubject = aggregateBy(tasks, 'konu_sorumlusu_username', t => isOverdue(t));
+    const allByDepartment = aggregateBy(tasks, 'departman', () => true);
+    const dueSoonByUser = aggregateBy(tasks, 'assigned_username', t => isDueSoon(t, 3));
+    const overdueUrgentByUser = aggregateBy(tasks, 'assigned_username', t => isOverdue(t) && isUrgent(t));
 
     // Pasta grafiği için durumlara göre say
     const statusCounts = tasks.reduce(
       (acc, t) => {
-        const isDone = t.status === 'done';
-        const hasDeadline = !!t.deadline;
-        const deadlineDate = hasDeadline ? new Date(t.deadline) : null;
-        const isOverdue =
-          hasDeadline &&
-          !isDone &&
-          !Number.isNaN(deadlineDate.getTime()) &&
-          deadlineDate < new Date();
-        if (!isOverdue) return acc;
-
         if (t.status === 'pending') acc.pending += 1;
         if (t.status === 'in_progress') acc.in_progress += 1;
+        if (!isOverdueMode && t.status === 'done') acc.done += 1;
         return acc;
       },
-      { pending: 0, in_progress: 0 }
+      { pending: 0, in_progress: 0, done: 0 }
     );
 
     function renderStatusPie() {
       const wrap = document.getElementById('chart-overdue-by-status-pie');
       if (!wrap) return;
 
-      const total = statusCounts.pending + statusCounts.in_progress;
+      const total = isOverdueMode
+        ? statusCounts.pending + statusCounts.in_progress
+        : statusCounts.pending + statusCounts.in_progress + statusCounts.done;
       const ringEl = wrap.querySelector('.tm-pie-modern-ring');
       const centerValEl = wrap.querySelector('.tm-pie-modern-total');
       const pendingEl = wrap.querySelector(
@@ -1270,14 +1522,23 @@
       const inProgPercentEl = wrap.querySelector(
         '.tm-pie-legend-percent[data-status-percent="in_progress"]'
       );
+      const doneEl = wrap.querySelector(
+        '.tm-pie-legend-value[data-status="done"]'
+      );
+      const donePercentEl = wrap.querySelector(
+        '.tm-pie-legend-percent[data-status-percent="done"]'
+      );
 
       if (centerValEl) centerValEl.textContent = String(total);
       if (pendingEl) pendingEl.textContent = String(statusCounts.pending);
       if (inProgEl) inProgEl.textContent = String(statusCounts.in_progress);
+      if (doneEl) doneEl.textContent = String(statusCounts.done);
       const pendingPct = total ? Math.round((statusCounts.pending / total) * 100) : 0;
       const inProgPct = total ? Math.round((statusCounts.in_progress / total) * 100) : 0;
+      const donePct = total ? Math.round((statusCounts.done / total) * 100) : 0;
       if (pendingPercentEl) pendingPercentEl.textContent = `%${pendingPct}`;
       if (inProgPercentEl) inProgPercentEl.textContent = `%${inProgPct}`;
+      if (donePercentEl) donePercentEl.textContent = `%${donePct}`;
 
       if (!ringEl) return;
       if (!total) {
@@ -1287,15 +1548,28 @@
       }
 
       const pendingDeg = (statusCounts.pending / total) * 360;
-      const inProgDeg = 360 - pendingDeg;
-      animateConicGradient(
-        ringEl,
-        [
-          { color: '#facc15', angle: pendingDeg },
-          { color: '#3b82f6', angle: inProgDeg }
-        ],
-        900
-      );
+      const inProgDeg = (statusCounts.in_progress / total) * 360;
+      if (isOverdueMode) {
+        animateConicGradient(
+          ringEl,
+          [
+            { color: '#facc15', angle: pendingDeg },
+            { color: '#3b82f6', angle: 360 - pendingDeg }
+          ],
+          900
+        );
+      } else {
+        const doneDeg = 360 - pendingDeg - inProgDeg;
+        animateConicGradient(
+          ringEl,
+          [
+            { color: '#facc15', angle: pendingDeg },
+            { color: '#3b82f6', angle: inProgDeg },
+            { color: '#22c55e', angle: doneDeg }
+          ],
+          900
+        );
+      }
     }
 
     function renderDepartmentPie(items) {
@@ -1372,22 +1646,157 @@
       legendEl.innerHTML = legendRows.join('');
     }
 
+    function renderTrendChart() {
+      const container = document.getElementById('chart-created-completed-trend');
+      if (!container) return;
+
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+        months.push({ key, label, created: 0, completed: 0 });
+      }
+
+      const monthMap = new Map(months.map(m => [m.key, m]));
+      const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+      tasks.forEach(t => {
+        const createdAt = parseDate(t.created_at);
+        const completedAt = parseDate(t.completed_at);
+        if (createdAt) {
+          const target = monthMap.get(toKey(createdAt));
+          if (target) target.created += 1;
+        }
+        if (completedAt) {
+          const target = monthMap.get(toKey(completedAt));
+          if (target) target.completed += 1;
+        }
+      });
+
+      const maxVal = Math.max(
+        1,
+        ...months.map(m => Math.max(m.created, m.completed))
+      );
+
+      container.innerHTML = `
+        <div class="tm-trend-grid">
+          ${months.map(m => {
+            const createdPct = (m.created / maxVal) * 100;
+            const completedPct = (m.completed / maxVal) * 100;
+            return `
+              <div class="tm-trend-col">
+                <div class="tm-trend-bars">
+                  <div class="tm-trend-bar tm-trend-bar--created" style="height:${createdPct}%;" title="${i18n.monthCreated}: ${m.created}"></div>
+                  <div class="tm-trend-bar tm-trend-bar--completed" style="height:${completedPct}%;" title="${i18n.monthCompleted}: ${m.completed}"></div>
+                </div>
+                <div class="tm-trend-label">${m.label}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="tm-trend-legend">
+          <span><i class="bi bi-square-fill text-primary"></i> ${i18n.monthCreated}</span>
+          <span><i class="bi bi-square-fill text-success"></i> ${i18n.monthCompleted}</span>
+        </div>
+      `;
+    }
+
+    function renderTopPerformers() {
+      const container = document.getElementById('top-performers-board');
+      if (!container) return;
+
+      const byUser = new Map();
+      tasks.forEach(t => {
+        const user = safeLabel(t.assigned_username);
+        if (!byUser.has(user)) {
+          byUser.set(user, {
+            user,
+            total: 0,
+            completed: 0,
+            open: 0,
+            overdue: 0,
+            onTimeCompleted: 0
+          });
+        }
+        const stat = byUser.get(user);
+        stat.total += 1;
+        if (isDone(t)) {
+          stat.completed += 1;
+          const deadline = parseDate(t.deadline);
+          const completedAt = parseDate(t.completed_at);
+          if (deadline && completedAt && completedAt.getTime() <= deadline.getTime()) {
+            stat.onTimeCompleted += 1;
+          }
+        } else {
+          stat.open += 1;
+          if (isOverdue(t)) stat.overdue += 1;
+        }
+      });
+
+      const ranked = Array.from(byUser.values())
+        .map(s => {
+          const completionRate = s.total ? Math.round((s.completed / s.total) * 100) : 0;
+          const onTimeRate = s.completed ? Math.round((s.onTimeCompleted / s.completed) * 100) : 0;
+          const overdueRate = s.open ? Math.round((s.overdue / s.open) * 100) : 0;
+          const score = Math.round((completionRate * 0.55) + (onTimeRate * 0.25) + ((100 - overdueRate) * 0.20));
+          return { ...s, completionRate, onTimeRate, overdueRate, score };
+        })
+        .sort((a, b) => b.score - a.score || b.completed - a.completed || a.overdue - b.overdue)
+        .slice(0, 3);
+
+      if (!ranked.length) {
+        container.innerHTML = `<p class="small text-muted mb-0">${i18n.noData}</p>`;
+        return;
+      }
+
+      const medals = ['🥇', '🥈', '🥉'];
+      container.innerHTML = `
+        <div class="tm-top3-grid">
+          ${ranked.map((r, idx) => `
+            <div class="tm-top3-card">
+              <div class="tm-top3-head">
+                <span class="tm-top3-medal">${medals[idx] || '#' + (idx + 1)}</span>
+                <div class="tm-top3-user-wrap">
+                  <div class="tm-top3-user">${escapeHtml(r.user)}</div>
+                  <div class="tm-top3-score">${i18n.performanceScore}: ${r.score}</div>
+                </div>
+              </div>
+              <div class="tm-top3-stats">
+                <span class="tm-top3-stat">${i18n.totalAssigned}: <b>${r.total}</b></span>
+                <span class="tm-top3-stat">${i18n.completionRate}: <b>%${r.completionRate}</b></span>
+                <span class="tm-top3-stat">${i18n.onTimeRate}: <b>%${r.onTimeRate}</b></span>
+                <span class="tm-top3-stat">${i18n.overdueRate}: <b>%${r.overdueRate}</b></span>
+              </div>
+              <div class="tm-top3-bars">
+                <div class="tm-top3-bar-row">
+                  <span>${i18n.completionRate}</span>
+                  <div class="tm-top3-track"><div class="tm-top3-fill tm-top3-fill--completion" style="width:${r.completionRate}%"></div></div>
+                </div>
+                <div class="tm-top3-bar-row">
+                  <span>${i18n.onTimeRate}</span>
+                  <div class="tm-top3-track"><div class="tm-top3-fill tm-top3-fill--ontime" style="width:${r.onTimeRate}%"></div></div>
+                </div>
+                <div class="tm-top3-bar-row">
+                  <span>${i18n.overdueRate}</span>
+                  <div class="tm-top3-track"><div class="tm-top3-fill tm-top3-fill--overdue" style="width:${r.overdueRate}%"></div></div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     function renderOverdueTopicDays() {
       const container = document.getElementById('overdue-topic-days-list');
       if (!container) return;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       const rows = tasks
         .map(t => {
-          if (!t || t.status === 'done' || !t.deadline) return null;
-          const deadline = new Date(t.deadline);
-          if (Number.isNaN(deadline.getTime())) return null;
-          deadline.setHours(0, 0, 0, 0);
-
-          const diffMs = today.getTime() - deadline.getTime();
-          const overdueDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          if (!t || t.status === 'done') return null;
+          const overdueDays = getOverdueDays(t);
           if (overdueDays <= 0) return null;
 
           return {
@@ -1413,57 +1822,114 @@
         return;
       }
 
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
+      const topRows = rows.slice(0, 20);
+      if (isOverdueMode) {
+        container.innerHTML = topRows
+          .map(row => {
+            return `
+              <div class="d-flex align-items-center justify-content-between gap-2 border rounded-3 px-2 py-2 bg-light mb-2">
+                <div class="d-flex flex-column" style="min-width: 0;">
+                  <a
+                    href="/admin/tasks/${row.id}"
+                    class="small fw-semibold text-truncate text-decoration-none text-dark"
+                    style="min-width: 0;"
+                    title="${escapeHtml(row.title)}"
+                  >
+                    ${escapeHtml(row.title)}
+                  </a>
+                  <div class="small text-muted d-flex flex-wrap gap-2 align-items-center" style="min-width: 0;">
+                    <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
+                      ${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}
+                    </span>
+                    <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.statusLabel)}: ${escapeHtml(row.statusText)}">
+                      ${escapeHtml(i18n.statusLabel)}:
+                      <span class="badge status-${escapeHtml(row.status)}">${escapeHtml(row.statusText)}</span>
+                    </span>
+                  </div>
+                </div>
+                <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
+              </div>
+            `;
+          })
+          .join('');
+        return;
       }
 
-      const topRows = rows.slice(0, 20);
-      container.innerHTML = topRows
-        .map(row => {
-          return `
-            <div class="d-flex align-items-center justify-content-between gap-2 border rounded-3 px-2 py-2 bg-light mb-2">
-              <div class="d-flex flex-column" style="min-width: 0;">
-                <a
-                  href="/admin/tasks/${row.id}"
-                  class="small fw-semibold text-truncate text-decoration-none text-dark"
-                  style="min-width: 0;"
-                  title="${escapeHtml(row.title)}"
-                >
-                  ${escapeHtml(row.title)}
-                </a>
-                <div class="small text-muted d-flex flex-wrap gap-2 align-items-center" style="min-width: 0;">
-                  <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
-                    ${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}
-                  </span>
-                  <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.statusLabel)}: ${escapeHtml(row.statusText)}">
-                    ${escapeHtml(i18n.statusLabel)}:
-                    <span class="badge status-${escapeHtml(row.status)}">${escapeHtml(row.statusText)}</span>
-                  </span>
+      const totalOverdue = rows.length;
+      const maxOverdue = rows[0] ? rows[0].overdueDays : 0;
+      const avgOverdue = totalOverdue
+        ? Math.round(rows.reduce((sum, r) => sum + r.overdueDays, 0) / totalOverdue)
+        : 0;
+
+      container.innerHTML = `
+        <div class="tm-overdue-pro-summary">
+          <div class="tm-overdue-pro-stat">
+            <span class="tm-overdue-pro-stat-label">Toplam geciken</span>
+            <span class="tm-overdue-pro-stat-value">${totalOverdue}</span>
+          </div>
+          <div class="tm-overdue-pro-stat">
+            <span class="tm-overdue-pro-stat-label">Ortalama gecikme</span>
+            <span class="tm-overdue-pro-stat-value">${avgOverdue} gün</span>
+          </div>
+          <div class="tm-overdue-pro-stat">
+            <span class="tm-overdue-pro-stat-label">Maksimum gecikme</span>
+            <span class="tm-overdue-pro-stat-value">${maxOverdue} gün</span>
+          </div>
+        </div>
+        <div class="tm-overdue-pro-list">
+          ${topRows.map((row, idx) => {
+            const width = maxOverdue > 0 ? Math.max(8, Math.round((row.overdueDays / maxOverdue) * 100)) : 8;
+            return `
+              <div class="tm-overdue-pro-row">
+                <div class="tm-overdue-pro-rank">#${idx + 1}</div>
+                <div class="tm-overdue-pro-main">
+                  <a
+                    href="/admin/tasks/${row.id}"
+                    class="tm-overdue-pro-title"
+                    title="${escapeHtml(row.title)}"
+                  >
+                    ${escapeHtml(row.title)}
+                  </a>
+                  <div class="tm-overdue-pro-meta">
+                    <span class="tm-overdue-pro-chip">
+                      <i class="bi bi-person-badge"></i>
+                      ${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}
+                    </span>
+                    <span class="tm-overdue-pro-chip">
+                      <i class="bi bi-flag"></i>
+                      ${escapeHtml(i18n.statusLabel)}:
+                      <span class="badge status-${escapeHtml(row.status)}">${escapeHtml(row.statusText)}</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="tm-overdue-pro-right">
+                  <span class="tm-overdue-pro-days">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
+                  <div class="tm-overdue-pro-track">
+                    <div class="tm-overdue-pro-fill" style="width:${width}%"></div>
+                  </div>
                 </div>
               </div>
-              <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
-            </div>
-          `;
-        })
-        .join('');
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
-    renderBarChart('chart-overdue-by-user', overdueByUser, { overdue: true });
-    renderBarChart('chart-overdue-by-subject', overdueBySubject, {
-      overdue: true
-    });
-    renderDepartmentPie(overdueByDepartment);
-    renderBarChart('chart-overdue-urgent-by-user', overdueUrgentByUser, {
-      overdue: true,
-      urgent: true
-    });
-
+    if (!isOverdueMode) {
+      renderKpis();
+    }
+    renderBarChart('chart-open-by-user', openByUser, { variant: 'open' });
+    renderBarChart('chart-completed-by-user', completedByUser, { variant: 'completed' });
+    renderBarChart('chart-overdue-by-user', overdueByUser, { variant: 'overdue' });
+    renderBarChart('chart-overdue-by-subject', overdueBySubject, { variant: 'overdue' });
+    renderDepartmentPie(allByDepartment);
+    renderBarChart('chart-overdue-urgent-by-user', overdueUrgentByUser, { variant: 'urgent' });
+    renderBarChart('chart-due-soon-by-user', dueSoonByUser, { variant: 'soon' });
     renderStatusPie();
+    if (!isOverdueMode) {
+      renderTrendChart();
+      renderTopPerformers();
+    }
     renderOverdueTopicDays();
   })();
 </script>
@@ -1980,6 +2446,422 @@
     height: 100%;
     object-fit: cover;
     border-radius: 999px;
+  }
+  .tm-charts-hero {
+    border: 1px solid rgba(59, 130, 246, 0.12);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(255, 255, 255, 0.95));
+  }
+  /* Global .tm-metric-grid in style.css uses CSS grid; charts header needs bootstrap row behavior */
+  .tm-charts-hero .tm-metric-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .tm-metric-card {
+    border-radius: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+    min-height: 84px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .tm-metric-title {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .tm-metric-value {
+    font-size: 1.35rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+  .tm-metric-card--total { border-left: 4px solid #334155; }
+  .tm-metric-card--open { border-left: 4px solid #3b82f6; }
+  .tm-metric-card--completed { border-left: 4px solid #22c55e; }
+  .tm-metric-card--overdue { border-left: 4px solid #ef4444; }
+  .tm-metric-card--urgent { border-left: 4px solid #f97316; }
+  .tm-metric-card--soon { border-left: 4px solid #f59e0b; }
+
+  .tm-pie-modern {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 12px;
+    position: relative;
+  }
+  .tm-pie-modern-ring {
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: conic-gradient(#e5e7eb 0deg 360deg);
+  }
+  .tm-pie-modern-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60%;
+    height: 60%;
+    right: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+  }
+  .tm-pie-modern-total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .tm-pie-modern-total-label {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .tm-pie-modern-legend {
+    display: grid;
+    gap: 8px;
+  }
+  .tm-pie-legend-item {
+    display: grid;
+    grid-template-columns: 14px 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.82rem;
+  }
+  .tm-pie-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #94a3b8;
+  }
+  .tm-pie-legend-color--pending { background: #facc15; }
+  .tm-pie-legend-color--inprogress { background: #3b82f6; }
+  .tm-pie-legend-color--done { background: #22c55e; }
+  .tm-pie-legend-label {
+    color: #334155;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tm-pie-legend-percent {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .tm-pie-legend-value {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .tm-bar-row {
+    display: grid;
+    grid-template-columns: minmax(100px, 180px) minmax(120px, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .tm-bar-row-label {
+    font-size: 0.82rem;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tm-bar-row-track {
+    height: 12px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .tm-bar-row-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+  .tm-bar-row-fill--default { background: #64748b; }
+  .tm-bar-row-fill--open { background: #3b82f6; }
+  .tm-bar-row-fill--completed { background: #22c55e; }
+  .tm-bar-row-fill--overdue { background: #ef4444; }
+  .tm-bar-row-fill--urgent { background: #f97316; }
+  .tm-bar-row-fill--soon { background: #f59e0b; }
+  .tm-bar-row-value {
+    font-size: 0.82rem;
+    color: #0f172a;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: end;
+  }
+
+  .tm-trend-chart {
+    min-height: 240px;
+  }
+  .tm-trend-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(60px, 1fr));
+    gap: 12px;
+    align-items: end;
+    min-height: 200px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+  }
+  .tm-trend-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tm-trend-bars {
+    width: 100%;
+    min-height: 150px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 5px;
+  }
+  .tm-trend-bar {
+    border-radius: 8px 8px 0 0;
+    min-height: 2px;
+  }
+  .tm-trend-bar--created { background: #3b82f6; }
+  .tm-trend-bar--completed { background: #22c55e; }
+  .tm-trend-label {
+    font-size: 0.74rem;
+    color: #64748b;
+  }
+  .tm-trend-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: #334155;
+  }
+  .tm-overdue-pro-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .tm-overdue-pro-stat {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tm-overdue-pro-stat-label {
+    font-size: 0.74rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+  .tm-overdue-pro-stat-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .tm-overdue-pro-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tm-overdue-pro-row {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) minmax(170px, 220px);
+    gap: 10px;
+    align-items: center;
+  }
+  .tm-overdue-pro-rank {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.78rem;
+  }
+  .tm-overdue-pro-main {
+    min-width: 0;
+  }
+  .tm-overdue-pro-title {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .tm-overdue-pro-title:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+  .tm-overdue-pro-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tm-overdue-pro-chip {
+    font-size: 0.74rem;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tm-overdue-pro-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .tm-overdue-pro-days {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #b91c1c;
+    align-self: flex-end;
+  }
+  .tm-overdue-pro-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .tm-overdue-pro-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fb7185, #ef4444);
+  }
+  .tm-top3-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .tm-top3-card {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 14px;
+    padding: 10px;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+  }
+  .tm-top3-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .tm-top3-medal {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .tm-top3-user-wrap {
+    min-width: 0;
+  }
+  .tm-top3-user {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tm-top3-score {
+    font-size: 0.74rem;
+    color: #475569;
+    font-weight: 600;
+  }
+  .tm-top3-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .tm-top3-stat {
+    font-size: 0.73rem;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px 6px;
+  }
+  .tm-top3-stat b {
+    color: #0f172a;
+  }
+  .tm-top3-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .tm-top3-bar-row {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .tm-top3-bar-row span {
+    font-size: 0.72rem;
+    color: #64748b;
+  }
+  .tm-top3-track {
+    height: 7px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .tm-top3-fill {
+    height: 100%;
+    border-radius: 999px;
+  }
+  .tm-top3-fill--completion { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .tm-top3-fill--ontime { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .tm-top3-fill--overdue { background: linear-gradient(90deg, #fb7185, #ef4444); }
+  @media (max-width: 767.98px) {
+    .tm-metric-card {
+      min-height: 76px;
+      padding: 8px 10px;
+    }
+    .tm-metric-value {
+      font-size: 1.15rem;
+    }
+    .tm-overdue-pro-summary {
+      grid-template-columns: 1fr;
+    }
+    .tm-overdue-pro-row {
+      grid-template-columns: 40px minmax(0, 1fr);
+    }
+    .tm-overdue-pro-right {
+      grid-column: 1 / -1;
+    }
+    .tm-overdue-pro-days {
+      align-self: flex-start;
+    }
+    .tm-top3-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 

@@ -361,7 +361,7 @@ const STRINGS = {
     overdueByUserChart: 'Kişiye göre geciken görevler',
     overdueBySubjectOwnerChart: 'Konu sorumlusuna göre geciken görevler',
     urgentOverdueByUserChart: 'Acil & geciken görevler (kişiye göre)',
-    overdueByTopicDaysChart: 'Konu başlıklarına göre gecikme günü',
+    overdueByTopicDaysChart: 'Geciken görevlerin listesi',
     subjectOwnerLabel: 'Konu sorumlusu',
     daysOverdueSuffix: 'gün gecikme',
     noOverdueTopicFound: 'Geciken konu başlığı bulunamadı.',
