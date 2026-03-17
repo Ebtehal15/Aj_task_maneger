@@ -1736,6 +1736,8 @@
       });
 
       const ranked = Array.from(byUser.values())
+        // Top 3 değerlendirmesine sadece belirli hacmin üstündeki kullanıcıları al
+        .filter(s => s.total > 18 || s.completed > 18)
         .map(s => {
           const completionRate = s.total ? Math.round((s.completed / s.total) * 100) : 0;
           const onTimeRate = s.completed ? Math.round((s.onTimeCompleted / s.completed) * 100) : 0;
