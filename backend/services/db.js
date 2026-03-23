@@ -356,6 +356,16 @@ async function initSchema() {
       )
     `);
 
+    // Geciken görevler raporu: görev kaydını değiştirmeden, sadece bu sayfada gösterilen notlar
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS task_overdue_list_notes (
+        task_id INTEGER PRIMARY KEY REFERENCES tasks(id) ON DELETE CASCADE,
+        note TEXT NOT NULL DEFAULT '',
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
     // Create indexes for better performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);

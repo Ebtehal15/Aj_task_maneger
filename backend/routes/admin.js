@@ -764,6 +764,71 @@ router.get('/reports', async (req, res) => {
   }
 });
 
+/** Geciken görevler listesi: görev kaydındaki açıklamayı değiştirmeden tutulan notlar */
+router.get('/reports/overdue-notes', async (req, res) => {
+  const raw = req.query.taskIds || '';
+  const ids = String(raw)
+    .split(',')
+    .map((x) => parseInt(String(x).trim(), 10))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  if (!ids.length) {
+    return res.json({ notes: {} });
+  }
+  try {
+    const r = await pool.query(
+      `SELECT n.task_id, n.note, n.updated_at, u.username AS updated_by_username
+       FROM task_overdue_list_notes n
+       LEFT JOIN users u ON n.updated_by = u.id
+       WHERE n.task_id = ANY($1::int[])`,
+      [ids]
+    );
+    const notes = {};
+    r.rows.forEach((row) => {
+      notes[String(row.task_id)] = {
+        note: row.note != null ? String(row.note) : '',
+        updatedByUsername: row.updated_by_username ? String(row.updated_by_username) : '',
+        updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : ''
+      };
+    });
+    res.json({ notes });
+  } catch (err) {
+    console.error('overdue-notes GET', err);
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
+router.put('/reports/overdue-notes/:taskId', async (req, res) => {
+  const taskId = parseInt(req.params.taskId, 10);
+  if (!Number.isInteger(taskId) || taskId <= 0) {
+    return res.status(400).json({ error: 'invalid_task_id' });
+  }
+  const note =
+    typeof req.body?.note === 'string' ? req.body.note.slice(0, 4000) : '';
+  try {
+    const taskCheck = await pool.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
+    if (!taskCheck.rowCount) {
+      return res.status(404).json({ error: 'task_not_found' });
+    }
+    await pool.query(
+      `INSERT INTO task_overdue_list_notes (task_id, note, updated_at, updated_by)
+       VALUES ($1, $2, NOW(), $3)
+       ON CONFLICT (task_id) DO UPDATE SET
+         note = EXCLUDED.note,
+         updated_at = NOW(),
+         updated_by = EXCLUDED.updated_by`,
+      [taskId, note, req.user.id]
+    );
+    res.json({
+      ok: true,
+      updatedByUsername: req.user.username || '',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('overdue-notes PUT', err);
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
 // Upload temporary Excel file for sharing
 router.post('/reports/upload-temp', async (req, res) => {
   try {

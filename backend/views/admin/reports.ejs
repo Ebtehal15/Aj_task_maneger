@@ -54,12 +54,30 @@
       loading: 'Yükleniyor...',
       untitledTask: 'Başlıksız görev',
       noOverdueTopicFound: 'Geciken konu başlığı bulunamadı.',
+      overdueListSubviewTasks: 'Geciken görevler',
+      overdueListSubviewReasons: 'Gecikme sebepleri',
+      overdueListNoteLabel: 'Gecikme sebebi',
+      overdueListNoteAdd: 'Not ekle',
+      overdueListNoteEdit: 'Düzenle',
+      overdueListNoteCancel: 'İptal',
+      overdueListNoteBy: 'Kaydeden',
+      overdueListNoteShow: 'Notu gör',
+      overdueListNoteHide: 'Notu gizle',
+      overdueListNotePlaceholder: 'Notunuzu yazın…',
+      overdueListNoteSaved: 'Kaydedildi.',
+      overdueListNoteSaveError: 'Kaydedilemedi. Tekrar deneyin.',
       subjectOwnerLabel: 'Konu sorumlusu',
       daysOverdueSuffix: 'gün gecikme',
       showMore: 'Fazlasını Göster',
       showLess: 'Daha Az Göster',
       monthCreated: 'Açılan',
-      monthCompleted: 'Tamamlanan'
+      monthCompleted: 'Tamamlanan',
+      translate: 'Çevir',
+      translateNoText: 'Çevrilecek metin yok.',
+      translateFailed: 'Çeviri başarısız oldu.',
+      translateError: 'Çeviri sırasında hata oluştu.',
+      translateUnchanged:
+        'Metin değişmedi. Çeviri servisi engellenmiş olabilir veya metin zaten hedef dilde olabilir. Sunucu konsolunda [translate] kayıtlarına bakın.'
     },
     en: {
       overdueCharts: 'Charts for Overdue Tasks',
@@ -94,12 +112,30 @@
       loading: 'Loading...',
       untitledTask: 'Untitled task',
       noOverdueTopicFound: 'No overdue topic titles found.',
+      overdueListSubviewTasks: 'Overdue tasks',
+      overdueListSubviewReasons: 'Delay reasons',
+      overdueListNoteLabel: 'Delay reason',
+      overdueListNoteAdd: 'Add note',
+      overdueListNoteEdit: 'Edit',
+      overdueListNoteCancel: 'Cancel',
+      overdueListNoteBy: 'Saved by',
+      overdueListNoteShow: 'View note',
+      overdueListNoteHide: 'Hide note',
+      overdueListNotePlaceholder: 'Write your note…',
+      overdueListNoteSaved: 'Saved.',
+      overdueListNoteSaveError: 'Could not save. Try again.',
       subjectOwnerLabel: 'Subject owner',
       daysOverdueSuffix: 'days overdue',
       showMore: 'Show More',
       showLess: 'Show Less',
       monthCreated: 'Created',
-      monthCompleted: 'Completed'
+      monthCompleted: 'Completed',
+      translate: 'Translate',
+      translateNoText: 'No text to translate.',
+      translateFailed: 'Translation failed.',
+      translateError: 'An error occurred while translating.',
+      translateUnchanged:
+        'The text did not change. The service may be blocked, or the text may already match the target language. Check the server console for [translate] messages.'
     },
     ar: {
       overdueCharts: 'رسوم المهام المتأخرة',
@@ -134,12 +170,30 @@
       loading: 'جاري التحميل...',
       untitledTask: 'مهمة بدون عنوان',
       noOverdueTopicFound: 'لا توجد عناوين مواضيع متأخرة.',
+      overdueListSubviewTasks: 'المهام المتأخرة',
+      overdueListSubviewReasons: 'أسباب التأخير',
+      overdueListNoteLabel: 'سبب التأخير',
+      overdueListNoteAdd: 'إضافة ملاحظة',
+      overdueListNoteEdit: 'تعديل',
+      overdueListNoteCancel: 'إلغاء',
+      overdueListNoteBy: 'حفظ بواسطة',
+      overdueListNoteShow: 'عرض الملاحظة',
+      overdueListNoteHide: 'إخفاء الملاحظة',
+      overdueListNotePlaceholder: 'اكتب ملاحظتك…',
+      overdueListNoteSaved: 'تم الحفظ.',
+      overdueListNoteSaveError: 'تعذر الحفظ. حاول مرة أخرى.',
       subjectOwnerLabel: 'مسؤول الموضوع',
       daysOverdueSuffix: 'يوم تأخير',
       showMore: 'عرض المزيد',
       showLess: 'عرض أقل',
       monthCreated: 'مفتوحة',
-      monthCompleted: 'مكتملة'
+      monthCompleted: 'مكتملة',
+      translate: 'ترجمة',
+      translateNoText: 'لا يوجد نص للترجمة.',
+      translateFailed: 'فشلت الترجمة.',
+      translateError: 'حدث خطأ أثناء الترجمة.',
+      translateUnchanged:
+        'لم يتغير النص. قد تكون خدمة الترجمة محظورة أو النص بالفعل باللغة المستهدفة. راجع سجل الخادم لرسائل [translate].'
     }
   };
 
@@ -1060,6 +1114,28 @@
               <i class="bi bi-journal-text text-primary"></i>
               <span><%= tSafe('overdueByTopicDaysChart') %></span>
             </h3>
+            <% if (isOverdueView) { %>
+            <div
+              class="tm-overdue-subview-toggle btn-group mb-3"
+              role="group"
+              aria-label="<%= tSafe('overdueListSubviewTasks') %> / <%= tSafe('overdueListSubviewReasons') %>"
+            >
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                data-overdue-subview="tasks"
+              >
+                <i class="bi bi-list-task me-1" aria-hidden="true"></i><%= tSafe('overdueListSubviewTasks') %>
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                data-overdue-subview="reasons"
+              >
+                <i class="bi bi-journal-text me-1" aria-hidden="true"></i><%= tSafe('overdueListSubviewReasons') %>
+              </button>
+            </div>
+            <% } %>
             <div id="overdue-topic-days-list" class="tm-overdue-topic-list"></div>
           </div>
         </div>
@@ -1193,6 +1269,8 @@
   })();
 </script>
 
+<%- include('../partials/admin-translate-fetch') %>
+
 <script>
   // Grafikler sekmesi: profesyonel KPI + çoklu grafik senaryoları
   (function() {
@@ -1222,9 +1300,31 @@
       completionRate: tSafe('completionRate'),
       onTimeRate: tSafe('onTimeRate'),
       overdueRate: tSafe('overdueRate'),
-      totalAssigned: tSafe('totalAssigned')
+      totalAssigned: tSafe('totalAssigned'),
+      overdueListSubviewTasks: tSafe('overdueListSubviewTasks'),
+      overdueListSubviewReasons: tSafe('overdueListSubviewReasons'),
+      overdueListNoteLabel: tSafe('overdueListNoteLabel'),
+      overdueListNoteAdd: tSafe('overdueListNoteAdd'),
+      overdueListNoteEdit: tSafe('overdueListNoteEdit'),
+      overdueListNoteCancel: tSafe('overdueListNoteCancel'),
+      overdueListNoteBy: tSafe('overdueListNoteBy'),
+      overdueListNoteShow: tSafe('overdueListNoteShow'),
+      overdueListNoteHide: tSafe('overdueListNoteHide'),
+      overdueListNotePlaceholder: tSafe('overdueListNotePlaceholder'),
+      overdueListNoteSaved: tSafe('overdueListNoteSaved'),
+      overdueListNoteSaveError: tSafe('overdueListNoteSaveError'),
+      save: t('save'),
+      translate: tSafe('translate'),
+      translateNoText: tSafe('translateNoText'),
+      translateFailed: tSafe('translateFailed'),
+      translateError: tSafe('translateError'),
+      translateUnchanged: tSafe('translateUnchanged')
     }) %>;
+    const overdueChartsLang = '<%= typeof lang !== "undefined" ? lang : "tr" %>';
+
     if (!Array.isArray(tasks) || !tasks.length) return;
+
+    let overdueNotesDelegationBound = false;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1883,6 +1983,468 @@
       `;
     }
 
+    function normalizeOverdueNotePayload(payload) {
+      if (payload == null) {
+        return { note: '', updatedByUsername: '', updatedAt: '' };
+      }
+      if (typeof payload === 'string') {
+        return { note: String(payload), updatedByUsername: '', updatedAt: '' };
+      }
+      return {
+        note: payload.note != null ? String(payload.note) : '',
+        updatedByUsername:
+          payload.updatedByUsername != null ? String(payload.updatedByUsername) : '',
+        updatedAt: payload.updatedAt != null ? String(payload.updatedAt) : ''
+      };
+    }
+
+    function setOverdueNotePreviewCollapsed(wrap, collapsed) {
+      const collapsedEl = wrap.querySelector('.tm-overdue-note-collapsed');
+      const expandedEl = wrap.querySelector('.tm-overdue-note-expanded');
+      if (!collapsedEl || !expandedEl) return;
+      if (collapsed) {
+        collapsedEl.classList.remove('d-none');
+        expandedEl.classList.add('d-none');
+      } else {
+        collapsedEl.classList.add('d-none');
+        expandedEl.classList.remove('d-none');
+      }
+    }
+
+    function setOverdueNoteByline(wrap, username, updatedAt) {
+      const el = wrap.querySelector('.tm-overdue-note-byline');
+      if (!el) return;
+      const uname = (username || '').trim();
+      if (!uname) {
+        el.classList.add('d-none');
+        el.textContent = '';
+        return;
+      }
+      el.classList.remove('d-none');
+      let datePart = '';
+      if (updatedAt) {
+        try {
+          const d = new Date(updatedAt);
+          if (!Number.isNaN(d.getTime())) {
+            datePart = d.toLocaleString(undefined, {
+              dateStyle: 'short',
+              timeStyle: 'short'
+            });
+          }
+        } catch (_) {}
+      }
+      const prefix = i18n.overdueListNoteBy || '';
+      el.textContent = datePart
+        ? `${prefix}: ${uname} · ${datePart}`
+        : `${prefix}: ${uname}`;
+    }
+
+    function applyOverdueNoteLoadedState(wrap, payload) {
+      const { note, updatedByUsername, updatedAt } =
+        normalizeOverdueNotePayload(payload);
+      const addRow = wrap.querySelector('.tm-overdue-note-add-row');
+      const savedRow = wrap.querySelector('.tm-overdue-note-saved');
+      const editor = wrap.querySelector('.tm-overdue-note-editor');
+      const disp = wrap.querySelector('.tm-overdue-note-display-text');
+      const ta = wrap.querySelector('textarea.tm-overdue-list-note');
+      if (ta) ta.value = note;
+      if (disp) disp.textContent = note;
+      setOverdueNoteByline(wrap, updatedByUsername, updatedAt);
+      if (editor) editor.classList.add('d-none');
+      if (note.trim()) {
+        if (addRow) addRow.classList.add('d-none');
+        if (savedRow) savedRow.classList.remove('d-none');
+        setOverdueNotePreviewCollapsed(wrap, true);
+      } else {
+        if (addRow) addRow.classList.remove('d-none');
+        if (savedRow) savedRow.classList.add('d-none');
+      }
+    }
+
+    function showOverdueNoteEditor(wrap, initialText) {
+      const addRow = wrap.querySelector('.tm-overdue-note-add-row');
+      const savedRow = wrap.querySelector('.tm-overdue-note-saved');
+      const editor = wrap.querySelector('.tm-overdue-note-editor');
+      const ta = wrap.querySelector('textarea.tm-overdue-list-note');
+      const st = wrap.querySelector('.tm-overdue-list-note-status');
+      if (addRow) addRow.classList.add('d-none');
+      if (savedRow) savedRow.classList.add('d-none');
+      if (editor) editor.classList.remove('d-none');
+      if (st) {
+        st.textContent = '';
+        st.classList.remove('text-success', 'text-danger');
+      }
+      if (ta) {
+        ta.value = initialText != null ? String(initialText) : '';
+        ta.focus();
+      }
+    }
+
+    function hideOverdueNoteEditorWithoutSave(wrap) {
+      const editor = wrap.querySelector('.tm-overdue-note-editor');
+      const disp = wrap.querySelector('.tm-overdue-note-display-text');
+      const addRow = wrap.querySelector('.tm-overdue-note-add-row');
+      const savedRow = wrap.querySelector('.tm-overdue-note-saved');
+      const st = wrap.querySelector('.tm-overdue-list-note-status');
+      if (editor) editor.classList.add('d-none');
+      if (st) {
+        st.textContent = '';
+        st.classList.remove('text-success', 'text-danger');
+      }
+      const saved = (disp && disp.textContent.trim()) ? disp.textContent : '';
+      if (saved.trim()) {
+        if (addRow) addRow.classList.add('d-none');
+        if (savedRow) savedRow.classList.remove('d-none');
+        setOverdueNotePreviewCollapsed(wrap, false);
+      } else {
+        if (addRow) addRow.classList.remove('d-none');
+        if (savedRow) savedRow.classList.add('d-none');
+      }
+    }
+
+    function hideOverdueNoteEditorAfterSave(wrap, rawNote, meta) {
+      const editor = wrap.querySelector('.tm-overdue-note-editor');
+      const disp = wrap.querySelector('.tm-overdue-note-display-text');
+      const addRow = wrap.querySelector('.tm-overdue-note-add-row');
+      const savedRow = wrap.querySelector('.tm-overdue-note-saved');
+      const ta = wrap.querySelector('textarea.tm-overdue-list-note');
+      if (editor) editor.classList.add('d-none');
+      const note = rawNote != null ? String(rawNote) : '';
+      if (disp) disp.textContent = note;
+      if (ta) ta.value = note;
+      if (note.trim()) {
+        if (addRow) addRow.classList.add('d-none');
+        if (savedRow) savedRow.classList.remove('d-none');
+        if (meta && (meta.updatedByUsername || meta.updatedAt)) {
+          setOverdueNoteByline(
+            wrap,
+            meta.updatedByUsername,
+            meta.updatedAt
+          );
+        }
+        setOverdueNotePreviewCollapsed(wrap, true);
+      } else {
+        if (addRow) addRow.classList.remove('d-none');
+        if (savedRow) savedRow.classList.add('d-none');
+        setOverdueNoteByline(wrap, '', '');
+        setOverdueNotePreviewCollapsed(wrap, true);
+      }
+    }
+
+    async function loadOverdueListNotes(container, taskIds) {
+      if (!taskIds.length) return;
+      try {
+        const qs = new URLSearchParams();
+        qs.set('taskIds', taskIds.join(','));
+        const res = await fetch(`/admin/reports/overdue-notes?${qs.toString()}`, {
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const notes = data.notes || {};
+        taskIds.forEach((id) => {
+          const wrap = container.querySelector(
+            `.tm-overdue-note-wrap[data-task-id="${id}"]`
+          );
+          if (!wrap) return;
+          const fromApi = Object.prototype.hasOwnProperty.call(notes, String(id))
+            ? notes[String(id)]
+            : '';
+          applyOverdueNoteLoadedState(wrap, fromApi);
+        });
+      } catch (e) {
+        console.warn('overdue notes load failed', e);
+      }
+    }
+
+    async function saveOverdueListNote(taskId, note, statusEl) {
+      try {
+        const res = await fetch(
+          `/admin/reports/overdue-notes/${encodeURIComponent(taskId)}`,
+          {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json'
+            },
+            body: JSON.stringify({ note: note || '' })
+          }
+        );
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_) {}
+        if (statusEl) {
+          statusEl.textContent = res.ok
+            ? i18n.overdueListNoteSaved
+            : i18n.overdueListNoteSaveError;
+          statusEl.classList.toggle('text-success', res.ok);
+          statusEl.classList.toggle('text-danger', !res.ok);
+          if (res.ok) {
+            setTimeout(() => {
+              if (statusEl.textContent === i18n.overdueListNoteSaved) {
+                statusEl.textContent = '';
+                statusEl.classList.remove('text-success', 'text-danger');
+              }
+            }, 2500);
+          }
+        }
+        return {
+          ok: res.ok,
+          updatedByUsername: data.updatedByUsername,
+          updatedAt: data.updatedAt
+        };
+      } catch (e) {
+        if (statusEl) {
+          statusEl.textContent = i18n.overdueListNoteSaveError;
+          statusEl.classList.add('text-danger');
+        }
+        return { ok: false };
+      }
+    }
+
+    async function translateOverdueNoteSection(wrap, mode, btnEl) {
+      const ta = wrap.querySelector('textarea.tm-overdue-list-note');
+      const disp = wrap.querySelector('.tm-overdue-note-display-text');
+      let text = '';
+      if (mode === 'editor' && ta) text = ta.value || '';
+      else if (mode === 'display' && disp) text = disp.textContent || '';
+      if (!String(text).trim()) {
+        alert(i18n.translateNoText);
+        return;
+      }
+      const icon = btnEl.querySelector('i');
+      const prevClass = icon ? icon.className : '';
+      if (icon) icon.className = 'bi bi-hourglass-split';
+      btnEl.disabled = true;
+      try {
+        const tr =
+          typeof window.tmFetchAdminTranslation === 'function'
+            ? await window.tmFetchAdminTranslation(text, overdueChartsLang)
+            : null;
+        if (!tr || !tr.ok) {
+          alert(
+            tr && tr.error === 'parse'
+              ? i18n.translateError
+              : i18n.translateFailed
+          );
+          return;
+        }
+        const out = String(tr.translated || '').trim();
+        const same = out === String(text).trim();
+        if (!out) {
+          alert(i18n.translateFailed);
+          return;
+        }
+        // Zaten arayüz dilinde / aynı metin — uyarı gösterme
+        if (same) return;
+        if (mode === 'editor' && ta) ta.value = out;
+        if (mode === 'display' && disp) {
+          disp.textContent = out;
+          if (ta) ta.value = out;
+        }
+      } catch (err) {
+        console.error(err);
+        alert(i18n.translateError);
+      } finally {
+        if (icon) icon.className = prevClass;
+        btnEl.disabled = false;
+      }
+    }
+
+    function wireOverdueNoteInteractions(container) {
+      if (overdueNotesDelegationBound) return;
+      overdueNotesDelegationBound = true;
+      container.addEventListener('click', async (e) => {
+        // Metin düğümüne tıklanınca target.closest yok (Arapça/RTL etiket metni vb.)
+        const clickEl =
+          e.target && e.target.nodeType === Node.ELEMENT_NODE
+            ? e.target
+            : e.target && e.target.parentElement;
+        if (!clickEl || typeof clickEl.closest !== 'function') return;
+
+        const wrap = clickEl.closest('.tm-overdue-note-wrap');
+        if (!wrap) return;
+        const taskId = wrap.getAttribute('data-task-id');
+        if (!taskId) return;
+
+        const trBtn = clickEl.closest('.tm-overdue-note-translate-btn');
+        if (trBtn) {
+          const mode = trBtn.getAttribute('data-translate-target');
+          if (mode === 'display' || mode === 'editor') {
+            await translateOverdueNoteSection(wrap, mode, trBtn);
+          }
+          return;
+        }
+
+        if (clickEl.closest('.tm-overdue-note-show-btn')) {
+          setOverdueNotePreviewCollapsed(wrap, false);
+          return;
+        }
+        if (clickEl.closest('.tm-overdue-note-hide-btn')) {
+          setOverdueNotePreviewCollapsed(wrap, true);
+          return;
+        }
+        if (clickEl.closest('.tm-overdue-note-add')) {
+          showOverdueNoteEditor(wrap, '');
+          return;
+        }
+        if (clickEl.closest('.tm-overdue-note-edit')) {
+          const disp = wrap.querySelector('.tm-overdue-note-display-text');
+          showOverdueNoteEditor(wrap, disp ? disp.textContent : '');
+          return;
+        }
+        if (clickEl.closest('.tm-overdue-note-cancel')) {
+          hideOverdueNoteEditorWithoutSave(wrap);
+          return;
+        }
+        if (clickEl.closest('.tm-overdue-list-note-save')) {
+          const ta = wrap.querySelector('textarea.tm-overdue-list-note');
+          const st = wrap.querySelector('.tm-overdue-list-note-status');
+          if (!ta) return;
+          const result = await saveOverdueListNote(taskId, ta.value, st);
+          if (result.ok) {
+            hideOverdueNoteEditorAfterSave(wrap, ta.value, {
+              updatedByUsername: result.updatedByUsername,
+              updatedAt: result.updatedAt
+            });
+          }
+          return;
+        }
+      });
+    }
+
+    function getOverdueSubView() {
+      if (!isOverdueMode) return 'tasks';
+      const p = new URLSearchParams(window.location.search);
+      const v = (p.get('overdueView') || 'tasks').toLowerCase();
+      return v === 'reasons' ? 'reasons' : 'tasks';
+    }
+
+    function setOverdueSubView(view) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('overdueView', view);
+      if (!url.searchParams.get('overdue')) url.searchParams.set('overdue', 'true');
+      if ((url.searchParams.get('tab') || 'reports') !== 'charts') {
+        url.searchParams.set('tab', 'charts');
+      }
+      window.history.replaceState({}, '', url);
+      updateOverdueSubViewToggleUI(view);
+      renderOverdueTopicDays();
+    }
+
+    function updateOverdueSubViewToggleUI(view) {
+      document
+        .querySelectorAll('.tm-overdue-subview-toggle [data-overdue-subview]')
+        .forEach((btn) => {
+          const v = btn.getAttribute('data-overdue-subview');
+          const on = v === view;
+          btn.classList.toggle('active', on);
+          btn.classList.toggle('btn-primary', on);
+          btn.classList.toggle('btn-outline-primary', !on);
+        });
+    }
+
+    function bindOverdueSubViewToggle() {
+      const bar = document.querySelector('.tm-overdue-subview-toggle');
+      if (!bar || !isOverdueMode) return;
+      bar.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-overdue-subview]');
+        if (!btn) return;
+        const v = btn.getAttribute('data-overdue-subview');
+        if (v !== 'tasks' && v !== 'reasons') return;
+        setOverdueSubView(v);
+      });
+      updateOverdueSubViewToggleUI(getOverdueSubView());
+    }
+
+    function overdueCardMainHtml(row) {
+      return `
+                <div class="tm-overdue-card__main">
+                  <div class="tm-overdue-card__body">
+                    <a
+                      href="/admin/tasks/${row.id}"
+                      class="tm-overdue-card__title text-decoration-none"
+                      title="${escapeHtml(row.title)}"
+                    >
+                      ${escapeHtml(row.title)}
+                    </a>
+                    <div class="tm-overdue-card__meta">
+                      <span class="tm-overdue-card__chip" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
+                        <i class="bi bi-person-badge tm-overdue-card__chip-icon" aria-hidden="true"></i>
+                        <span class="text-truncate">${escapeHtml(row.konuSorumlusu)}</span>
+                      </span>
+                      <span class="tm-overdue-card__chip tm-overdue-card__chip--status">
+                        <i class="bi bi-flag tm-overdue-card__chip-icon" aria-hidden="true"></i>
+                        <span class="badge status-${escapeHtml(row.status)} mb-0">${escapeHtml(row.statusText)}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="tm-overdue-card__badge-wrap">
+                    <span class="tm-overdue-card__days">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
+                  </div>
+                </div>`;
+    }
+
+    function overdueCardNotePanelHtml(row) {
+      return `
+                <div class="tm-overdue-note-wrap tm-overdue-note-panel" data-task-id="${row.id}">
+                  <div class="tm-overdue-note-panel__head">
+                    <i class="bi bi-journal-text tm-overdue-note-panel__head-icon" aria-hidden="true"></i>
+                    <span class="tm-overdue-note-panel__head-label">${escapeHtml(i18n.overdueListNoteLabel)}</span>
+                  </div>
+                  <div class="tm-overdue-note-add-row">
+                    <button type="button" class="btn btn-sm tm-overdue-note-add">
+                      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>${escapeHtml(i18n.overdueListNoteAdd)}
+                    </button>
+                  </div>
+                  <div class="tm-overdue-note-saved d-none">
+                    <div class="tm-overdue-note-collapsed">
+                      <button type="button" class="btn btn-sm tm-overdue-note-show-btn">
+                        <i class="bi bi-eye me-1" aria-hidden="true"></i>${escapeHtml(i18n.overdueListNoteShow)}
+                      </button>
+                    </div>
+                    <div class="tm-overdue-note-expanded d-none">
+                      <div class="tm-overdue-note-byline d-none"></div>
+                      <div class="tm-overdue-note-display tm-overdue-note-display-text text-break" style="white-space: pre-wrap;"></div>
+                      <div class="tm-overdue-note-expanded-actions">
+                        <button type="button" class="btn btn-sm tm-overdue-note-edit">
+                          <i class="bi bi-pencil me-1" aria-hidden="true"></i>${escapeHtml(i18n.overdueListNoteEdit)}
+                        </button>
+                        <button type="button" class="btn btn-sm tm-overdue-note-translate-btn tm-overdue-note-translate-btn--display" data-translate-target="display" title="${escapeHtml(i18n.translate)}">
+                          <i class="bi bi-translate me-1" aria-hidden="true"></i>${escapeHtml(i18n.translate)}
+                        </button>
+                        <button type="button" class="btn btn-sm tm-overdue-note-hide-btn">
+                          <i class="bi bi-eye-slash me-1" aria-hidden="true"></i>${escapeHtml(i18n.overdueListNoteHide)}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tm-overdue-note-editor d-none">
+                    <textarea
+                      class="form-control tm-overdue-list-note"
+                      rows="3"
+                      data-task-id="${row.id}"
+                      placeholder="${escapeHtml(i18n.overdueListNotePlaceholder)}"
+                    ></textarea>
+                    <div class="tm-overdue-note-editor__actions">
+                      <button type="button" class="btn btn-sm tm-overdue-list-note-save" data-task-id="${row.id}">
+                        <i class="bi bi-check2 me-1" aria-hidden="true"></i>${escapeHtml(i18n.save)}
+                      </button>
+                      <button type="button" class="btn btn-sm tm-overdue-note-translate-btn tm-overdue-note-translate-btn--editor" data-translate-target="editor" title="${escapeHtml(i18n.translate)}">
+                        <i class="bi bi-translate me-1" aria-hidden="true"></i>${escapeHtml(i18n.translate)}
+                      </button>
+                      <button type="button" class="btn btn-sm tm-overdue-note-cancel">
+                        ${escapeHtml(i18n.overdueListNoteCancel)}
+                      </button>
+                    </div>
+                    <div class="tm-overdue-list-note-status" data-task-id="${row.id}"></div>
+                  </div>
+                </div>`;
+    }
+
     function renderOverdueTopicDays() {
       const container = document.getElementById('overdue-topic-days-list');
       if (!container) return;
@@ -1918,34 +2480,30 @@
 
       const topRows = rows.slice(0, 20);
       if (isOverdueMode) {
-        container.innerHTML = topRows
-          .map(row => {
-            return `
-              <div class="d-flex align-items-center justify-content-between gap-2 border rounded-3 px-2 py-2 bg-light mb-2">
-                <div class="d-flex flex-column" style="min-width: 0;">
-                  <a
-                    href="/admin/tasks/${row.id}"
-                    class="small fw-semibold text-truncate text-decoration-none text-dark"
-                    style="min-width: 0;"
-                    title="${escapeHtml(row.title)}"
-                  >
-                    ${escapeHtml(row.title)}
-                  </a>
-                  <div class="small text-muted d-flex flex-wrap gap-2 align-items-center" style="min-width: 0;">
-                    <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
-                      ${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}
-                    </span>
-                    <span class="text-truncate" style="min-width: 0;" title="${escapeHtml(i18n.statusLabel)}: ${escapeHtml(row.statusText)}">
-                      ${escapeHtml(i18n.statusLabel)}:
-                      <span class="badge status-${escapeHtml(row.status)}">${escapeHtml(row.statusText)}</span>
-                    </span>
-                  </div>
-                </div>
-                <span class="badge text-bg-danger flex-shrink-0">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
-              </div>
-            `;
-          })
-          .join('');
+        const sub = getOverdueSubView();
+        if (sub === 'tasks') {
+          container.innerHTML = topRows
+            .map(
+              (row) => `
+              <div class="tm-overdue-card tm-overdue-card--tasks-only">
+                ${overdueCardMainHtml(row)}
+              </div>`
+            )
+            .join('');
+        } else {
+          container.innerHTML = topRows
+            .map(
+              (row) => `
+              <div class="tm-overdue-card tm-overdue-card--reasons">
+                ${overdueCardMainHtml(row)}
+                ${overdueCardNotePanelHtml(row)}
+              </div>`
+            )
+            .join('');
+          const ids = topRows.map((r) => r.id);
+          wireOverdueNoteInteractions(container);
+          loadOverdueListNotes(container, ids);
+        }
         return;
       }
 
@@ -2025,6 +2583,7 @@
       renderTopPerformers();
     }
     renderOverdueTopicDays();
+    bindOverdueSubViewToggle();
   })();
 </script>
 
@@ -2851,6 +3410,293 @@
     border-radius: 999px;
     background: linear-gradient(90deg, #fb7185, #ef4444);
   }
+
+  /* Geciken görevler (overdue mode) — kart + not paneli */
+  .tm-overdue-card {
+    margin-bottom: 0.875rem;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 14px;
+    background: linear-gradient(165deg, #ffffff 0%, #fafbfc 100%);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .tm-overdue-card:hover {
+    border-color: rgba(99, 102, 241, 0.28);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07), 0 0 0 1px rgba(99, 102, 241, 0.06);
+  }
+  .tm-overdue-card:last-child {
+    margin-bottom: 0;
+  }
+  .tm-overdue-card--tasks-only .tm-overdue-card__main {
+    border-bottom: none;
+  }
+  .tm-overdue-card--reasons .tm-overdue-note-panel {
+    border-left-width: 4px;
+  }
+  .tm-overdue-subview-toggle {
+    flex-wrap: wrap;
+  }
+  .tm-overdue-card__main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  }
+  .tm-overdue-card__body {
+    min-width: 0;
+    flex: 1;
+  }
+  .tm-overdue-card__title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-decoration: none;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .tm-overdue-card__title:hover {
+    color: #4f46e5;
+  }
+  .tm-overdue-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .tm-overdue-card__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 4px 10px 4px 8px;
+  }
+  .tm-overdue-card__chip--status {
+    background: #fff;
+  }
+  .tm-overdue-card__chip-icon {
+    font-size: 0.85rem;
+    color: #64748b;
+    flex-shrink: 0;
+  }
+  .tm-overdue-card__badge-wrap {
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .tm-overdue-card__days {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+    padding: 6px 12px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    white-space: nowrap;
+  }
+  .tm-overdue-note-panel {
+    padding: 12px 16px 14px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.5) 100%);
+    border-left: 3px solid #6366f1;
+  }
+  .tm-overdue-note-panel__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .tm-overdue-note-panel__head-icon {
+    font-size: 1rem;
+    color: #6366f1;
+  }
+  .tm-overdue-note-panel__head-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+  }
+  .tm-overdue-note-add {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border: 1px dashed #94a3b8;
+    color: #475569;
+    background: #fff;
+    transition: all 0.15s ease;
+  }
+  .tm-overdue-note-add:hover {
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: rgba(99, 102, 241, 0.06);
+  }
+  .tm-overdue-card .tm-overdue-note-show-btn.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    transition: all 0.15s ease;
+  }
+  .tm-overdue-card .tm-overdue-note-show-btn.btn:hover {
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: rgba(99, 102, 241, 0.06);
+  }
+  .tm-overdue-note-expanded-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .tm-overdue-card .tm-overdue-note-hide-btn.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+  }
+  .tm-overdue-card .tm-overdue-note-hide-btn.btn:hover {
+    color: #475569;
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+  .tm-overdue-card .tm-overdue-note-translate-btn.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    color: #0369a1;
+    background: #fff;
+    border: 1px solid #bae6fd;
+  }
+  .tm-overdue-card .tm-overdue-note-translate-btn.btn:hover {
+    color: #0c4a6e;
+    border-color: #7dd3fc;
+    background: #f0f9ff;
+  }
+  .tm-overdue-note-byline {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+  .tm-overdue-note-display {
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: #334155;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+  }
+  .tm-overdue-note-edit {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    color: #4f46e5;
+    background: transparent;
+    border: none;
+  }
+  .tm-overdue-note-edit:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #4338ca;
+  }
+  .tm-overdue-note-editor {
+    margin-top: 2px;
+  }
+  .tm-overdue-note-editor .tm-overdue-list-note {
+    font-size: 0.84rem;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 72px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tm-overdue-note-editor .tm-overdue-list-note:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    outline: none;
+  }
+  .tm-overdue-note-editor__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .tm-overdue-card .tm-overdue-list-note-save.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+  }
+  .tm-overdue-card .tm-overdue-list-note-save.btn:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    color: #fff !important;
+  }
+  .tm-overdue-card .tm-overdue-list-note-save.btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  }
+  .tm-overdue-note-cancel {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    background: #fff;
+  }
+  .tm-overdue-note-cancel:hover {
+    border-color: #cbd5e1;
+    color: #475569;
+    background: #f8fafc;
+  }
+  .tm-overdue-list-note-status {
+    min-height: 1.25rem;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  @media (max-width: 575.98px) {
+    .tm-overdue-card__main {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .tm-overdue-card__badge-wrap {
+      align-self: flex-start;
+    }
+  }
+
   .tm-top3-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));

@@ -1,0 +1,55 @@
+<%#
+  Tek çeviri istemcisi: görev detayı, görev formu ve raporlar (geciken notlar) aynı
+  POST /admin/translate + translate.js (Lingva / gtx / Cloud API) zincirini kullanır.
+%>
+<script>
+(function () {
+  if (typeof window.tmFetchAdminTranslation === 'function') return;
+  /**
+   * @param {string} text
+   * @param {string} targetLang  ar | en | tr
+   * @returns {Promise<{ ok: boolean, translated?: string, error?: string }>}
+   */
+  window.tmFetchAdminTranslation = async function (text, targetLang) {
+    const payload = {
+      text: String(text || '').trim(),
+      targetLang: targetLang || 'tr'
+    };
+    try {
+      const res = await fetch('/admin/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+      const raw = await res.text();
+      let result = {};
+      try {
+        result = raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        console.error('[tmFetchAdminTranslation] JSON parse error', e, raw.slice(0, 200));
+        return { ok: false, error: 'parse' };
+      }
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: result.error || 'http_' + res.status
+        };
+      }
+      if (result.success && result.translated != null) {
+        return { ok: true, translated: String(result.translated) };
+      }
+      return {
+        ok: false,
+        error: result.error || 'failed'
+      };
+    } catch (err) {
+      console.error('[tmFetchAdminTranslation]', err);
+      return { ok: false, error: 'network' };
+    }
+  };
+})();
+</script>

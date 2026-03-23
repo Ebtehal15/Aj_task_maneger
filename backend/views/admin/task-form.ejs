@@ -411,6 +411,7 @@
   </div>
 </div>
 
+<%- include('../partials/admin-translate-fetch') %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const quickAddUserForm = document.getElementById('quickAddUserForm');
@@ -686,20 +687,11 @@ document.addEventListener('DOMContentLoaded', function() {
       this.disabled = true;
       
       try {
-        const response = await fetch('/admin/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: textToTranslate,
-            targetLang: currentLang
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.translated) {
+        const result = await window.tmFetchAdminTranslation(
+          textToTranslate,
+          currentLang
+        );
+        if (result.ok && result.translated && String(result.translated).trim()) {
           targetElement.value = result.translated;
         } else {
           alert('Çeviri başarısız oldu');
