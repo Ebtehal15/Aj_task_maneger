@@ -714,10 +714,17 @@ router.get('/reports', async (req, res) => {
     params.push(status);
     paramIndex++;
   }
-  // Overdue: tamamlanmamış ve deadline tarihi bugün'den küçük olan görevler
+  // Geciken + yaklaşan deadline (tahmini bitişe 0–3 gün): grafiklerdeki liste için veri gelsin
+  // (sadece geciken deseydik deadline'ı gelecekte olan görevler hiç JSON'a girmezdi)
   if (overdue === 'true') {
     where.push(`t.status <> 'done'`);
-    where.push(`t.deadline IS NOT NULL AND t.deadline::date < CURRENT_DATE`);
+    where.push(`t.deadline IS NOT NULL AND (
+      t.deadline::date < CURRENT_DATE
+      OR (
+        t.deadline::date >= CURRENT_DATE
+        AND t.deadline::date <= (CURRENT_DATE + INTERVAL '3 days')
+      )
+    )`);
   }
   if (urgent && urgent !== 'undefined' && urgent !== 'null') {
     where.push(`COALESCE(t.acil, false)::boolean = true`);
@@ -957,10 +964,16 @@ router.get('/reports/export', async (req, res) => {
     params.push(status);
     paramIndex++;
   }
-  // Overdue: tamamlanmamış ve deadline tarihi bugün'den küçük olan görevler
+  // Geciken + yaklaşan deadline (0–3 gün) — /reports ile aynı kapsam
   if (overdue === 'true') {
     where.push(`t.status <> 'done'`);
-    where.push(`t.deadline IS NOT NULL AND t.deadline::date < CURRENT_DATE`);
+    where.push(`t.deadline IS NOT NULL AND (
+      t.deadline::date < CURRENT_DATE
+      OR (
+        t.deadline::date >= CURRENT_DATE
+        AND t.deadline::date <= (CURRENT_DATE + INTERVAL '3 days')
+      )
+    )`);
   }
   if (urgent && urgent !== 'undefined' && urgent !== 'null') {
     where.push(`COALESCE(t.acil, false)::boolean = true`);

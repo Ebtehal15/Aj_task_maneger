@@ -1352,8 +1352,20 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    /** Takvim günü (UTC kayması olmadan): YYYY-MM-DD yerel gece yarısı */
     function parseDate(value) {
       if (!value) return null;
+      const s = String(value).trim();
+      const isoDay = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoDay) {
+        const y = Number(isoDay[1]);
+        const m = Number(isoDay[2]);
+        const day = Number(isoDay[3]);
+        const d = new Date(y, m - 1, day);
+        if (Number.isNaN(d.getTime())) return null;
+        d.setHours(0, 0, 0, 0);
+        return d;
+      }
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return null;
       d.setHours(0, 0, 0, 0);
@@ -1391,22 +1403,25 @@
       return getOverdueDays(task) > 0;
     }
 
+    /** Tahmini bitişe takvim günü olarak en fazla bu kadar kaldıysa (0 = bugün, 3 = 3 gün sonra) — gecikmiş görevler dahil değil */
     const DUE_SOON_DAY_LIMIT = 3;
 
     function isDueSoon(task, dayLimit = DUE_SOON_DAY_LIMIT) {
       if (!task || isDone(task)) return false;
       const deadline = parseDate(task.deadline);
       if (!deadline) return false;
-      const diffDays = Math.floor((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(
+        (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
       return diffDays >= 0 && diffDays <= dayLimit;
     }
 
-    /** Bugünden itibaren 0..dayLimit gün içinde (gecikmemiş) bitiş */
+    /** Yaklaşan deadline listesi: deadline bugün veya gelecekte, 0–dayLimit gün kalmış (gecikmiş hariç) */
     function getDaysLeftUntilDeadline(task, dayLimit = DUE_SOON_DAY_LIMIT) {
       if (!task || isDone(task)) return null;
       const deadline = parseDate(task.deadline);
       if (!deadline) return null;
-      const diffDays = Math.floor(
+      const diffDays = Math.round(
         (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
       );
       if (diffDays < 0 || diffDays > dayLimit) return null;
@@ -2545,6 +2560,55 @@
       const container = document.getElementById('overdue-topic-days-list');
       if (!container) return;
 
+      /* Yaklaşan deadline: geciken görev olmasa da çalışmalı (önceden erken return yüzünden boş kalıyordu) */
+      if (isOverdueMode && getOverdueSubView() === 'dueSoon') {
+        const soonRows = tasks
+          .map((t) => {
+            if (!t || t.status === 'done') return null;
+            const daysLeft = getDaysLeftUntilDeadline(t, DUE_SOON_DAY_LIMIT);
+            if (daysLeft === null) return null;
+            return {
+              id: t.id,
+              title: (t.title || i18n.untitledTask).trim(),
+              konuSorumlusu: (
+                t.konu_sorumlusu_username ||
+                t.assigned_username ||
+                '-'
+              ).trim(),
+              status: t.status,
+              statusText:
+                t.status === 'in_progress'
+                  ? i18n.statusInProgress
+                  : t.status === 'pending'
+                  ? i18n.statusPending
+                  : String(t.status || ''),
+              daysLeft,
+              deadlineStr: formatTaskDeadlineDisplay(t)
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => {
+            if (a.daysLeft !== b.daysLeft) return a.daysLeft - b.daysLeft;
+            return String(a.title).localeCompare(String(b.title), undefined, {
+              sensitivity: 'base'
+            });
+          });
+        if (!soonRows.length) {
+          container.innerHTML = `<p class="small text-muted mb-0">${escapeHtml(i18n.noDueSoonTasksFound)}</p>`;
+          return;
+        }
+        const soonTop = soonRows.slice(0, 40);
+        container.innerHTML = soonTop
+          .map(
+            (row) => `
+              <div class="tm-overdue-card tm-overdue-card--tasks-only tm-overdue-card--due-soon">
+                ${dueSoonCardMainHtml(row)}
+              </div>`
+          )
+          .join('');
+        return;
+      }
+
       const rows = tasks
         .map(t => {
           if (!t || t.status === 'done') return null;
@@ -2577,53 +2641,6 @@
       const topRows = rows.slice(0, 20);
       if (isOverdueMode) {
         const sub = getOverdueSubView();
-        if (sub === 'dueSoon') {
-          const soonRows = tasks
-            .map((t) => {
-              if (!t || t.status === 'done') return null;
-              const daysLeft = getDaysLeftUntilDeadline(t, DUE_SOON_DAY_LIMIT);
-              if (daysLeft === null) return null;
-              return {
-                id: t.id,
-                title: (t.title || i18n.untitledTask).trim(),
-                konuSorumlusu: (
-                  t.konu_sorumlusu_username ||
-                  t.assigned_username ||
-                  '-'
-                ).trim(),
-                status: t.status,
-                statusText:
-                  t.status === 'in_progress'
-                    ? i18n.statusInProgress
-                    : t.status === 'pending'
-                    ? i18n.statusPending
-                    : String(t.status || ''),
-                daysLeft,
-                deadlineStr: formatTaskDeadlineDisplay(t)
-              };
-            })
-            .filter(Boolean)
-            .sort((a, b) => {
-              if (a.daysLeft !== b.daysLeft) return a.daysLeft - b.daysLeft;
-              return String(a.title).localeCompare(String(b.title), undefined, {
-                sensitivity: 'base'
-              });
-            });
-          if (!soonRows.length) {
-            container.innerHTML = `<p class="small text-muted mb-0">${escapeHtml(i18n.noDueSoonTasksFound)}</p>`;
-            return;
-          }
-          const soonTop = soonRows.slice(0, 40);
-          container.innerHTML = soonTop
-            .map(
-              (row) => `
-              <div class="tm-overdue-card tm-overdue-card--tasks-only tm-overdue-card--due-soon">
-                ${dueSoonCardMainHtml(row)}
-              </div>`
-            )
-            .join('');
-          return;
-        }
         if (sub === 'tasks') {
           container.innerHTML = topRows
             .map(
