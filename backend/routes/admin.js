@@ -694,6 +694,19 @@ router.get('/reports', async (req, res) => {
     }
   }
 
+  /** Geciken/yaklaşan penceresi: PG CURRENT_DATE sunucu TZ'ye bağlı; İstanbul iş günü ile hizala */
+  let reportAnchorDate = null;
+  if (overdue === 'true') {
+    try {
+      const anchorRow = await pool.query(
+        `SELECT (current_timestamp AT TIME ZONE 'Europe/Istanbul')::date::text AS d`
+      );
+      reportAnchorDate = anchorRow.rows[0]?.d || null;
+    } catch (e) {
+      console.error('reportAnchorDate (Istanbul)', e);
+    }
+  }
+
   const params = [];
   const where = [];
   let paramIndex = 1;
@@ -709,7 +722,9 @@ router.get('/reports', async (req, res) => {
     params.push(userId);
     paramIndex++;
   }
-  if (status) {
+  // Geciken/yaklaşan görünümde zaten status <> 'done' var; ekstra status=pending gibi filtre
+  // devam eden görevleri (in_progress) tamamen düşürüp "Yaklaşan deadline" listesini boşaltıyordu.
+  if (status && overdue !== 'true') {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
     paramIndex++;
@@ -718,13 +733,25 @@ router.get('/reports', async (req, res) => {
   // (sadece geciken deseydik deadline'ı gelecekte olan görevler hiç JSON'a girmezdi)
   if (overdue === 'true') {
     where.push(`t.status <> 'done'`);
-    where.push(`t.deadline IS NOT NULL AND (
+    if (reportAnchorDate) {
+      where.push(`t.deadline IS NOT NULL AND (
+      t.deadline::date < $${paramIndex}::date
+      OR (
+        t.deadline::date >= $${paramIndex}::date
+        AND t.deadline::date <= ($${paramIndex}::date + INTERVAL '3 days')
+      )
+    )`);
+      params.push(reportAnchorDate);
+      paramIndex++;
+    } else {
+      where.push(`t.deadline IS NOT NULL AND (
       t.deadline::date < CURRENT_DATE
       OR (
         t.deadline::date >= CURRENT_DATE
         AND t.deadline::date <= (CURRENT_DATE + INTERVAL '3 days')
       )
     )`);
+    }
   }
   if (urgent && urgent !== 'undefined' && urgent !== 'null') {
     where.push(`COALESCE(t.acil, false)::boolean = true`);
@@ -744,15 +771,19 @@ router.get('/reports', async (req, res) => {
     params.push(region);
     paramIndex++;
   }
-  if (from) {
-    where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
-    params.push(from);
-    paramIndex++;
-  }
-  if (to) {
-    where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
-    params.push(to);
-    paramIndex++;
+  // Geciken/yaklaşan görünümde deadline aralığı zaten overdue koşuluyla tanımlı;
+  // URL'de kalmış from/to (eski filtre) yaklaşan görevleri yanlışlıkla dışarıda bırakmasın.
+  if (overdue !== 'true') {
+    if (from) {
+      where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
+      params.push(from);
+      paramIndex++;
+    }
+    if (to) {
+      where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
+      params.push(to);
+      paramIndex++;
+    }
   }
   if (from_verilen) {
     where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
@@ -830,7 +861,8 @@ router.get('/reports', async (req, res) => {
       filters: { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, filterTypes, overdue },
       activeTab,
       selectedUserIds,
-      selectedUserIdsParam
+      selectedUserIdsParam,
+      reportAnchorDate
     });
   } catch (err) {
     console.error(err);
@@ -942,6 +974,18 @@ router.post('/reports/upload-temp', async (req, res) => {
 router.get('/reports/export', async (req, res) => {
   const { userId, status, urgent, from, to, city, municipality, region, from_verilen, to_verilen, from_completed, to_completed, departman, arsiv, sort, columns: columnsRaw, overdue } = req.query;
 
+  let reportAnchorDate = null;
+  if (overdue === 'true') {
+    try {
+      const anchorRow = await pool.query(
+        `SELECT (current_timestamp AT TIME ZONE 'Europe/Istanbul')::date::text AS d`
+      );
+      reportAnchorDate = anchorRow.rows[0]?.d || null;
+    } catch (e) {
+      console.error('reportAnchorDate export (Istanbul)', e);
+    }
+  }
+
   const params = [];
   const where = [];
   let paramIndex = 1;
@@ -959,21 +1003,38 @@ router.get('/reports/export', async (req, res) => {
     params.push(parseInt(userId));
     paramIndex++;
   }
-  if (status && status !== 'undefined' && status !== 'null') {
+  if (
+    status &&
+    status !== 'undefined' &&
+    status !== 'null' &&
+    overdue !== 'true'
+  ) {
     where.push(`t.status = $${paramIndex}`);
     params.push(status);
     paramIndex++;
   }
-  // Geciken + yaklaşan deadline (0–3 gün) — /reports ile aynı kapsam
+  // Geciken + yaklaşan deadline (0–3 gün) — /reports ile aynı kapsam (İstanbul takvim günü)
   if (overdue === 'true') {
     where.push(`t.status <> 'done'`);
-    where.push(`t.deadline IS NOT NULL AND (
+    if (reportAnchorDate) {
+      where.push(`t.deadline IS NOT NULL AND (
+      t.deadline::date < $${paramIndex}::date
+      OR (
+        t.deadline::date >= $${paramIndex}::date
+        AND t.deadline::date <= ($${paramIndex}::date + INTERVAL '3 days')
+      )
+    )`);
+      params.push(reportAnchorDate);
+      paramIndex++;
+    } else {
+      where.push(`t.deadline IS NOT NULL AND (
       t.deadline::date < CURRENT_DATE
       OR (
         t.deadline::date >= CURRENT_DATE
         AND t.deadline::date <= (CURRENT_DATE + INTERVAL '3 days')
       )
     )`);
+    }
   }
   if (urgent && urgent !== 'undefined' && urgent !== 'null') {
     where.push(`COALESCE(t.acil, false)::boolean = true`);
@@ -993,15 +1054,17 @@ router.get('/reports/export', async (req, res) => {
     params.push(region);
     paramIndex++;
   }
-  if (from && from !== 'undefined' && from !== 'null') {
-    where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
-    params.push(from);
-    paramIndex++;
-  }
-  if (to && to !== 'undefined' && to !== 'null') {
-    where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
-    params.push(to);
-    paramIndex++;
+  if (overdue !== 'true') {
+    if (from && from !== 'undefined' && from !== 'null') {
+      where.push(`DATE(t.deadline) >= DATE($${paramIndex})`);
+      params.push(from);
+      paramIndex++;
+    }
+    if (to && to !== 'undefined' && to !== 'null') {
+      where.push(`DATE(t.deadline) <= DATE($${paramIndex})`);
+      params.push(to);
+      paramIndex++;
+    }
   }
   if (from_verilen && from_verilen !== 'undefined' && from_verilen !== 'null') {
     where.push(`DATE(t.verilen_is_tarihi) >= DATE($${paramIndex})`);
