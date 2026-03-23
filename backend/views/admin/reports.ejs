@@ -1592,10 +1592,10 @@
       ];
 
       /** Sabit departman renkleri — paletten atlanır (çakışma olmasın) */
-      const RESERVED_DEPT_HEX = new Set(['#22c55e', '#3b82f6', '#eab308']);
+      const RESERVED_DEPT_HEX = new Set(['#22c55e', '#3b82f6', '#0891b2']);
 
       /**
-       * SAHA = yeşil, BELEDİYE = mavi, GENEL = sarı (sabit); diğerleri paletten.
+       * SAHA = yeşil, BELEDİYE = mavi, GENEL = cyan (sabit); diğerleri paletten.
        * SAHA için tr-TR upperCase bazı tarayıcılarda farklı davranabildiğinden önce ASCII upper kullanılır.
        */
       function departmentPieColor(label) {
@@ -1606,7 +1606,7 @@
           .replace(/\s+/g, '');
         if (!compact) return null;
         if (compact.toUpperCase() === 'SAHA') return '#22c55e';
-        if (compact.toUpperCase() === 'GENEL') return '#eab308';
+        if (compact.toUpperCase() === 'GENEL') return '#0891b2';
         const upperTr = compact.toLocaleUpperCase('tr-TR');
         const upperAscii = compact
           .replace(/\u0130/g, 'I')
