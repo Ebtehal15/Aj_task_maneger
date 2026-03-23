@@ -660,6 +660,9 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
 
 .tm-table-soft thead th {
   border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.8rem;
 }
 
 .tm-table-soft tbody tr:hover {

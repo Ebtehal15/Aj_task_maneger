@@ -68,6 +68,10 @@
       overdueListNoteSaveError: 'Kaydedilemedi. Tekrar deneyin.',
       subjectOwnerLabel: 'Konu sorumlusu',
       daysOverdueSuffix: 'gün gecikme',
+      overdueListSubviewDueSoon: 'Yaklaşan deadline',
+      daysUntilDeadlineSuffix: 'gün kaldı',
+      noDueSoonTasksFound: 'Önümüzdeki 3 gün içinde bitecek açık görev yok.',
+      deadlineDateLabel: 'Bitiş tarihi',
       showMore: 'Fazlasını Göster',
       showLess: 'Daha Az Göster',
       monthCreated: 'Açılan',
@@ -126,6 +130,10 @@
       overdueListNoteSaveError: 'Could not save. Try again.',
       subjectOwnerLabel: 'Subject owner',
       daysOverdueSuffix: 'days overdue',
+      overdueListSubviewDueSoon: 'Due soon (3 days)',
+      daysUntilDeadlineSuffix: 'days left',
+      noDueSoonTasksFound: 'No open tasks due in the next 3 days.',
+      deadlineDateLabel: 'Due date',
       showMore: 'Show More',
       showLess: 'Show Less',
       monthCreated: 'Created',
@@ -184,6 +192,10 @@
       overdueListNoteSaveError: 'تعذر الحفظ. حاول مرة أخرى.',
       subjectOwnerLabel: 'مسؤول الموضوع',
       daysOverdueSuffix: 'يوم تأخير',
+      overdueListSubviewDueSoon: 'المستحقة قريباً',
+      daysUntilDeadlineSuffix: 'يوم متبقي',
+      noDueSoonTasksFound: 'لا توجد مهام مفتوحة مستحقة خلال 3 أيام.',
+      deadlineDateLabel: 'تاريخ الاستحقاق',
       showMore: 'عرض المزيد',
       showLess: 'عرض أقل',
       monthCreated: 'مفتوحة',
@@ -1116,9 +1128,9 @@
             </h3>
             <% if (isOverdueView) { %>
             <div
-              class="tm-overdue-subview-toggle btn-group mb-3"
+              class="tm-overdue-subview-toggle btn-group btn-group-sm flex-wrap mb-3"
               role="group"
-              aria-label="<%= tSafe('overdueListSubviewTasks') %> / <%= tSafe('overdueListSubviewReasons') %>"
+              aria-label="<%= tSafe('overdueListSubviewTasks') %> / <%= tSafe('overdueListSubviewDueSoon') %> / <%= tSafe('overdueListSubviewReasons') %>"
             >
               <button
                 type="button"
@@ -1126,6 +1138,13 @@
                 data-overdue-subview="tasks"
               >
                 <i class="bi bi-list-task me-1" aria-hidden="true"></i><%= tSafe('overdueListSubviewTasks') %>
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                data-overdue-subview="dueSoon"
+              >
+                <i class="bi bi-calendar-event me-1" aria-hidden="true"></i><%= tSafe('overdueListSubviewDueSoon') %>
               </button>
               <button
                 type="button"
@@ -1302,7 +1321,11 @@
       overdueRate: tSafe('overdueRate'),
       totalAssigned: tSafe('totalAssigned'),
       overdueListSubviewTasks: tSafe('overdueListSubviewTasks'),
+      overdueListSubviewDueSoon: tSafe('overdueListSubviewDueSoon'),
       overdueListSubviewReasons: tSafe('overdueListSubviewReasons'),
+      daysUntilDeadlineSuffix: tSafe('daysUntilDeadlineSuffix'),
+      noDueSoonTasksFound: tSafe('noDueSoonTasksFound'),
+      deadlineDateLabel: tSafe('deadlineDateLabel'),
       overdueListNoteLabel: tSafe('overdueListNoteLabel'),
       overdueListNoteAdd: tSafe('overdueListNoteAdd'),
       overdueListNoteEdit: tSafe('overdueListNoteEdit'),
@@ -1368,12 +1391,46 @@
       return getOverdueDays(task) > 0;
     }
 
-    function isDueSoon(task, dayLimit = 3) {
+    const DUE_SOON_DAY_LIMIT = 3;
+
+    function isDueSoon(task, dayLimit = DUE_SOON_DAY_LIMIT) {
       if (!task || isDone(task)) return false;
       const deadline = parseDate(task.deadline);
       if (!deadline) return false;
       const diffDays = Math.floor((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays >= 0 && diffDays <= dayLimit;
+    }
+
+    /** Bugünden itibaren 0..dayLimit gün içinde (gecikmemiş) bitiş */
+    function getDaysLeftUntilDeadline(task, dayLimit = DUE_SOON_DAY_LIMIT) {
+      if (!task || isDone(task)) return null;
+      const deadline = parseDate(task.deadline);
+      if (!deadline) return null;
+      const diffDays = Math.floor(
+        (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (diffDays < 0 || diffDays > dayLimit) return null;
+      return diffDays;
+    }
+
+    function formatTaskDeadlineDisplay(task) {
+      const d = parseDate(task.deadline);
+      if (!d) return '';
+      const loc =
+        overdueChartsLang === 'ar'
+          ? 'ar'
+          : overdueChartsLang === 'en'
+          ? 'en-GB'
+          : 'tr-TR';
+      try {
+        return d.toLocaleDateString(loc, {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      } catch {
+        return d.toISOString().slice(0, 10);
+      }
     }
 
     function safeLabel(value) {
@@ -1483,7 +1540,7 @@
         completed: tasks.filter(isDone).length,
         overdue: tasks.filter(isOverdue).length,
         urgent: tasks.filter(isUrgent).length,
-        dueSoon: tasks.filter(t => isDueSoon(t, 3)).length
+        dueSoon: tasks.filter(t => isDueSoon(t, DUE_SOON_DAY_LIMIT)).length
       };
 
       const idMap = {
@@ -1627,7 +1684,9 @@
     const overdueByUser = aggregateBy(tasks, 'assigned_username', t => isOverdue(t));
     const overdueBySubject = aggregateBy(tasks, 'konu_sorumlusu_username', t => isOverdue(t));
     const allByDepartment = aggregateBy(tasks, 'departman', () => true);
-    const dueSoonByUser = aggregateBy(tasks, 'assigned_username', t => isDueSoon(t, 3));
+    const dueSoonByUser = aggregateBy(tasks, 'assigned_username', t =>
+      isDueSoon(t, DUE_SOON_DAY_LIMIT)
+    );
     const overdueUrgentByUser = aggregateBy(tasks, 'assigned_username', t => isOverdue(t) && isUrgent(t));
 
     // Pasta grafiği için durumlara göre say
@@ -2320,7 +2379,9 @@
       if (!isOverdueMode) return 'tasks';
       const p = new URLSearchParams(window.location.search);
       const v = (p.get('overdueView') || 'tasks').toLowerCase();
-      return v === 'reasons' ? 'reasons' : 'tasks';
+      if (v === 'reasons') return 'reasons';
+      if (v === 'duesoon' || v === 'due-soon' || v === 'due_soon') return 'dueSoon';
+      return 'tasks';
     }
 
     function setOverdueSubView(view) {
@@ -2354,7 +2415,7 @@
         const btn = e.target.closest('[data-overdue-subview]');
         if (!btn) return;
         const v = btn.getAttribute('data-overdue-subview');
-        if (v !== 'tasks' && v !== 'reasons') return;
+        if (v !== 'tasks' && v !== 'reasons' && v !== 'dueSoon') return;
         setOverdueSubView(v);
       });
       updateOverdueSubViewToggleUI(getOverdueSubView());
@@ -2384,6 +2445,41 @@
                   </div>
                   <div class="tm-overdue-card__badge-wrap">
                     <span class="tm-overdue-card__days">${row.overdueDays} ${escapeHtml(i18n.daysOverdueSuffix)}</span>
+                  </div>
+                </div>`;
+    }
+
+    function dueSoonCardMainHtml(row) {
+      const dl = row.deadlineStr
+        ? `<div class="tm-overdue-card__deadline-hint text-muted small mt-1">
+             <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+             ${escapeHtml(i18n.deadlineDateLabel)}: ${escapeHtml(row.deadlineStr)}
+           </div>`
+        : '';
+      return `
+                <div class="tm-overdue-card__main">
+                  <div class="tm-overdue-card__body">
+                    <a
+                      href="/admin/tasks/${row.id}"
+                      class="tm-overdue-card__title text-decoration-none"
+                      title="${escapeHtml(row.title)}"
+                    >
+                      ${escapeHtml(row.title)}
+                    </a>
+                    <div class="tm-overdue-card__meta">
+                      <span class="tm-overdue-card__chip" title="${escapeHtml(i18n.subjectOwnerLabel)}: ${escapeHtml(row.konuSorumlusu)}">
+                        <i class="bi bi-person-badge tm-overdue-card__chip-icon" aria-hidden="true"></i>
+                        <span class="text-truncate">${escapeHtml(row.konuSorumlusu)}</span>
+                      </span>
+                      <span class="tm-overdue-card__chip tm-overdue-card__chip--status">
+                        <i class="bi bi-flag tm-overdue-card__chip-icon" aria-hidden="true"></i>
+                        <span class="badge status-${escapeHtml(row.status)} mb-0">${escapeHtml(row.statusText)}</span>
+                      </span>
+                    </div>
+                    ${dl}
+                  </div>
+                  <div class="tm-overdue-card__badge-wrap">
+                    <span class="tm-overdue-card__days tm-overdue-card__days--soon">${row.daysLeft} ${escapeHtml(i18n.daysUntilDeadlineSuffix)}</span>
                   </div>
                 </div>`;
     }
@@ -2481,6 +2577,53 @@
       const topRows = rows.slice(0, 20);
       if (isOverdueMode) {
         const sub = getOverdueSubView();
+        if (sub === 'dueSoon') {
+          const soonRows = tasks
+            .map((t) => {
+              if (!t || t.status === 'done') return null;
+              const daysLeft = getDaysLeftUntilDeadline(t, DUE_SOON_DAY_LIMIT);
+              if (daysLeft === null) return null;
+              return {
+                id: t.id,
+                title: (t.title || i18n.untitledTask).trim(),
+                konuSorumlusu: (
+                  t.konu_sorumlusu_username ||
+                  t.assigned_username ||
+                  '-'
+                ).trim(),
+                status: t.status,
+                statusText:
+                  t.status === 'in_progress'
+                    ? i18n.statusInProgress
+                    : t.status === 'pending'
+                    ? i18n.statusPending
+                    : String(t.status || ''),
+                daysLeft,
+                deadlineStr: formatTaskDeadlineDisplay(t)
+              };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+              if (a.daysLeft !== b.daysLeft) return a.daysLeft - b.daysLeft;
+              return String(a.title).localeCompare(String(b.title), undefined, {
+                sensitivity: 'base'
+              });
+            });
+          if (!soonRows.length) {
+            container.innerHTML = `<p class="small text-muted mb-0">${escapeHtml(i18n.noDueSoonTasksFound)}</p>`;
+            return;
+          }
+          const soonTop = soonRows.slice(0, 40);
+          container.innerHTML = soonTop
+            .map(
+              (row) => `
+              <div class="tm-overdue-card tm-overdue-card--tasks-only tm-overdue-card--due-soon">
+                ${dueSoonCardMainHtml(row)}
+              </div>`
+            )
+            .join('');
+          return;
+        }
         if (sub === 'tasks') {
           container.innerHTML = topRows
             .map(
@@ -3506,6 +3649,13 @@
     border-radius: 999px;
     box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
     white-space: nowrap;
+  }
+  .tm-overdue-card__days--soon {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.28);
+  }
+  .tm-overdue-card__deadline-hint {
+    font-size: 0.78rem;
   }
   .tm-overdue-note-panel {
     padding: 12px 16px 14px;

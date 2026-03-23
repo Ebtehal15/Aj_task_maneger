@@ -291,40 +291,66 @@ router.get('/task-distribution', async (req, res) => {
 
   try {
     const byUserResult = await pool.query(`
+      WITH agg AS (
+        SELECT
+          u.id,
+          u.username,
+          COUNT(t.id)::int AS total,
+          COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
+          COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
+          COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
+          COUNT(*) FILTER (
+            WHERE t.status <> 'done'
+              AND t.deadline IS NOT NULL
+              AND (t.deadline::date < CURRENT_DATE)
+          )::int AS overdue,
+          COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent,
+          COUNT(*) FILTER (
+            WHERE t.status = 'done'
+              AND t.deadline IS NOT NULL
+              AND t.completed_at IS NOT NULL
+              AND (t.completed_at::date <= t.deadline::date)
+          )::int AS on_time_done
+        FROM users u
+        LEFT JOIN tasks t
+          ON (
+            t.assigned_to = u.id
+            OR t.sorumlu_2 = u.id
+            OR t.sorumlu_3 = u.id
+            OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
+          )
+        WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
+        GROUP BY u.id, u.username
+      )
       SELECT
-        u.id,
-        u.username,
-        COUNT(t.id)::int AS total,
-        COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
-        COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
-        COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
-        COUNT(*) FILTER (
-          WHERE t.status <> 'done'
-            AND t.deadline IS NOT NULL
-            AND (t.deadline::date < CURRENT_DATE)
-        )::int AS overdue,
-        COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
-      FROM users u
-      LEFT JOIN tasks t
-        ON (
-          t.assigned_to = u.id
-          OR t.sorumlu_2 = u.id
-          OR t.sorumlu_3 = u.id
-          OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
-        )
-      WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
-      GROUP BY u.id, u.username
+        agg.id,
+        agg.username,
+        agg.total,
+        agg.pending,
+        agg.in_progress,
+        agg.done,
+        agg.overdue,
+        agg.urgent,
+        agg.on_time_done,
+        ROUND(
+          0.55 * (CASE WHEN agg.total = 0 THEN 0 ELSE ROUND(100.0 * agg.done / agg.total::numeric) END)
+          + 0.25 * (CASE WHEN agg.done = 0 THEN 0 ELSE ROUND(100.0 * agg.on_time_done / agg.done::numeric) END)
+          + 0.20 * (
+              100 - (
+                CASE
+                  WHEN (agg.total - agg.done) = 0 THEN 0
+                  ELSE ROUND(100.0 * agg.overdue / (agg.total - agg.done)::numeric)
+                END
+              )
+            )
+        )::int AS performance_score
+      FROM agg
       ORDER BY
-        (COUNT(t.id) > 0) DESC,
-        (
-          -- başarı skoru: (done/total) * (done / (done + 5))
-          (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0))
-          *
-          (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF((COUNT(*) FILTER (WHERE t.status = 'done') + 5), 0))
-        ) DESC,
-        COUNT(*) FILTER (WHERE t.status = 'done') DESC,
-        COUNT(t.id) DESC,
-        u.username ASC
+        (agg.total > 0) DESC,
+        performance_score DESC,
+        agg.done DESC,
+        agg.overdue ASC,
+        agg.username ASC
     `);
 
     const totalsResult = await pool.query(`
@@ -361,34 +387,64 @@ router.get('/task-distribution/pdf', async (req, res) => {
 
   try {
     const byUserResult = await pool.query(`
+      WITH agg AS (
+        SELECT
+          u.id,
+          u.username,
+          COUNT(t.id)::int AS total,
+          COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
+          COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
+          COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
+          COUNT(*) FILTER (
+            WHERE t.status <> 'done'
+              AND t.deadline IS NOT NULL
+              AND (t.deadline::date < CURRENT_DATE)
+          )::int AS overdue,
+          COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent,
+          COUNT(*) FILTER (
+            WHERE t.status = 'done'
+              AND t.deadline IS NOT NULL
+              AND t.completed_at IS NOT NULL
+              AND (t.completed_at::date <= t.deadline::date)
+          )::int AS on_time_done
+        FROM users u
+        LEFT JOIN tasks t
+          ON (
+            t.assigned_to = u.id
+            OR t.sorumlu_2 = u.id
+            OR t.sorumlu_3 = u.id
+            OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
+          )
+        WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
+        GROUP BY u.id, u.username
+      )
       SELECT
-        u.username,
-        COUNT(t.id)::int AS total,
-        COUNT(*) FILTER (WHERE t.status = 'pending')::int AS pending,
-        COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
-        COUNT(*) FILTER (WHERE t.status = 'done')::int AS done,
-        COUNT(*) FILTER (
-          WHERE t.status <> 'done'
-            AND t.deadline IS NOT NULL
-            AND (t.deadline::date < CURRENT_DATE)
-        )::int AS overdue,
-        COUNT(*) FILTER (WHERE COALESCE(t.acil, false)::boolean = true)::int AS urgent
-      FROM users u
-      LEFT JOIN tasks t
-        ON (
-          t.assigned_to = u.id
-          OR t.sorumlu_2 = u.id
-          OR t.sorumlu_3 = u.id
-          OR (t.konu_sorumlusu IS NOT NULL AND t.konu_sorumlusu::text != '' AND t.konu_sorumlusu::text = u.id::text)
-        )
-      WHERE u.role IN ('admin', 'user', 'super_admin', 'system_admin')
-      GROUP BY u.id, u.username
+        agg.username,
+        agg.total,
+        agg.pending,
+        agg.in_progress,
+        agg.done,
+        agg.overdue,
+        agg.urgent,
+        ROUND(
+          0.55 * (CASE WHEN agg.total = 0 THEN 0 ELSE ROUND(100.0 * agg.done / agg.total::numeric) END)
+          + 0.25 * (CASE WHEN agg.done = 0 THEN 0 ELSE ROUND(100.0 * agg.on_time_done / agg.done::numeric) END)
+          + 0.20 * (
+              100 - (
+                CASE
+                  WHEN (agg.total - agg.done) = 0 THEN 0
+                  ELSE ROUND(100.0 * agg.overdue / (agg.total - agg.done)::numeric)
+                END
+              )
+            )
+        )::int AS performance_score
+      FROM agg
       ORDER BY
-        (COUNT(t.id) > 0) DESC,
-        (COUNT(*) FILTER (WHERE t.status = 'done')::float / NULLIF(COUNT(t.id), 0)) DESC,
-        COUNT(*) FILTER (WHERE t.status = 'done') DESC,
-        COUNT(t.id) DESC,
-        u.username ASC
+        (agg.total > 0) DESC,
+        performance_score DESC,
+        agg.done DESC,
+        agg.overdue ASC,
+        agg.username ASC
     `);
 
     const totalsResult = await pool.query(`
@@ -467,6 +523,14 @@ router.get('/task-distribution/pdf', async (req, res) => {
 
     // Table header
     const startX = doc.x;
+    const performanceScorePdfLabel = (() => {
+      const x = t('performanceScore');
+      if (x && x !== 'performanceScore') return x;
+      const l = req.lang || 'tr';
+      if (l === 'en') return 'Performance score';
+      if (l === 'ar') return 'نقاط الأداء';
+      return 'Performans skoru';
+    })();
     const headers = [
       '#',
       t('personnel'),
@@ -476,7 +540,7 @@ router.get('/task-distribution/pdf', async (req, res) => {
       t('status_done'),
       t('overdueTasks'),
       t('urgentTasks'),
-      t('completionRate'),
+      performanceScorePdfLabel,
     ];
     const colWidths = [20, 110, 45, 45, 45, 45, 50, 50, 60];
 
@@ -501,7 +565,10 @@ router.get('/task-distribution/pdf', async (req, res) => {
       }
       const total = r.total || 0;
       const done = r.done || 0;
-      const completion = total > 0 ? Math.round((done / total) * 100) : 0;
+      const perfScore =
+        r.performance_score != null && r.performance_score !== ''
+          ? Number(r.performance_score)
+          : 0;
 
       const values = [
         String(index),
@@ -512,7 +579,7 @@ router.get('/task-distribution/pdf', async (req, res) => {
         String(done),
         String(r.overdue || 0),
         String(r.urgent || 0),
-        `${completion}%`,
+        String(perfScore),
       ];
 
       values.forEach((val, i) => {

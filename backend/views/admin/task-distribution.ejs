@@ -7,6 +7,17 @@
   const urgentAll = totals?.urgent ?? 0;
   const completionAll = totalAll > 0 ? Math.round((doneAll / totalAll) * 100) : 0;
   const completionAllBarClass = completionAll > 50 ? 'tm-progress__bar--green' : (completionAll === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red');
+  /** t() bazen anahtarı döndürürse (önbellek) doğrudan çeviri */
+  const performanceScoreLabel = (() => {
+    if (typeof t === 'function') {
+      const tr = t('performanceScore');
+      if (tr && tr !== 'performanceScore') return tr;
+    }
+    const l = typeof lang !== 'undefined' ? lang : 'tr';
+    if (l === 'en') return 'Performance score';
+    if (l === 'ar') return 'نقاط الأداء';
+    return 'Performans skoru';
+  })();
 %>
 
 <div class="d-flex justify-content-between align-items-center mb-3 td-header">
@@ -145,13 +156,8 @@
           const done = r.done ?? 0;
           const overdue = r.overdue ?? 0;
           const urgent = r.urgent ?? 0;
-          // Başarı oranı: tamamlanma oranı * hacim faktörü
-          // - Tamamlanma oranı: done / total
-          // - Hacim faktörü: done / (done + 5)  -> daha çok görev tamamlayanlar daha yüksek puan alır
-          const completionRatio = total > 0 ? (done / total) : 0;
-          const volumeFactor = done > 0 ? (done / (done + 5)) : 0;
-          const successRaw = completionRatio * volumeFactor * 100;
-          const success = Math.max(0, Math.min(100, Math.round(successRaw)));
+          /* Grafikler > Top 3 ile aynı: %55 tamamlanma + %25 zamanında + %20 (100 − açık gecikme oranı) */
+          const performanceScore = Math.max(0, Math.min(100, Number(r.performance_score) || 0));
           const initial = (r.username || '?').toString().trim().charAt(0).toUpperCase();
         %>
         <div class="tm-user-card-col">
@@ -168,14 +174,14 @@
                   </div>
                 </div>
 
-                <div class="tm-user-card__rate" title="Başarı Oranı">
-                  <b><%= success %>%</b>
+                <div class="tm-user-card__rate" title="<%= performanceScoreLabel %>">
+                  <b><%= performanceScore %></b>
                   <span class="tm-user-card__chev" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
                 </div>
               </div>
 
-              <div class="tm-progress" aria-label="Başarı Oranı">
-                <div class="tm-progress__bar <%= success > 50 ? 'tm-progress__bar--green' : (success === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= success %>%;"></div>
+              <div class="tm-progress" aria-label="<%= performanceScoreLabel %>">
+                <div class="tm-progress__bar <%= performanceScore > 50 ? 'tm-progress__bar--green' : (performanceScore === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= performanceScore %>%;"></div>
               </div>
 
               <div class="tm-user-card__details">
@@ -265,7 +271,7 @@
               <th class="text-center"><%= t('status_done') %></th>
               <th class="text-center"><%= t('overdueTasks') %></th>
               <th class="text-center"><%= t('urgentTasks') %></th>
-              <th class="text-center">Başarı Oranı</th>
+              <th class="text-center"><%= performanceScoreLabel %></th>
             </tr>
           </thead>
           <tbody>
@@ -275,10 +281,7 @@
                 const done = r.done ?? 0;
                 const overdue = r.overdue ?? 0;
                 const urgent = r.urgent ?? 0;
-                const completionRatio = total > 0 ? (done / total) : 0;
-                const volumeFactor = done > 0 ? (done / (done + 5)) : 0;
-                const successRaw = completionRatio * volumeFactor * 100;
-                const success = Math.max(0, Math.min(100, Math.round(successRaw)));
+                const performanceScore = Math.max(0, Math.min(100, Number(r.performance_score) || 0));
                 const rank = idx + 1;
                 const rankClass = rank === 1 ? 'tm-rank tm-rank--1' : rank === 2 ? 'tm-rank tm-rank--2' : rank === 3 ? 'tm-rank tm-rank--3' : '';
               %>
@@ -331,9 +334,9 @@
                 <td class="text-center" style="min-width: 160px;">
                   <div class="d-flex align-items-center gap-2 justify-content-center">
                     <div class="tm-progress" style="width: 110px;">
-                      <div class="tm-progress__bar <%= success > 50 ? 'tm-progress__bar--green' : (success === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= success %>%;"></div>
+                      <div class="tm-progress__bar <%= performanceScore > 50 ? 'tm-progress__bar--green' : (performanceScore === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= performanceScore %>%;"></div>
                     </div>
-                    <span class="fw-bold"><%= success %>%</span>
+                    <span class="fw-bold"><%= performanceScore %></span>
                   </div>
                 </td>
               </tr>
