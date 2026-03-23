@@ -1280,6 +1280,46 @@
       return (String(value || '').trim() || i18n.other);
     }
 
+    /** Pasta: "Diğer" / Other / boş / yazım varyantlarını tek grupta toplar */
+    function departmentGroupingKey(label) {
+      const compact = String(label == null ? '' : label)
+        .trim()
+        .normalize('NFKC')
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+        .replace(/\s+/g, '');
+      if (!compact) return '__other__';
+      const upperTr = compact.toLocaleUpperCase('tr-TR');
+      const upperAscii = compact
+        .replace(/\u0130/g, 'I')
+        .replace(/İ/g, 'I')
+        .replace(/ı/g, 'i')
+        .toUpperCase();
+      if (
+        upperTr === 'DİĞER' ||
+        upperAscii === 'DIGER' ||
+        upperAscii === 'OTHER'
+      ) {
+        return '__other__';
+      }
+      return upperTr;
+    }
+
+    function mergeDepartmentPieBuckets(items) {
+      const map = new Map();
+      (items || []).forEach(it => {
+        const key = departmentGroupingKey(it.label);
+        const displayLabel =
+          key === '__other__' ? i18n.other : String(it.label || '').trim() || i18n.other;
+        const cur = map.get(key);
+        if (cur) {
+          cur.value += it.value;
+        } else {
+          map.set(key, { label: displayLabel, value: it.value });
+        }
+      });
+      return Array.from(map.values());
+    }
+
     function escapeHtml(str) {
       return String(str)
         .replace(/&/g, '&amp;')
@@ -1617,13 +1657,24 @@
         return null;
       }
 
-      // Çok fazla departman varsa ilk 6 + Diğer yap
-      const normalized = (items || []).slice().sort((a, b) => b.value - a.value);
+      // Önce yazım varyantlarını birleştir; sonra ilk 6 + kalan (tek "Diğer" satırı)
+      const merged = mergeDepartmentPieBuckets(items);
+      const normalized = merged.slice().sort((a, b) => b.value - a.value);
       const top = normalized.slice(0, 6);
       const rest = normalized.slice(6);
       if (rest.length) {
         const restTotal = rest.reduce((sum, it) => sum + it.value, 0);
-        top.push({ label: i18n.other, value: restTotal });
+        const otherIdx = top.findIndex(
+          it => departmentGroupingKey(it.label) === '__other__'
+        );
+        if (otherIdx >= 0) {
+          top[otherIdx] = {
+            label: i18n.other,
+            value: top[otherIdx].value + restTotal
+          };
+        } else {
+          top.push({ label: i18n.other, value: restTotal });
+        }
       }
 
       const total = top.reduce((sum, it) => sum + it.value, 0);
