@@ -31,8 +31,8 @@
       overdueTasksKpi: 'Geciken',
       urgentTasksKpi: 'Acil',
       dueSoonTasksKpi: 'Yaklaşan (3 gün)',
-      statusDistributionPie: 'Duruma göre dağılım (pasta)',
-      departmentDistributionPie: 'Departmana göre dağılım (pasta)',
+      statusDistributionPie: 'Duruma göre dağılım',
+      departmentDistributionPie: 'Departmana göre dağılım',
       openByUserChart: 'Kişiye göre açık görev dağılımı',
       completedByUserChart: 'Kişiye göre tamamlanan görev dağılımı',
       overdueByUserChart: 'Kişiye göre geciken görevler',
@@ -1591,6 +1591,32 @@
         '#f97316'
       ];
 
+      /** Sabit departman renkleri — paletten atlanır (çakışma olmasın) */
+      const RESERVED_DEPT_HEX = new Set(['#22c55e', '#3b82f6', '#eab308']);
+
+      /**
+       * SAHA = yeşil, BELEDİYE = mavi, GENEL = sarı (sabit); diğerleri paletten.
+       * SAHA için tr-TR upperCase bazı tarayıcılarda farklı davranabildiğinden önce ASCII upper kullanılır.
+       */
+      function departmentPieColor(label) {
+        const compact = String(label == null ? '' : label)
+          .trim()
+          .normalize('NFKC')
+          .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+          .replace(/\s+/g, '');
+        if (!compact) return null;
+        if (compact.toUpperCase() === 'SAHA') return '#22c55e';
+        if (compact.toUpperCase() === 'GENEL') return '#eab308';
+        const upperTr = compact.toLocaleUpperCase('tr-TR');
+        const upperAscii = compact
+          .replace(/\u0130/g, 'I')
+          .replace(/İ/g, 'I')
+          .replace(/ı/g, 'i')
+          .toUpperCase();
+        if (upperTr === 'BELEDİYE' || upperAscii === 'BELEDIYE') return '#3b82f6';
+        return null;
+      }
+
       // Çok fazla departman varsa ilk 6 + Diğer yap
       const normalized = (items || []).slice().sort((a, b) => b.value - a.value);
       const top = normalized.slice(0, 6);
@@ -1620,9 +1646,24 @@
       const gradientParts = [];
       const legendRows = [];
       const segments = [];
+      let paletteCursor = 0;
+
+      function nextNonReservedPaletteColor() {
+        let guard = 0;
+        while (guard < palette.length * 2) {
+          const c = palette[paletteCursor % palette.length];
+          paletteCursor += 1;
+          if (!RESERVED_DEPT_HEX.has(c)) return c;
+          guard += 1;
+        }
+        return '#94a3b8';
+      }
 
       top.forEach((it, idx) => {
-        const color = palette[idx % palette.length];
+        let color = departmentPieColor(it.label);
+        if (!color) {
+          color = nextNonReservedPaletteColor();
+        }
         const percent = Math.round((it.value / total) * 100);
         const angle = (it.value / total) * 360;
         const angleEnd = angleStart + angle;
