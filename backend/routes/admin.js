@@ -523,16 +523,15 @@ router.get('/task-distribution/pdf', async (req, res) => {
 
     // Table header
     const startX = doc.x;
-    const performanceScorePdfLabel = (() => {
-      const x = t('performanceScore');
-      if (x && x !== 'performanceScore') return x;
+    const completionRatePdfLabel = (() => {
+      const x = t('completionRate');
+      if (x && x !== 'completionRate') return x;
       const l = req.lang || 'tr';
-      if (l === 'en') return 'Performance score';
-      if (l === 'ar') return 'نقاط الأداء';
-      return 'Performans skoru';
+      if (l === 'en') return 'Completion rate';
+      if (l === 'ar') return 'نسبة الإنجاز';
+      return 'Tamamlama oranı';
     })();
     const headers = [
-      '#',
       t('personnel'),
       t('totalTasks'),
       t('status_pending'),
@@ -540,15 +539,15 @@ router.get('/task-distribution/pdf', async (req, res) => {
       t('status_done'),
       t('overdueTasks'),
       t('urgentTasks'),
-      performanceScorePdfLabel,
+      completionRatePdfLabel,
     ];
-    const colWidths = [20, 110, 45, 45, 45, 45, 50, 50, 60];
+    const colWidths = [130, 45, 45, 45, 45, 50, 50, 60];
 
     doc.fontSize(10).fillColor('#111827').font('Helvetica-Bold');
     headers.forEach((h, i) => {
       doc.text(h, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), doc.y, {
         width: colWidths[i],
-        align: i === 1 ? 'left' : 'center',
+        align: i === 0 ? 'left' : 'center',
       });
     });
     doc.moveDown(0.5);
@@ -558,20 +557,16 @@ router.get('/task-distribution/pdf', async (req, res) => {
 
     doc.font('Helvetica').fillColor('#111827');
 
-    let index = 1;
     rows.forEach((r) => {
       if (doc.y > doc.page.height - 60) {
         doc.addPage();
       }
       const total = r.total || 0;
       const done = r.done || 0;
-      const perfScore =
-        r.performance_score != null && r.performance_score !== ''
-          ? Number(r.performance_score)
-          : 0;
+      const completionPct =
+        total > 0 ? Math.round((100 * done) / total) : 0;
 
       const values = [
-        String(index),
         r.username,
         String(total),
         String(r.pending || 0),
@@ -579,18 +574,17 @@ router.get('/task-distribution/pdf', async (req, res) => {
         String(done),
         String(r.overdue || 0),
         String(r.urgent || 0),
-        String(perfScore),
+        `${completionPct}%`,
       ];
 
       values.forEach((val, i) => {
         doc.text(val, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), doc.y, {
           width: colWidths[i],
-          align: i === 1 ? 'left' : 'center',
+          align: i === 0 ? 'left' : 'center',
         });
       });
 
       doc.moveDown(0.3);
-      index += 1;
     });
 
     doc.end();

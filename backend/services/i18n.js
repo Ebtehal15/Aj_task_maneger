@@ -415,7 +415,7 @@ const STRINGS = {
     cardView: 'Kart Görünümü',
     tableView: 'Tablo Görünümü',
     evaluation: 'Değerlendirme',
-    completionRate: 'Tamamlanma Oranı',
+    completionRate: 'Tamamlama oranı',
     performanceScore: 'Performans skoru',
     overdueTasks: 'Geciken Görevler',
     yoneticiKontrol: 'Yönetici Takip',

@@ -758,42 +758,6 @@ html[dir='rtl'] .navbar.tm-navbar .d-flex {
   }
 }
 
-/* Top 3 highlight (Task Distribution table) */
-.tm-top-row td {
-  background: rgba(250, 204, 21, 0.04);
-}
-
-.tm-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  font-weight: 900;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  background: rgba(255, 255, 255, 0.9);
-  color: #0f172a;
-}
-
-.tm-rank--1 {
-  border-color: rgba(250, 204, 21, 0.65);
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.35), rgba(234, 179, 8, 0.18));
-  box-shadow: 0 10px 18px rgba(250, 204, 21, 0.18);
-}
-
-.tm-rank--2 {
-  border-color: rgba(148, 163, 184, 0.75);
-  background: linear-gradient(135deg, rgba(148, 163, 184, 0.30), rgba(226, 232, 240, 0.18));
-  box-shadow: 0 10px 18px rgba(148, 163, 184, 0.16);
-}
-
-.tm-rank--3 {
-  border-color: rgba(180, 83, 9, 0.35);
-  background: linear-gradient(135deg, rgba(180, 83, 9, 0.20), rgba(245, 158, 11, 0.12));
-  box-shadow: 0 10px 18px rgba(245, 158, 11, 0.14);
-}
-
 /* User cards (Task Distribution) */
 .tm-user-cards {
   display: grid;

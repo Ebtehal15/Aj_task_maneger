@@ -8,15 +8,15 @@
   const completionAll = totalAll > 0 ? Math.round((doneAll / totalAll) * 100) : 0;
   const completionAllBarClass = completionAll > 50 ? 'tm-progress__bar--green' : (completionAll === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red');
   /** t() bazen anahtarı döndürürse (önbellek) doğrudan çeviri */
-  const performanceScoreLabel = (() => {
+  const completionRateLabel = (() => {
     if (typeof t === 'function') {
-      const tr = t('performanceScore');
-      if (tr && tr !== 'performanceScore') return tr;
+      const tr = t('completionRate');
+      if (tr && tr !== 'completionRate') return tr;
     }
     const l = typeof lang !== 'undefined' ? lang : 'tr';
-    if (l === 'en') return 'Performance score';
-    if (l === 'ar') return 'نقاط الأداء';
-    return 'Performans skoru';
+    if (l === 'en') return 'Completion rate';
+    if (l === 'ar') return 'نسبة الإنجاز';
+    return 'Tamamlama oranı';
   })();
 %>
 
@@ -42,21 +42,23 @@
 
 <div class="tm-kpi-grid mb-3">
   <div class="tm-kpi-col">
-    <div class="tm-kpi-card tm-kpi-accent--blue">
-      <div class="tm-kpi-card__body">
-        <div class="tm-kpi-card__top">
-          <div>
-            <div class="tm-kpi-card__label"><%= t('totalTasks') %></div>
-            <div class="tm-kpi-card__value"><%= totalAll %></div>
+    <a href="/admin/dashboard" class="text-decoration-none text-reset">
+      <div class="tm-kpi-card tm-kpi-accent--blue" style="cursor: pointer;">
+        <div class="tm-kpi-card__body">
+          <div class="tm-kpi-card__top">
+            <div>
+              <div class="tm-kpi-card__label"><%= t('totalTasks') %></div>
+              <div class="tm-kpi-card__value"><%= totalAll %></div>
+            </div>
+            <div class="tm-kpi-icon"><i class="bi bi-stack"></i></div>
           </div>
-          <div class="tm-kpi-icon"><i class="bi bi-stack"></i></div>
-        </div>
-        <div class="tm-kpi-sub">
-          <span class="tm-pill"><i class="bi bi-check2-circle"></i> <%= doneAll %></span>
-          <span class="tm-pill"><i class="bi bi-hourglass-split"></i> <%= pendingAll + inProgressAll %></span>
+          <div class="tm-kpi-sub">
+            <span class="tm-pill"><i class="bi bi-check2-circle"></i> <%= doneAll %></span>
+            <span class="tm-pill"><i class="bi bi-hourglass-split"></i> <%= pendingAll + inProgressAll %></span>
+          </div>
         </div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="tm-kpi-col">
@@ -98,21 +100,23 @@
   </div>
 
   <div class="tm-kpi-col">
-    <div class="tm-kpi-card tm-kpi-accent--amber">
-      <div class="tm-kpi-card__body">
-        <div class="tm-kpi-card__top">
-          <div>
-            <div class="tm-kpi-card__label"><%= t('urgentTasks') %></div>
-            <div class="tm-kpi-card__value"><%= urgentAll %></div>
+    <a href="/admin/reports?urgent=true" class="text-decoration-none text-reset">
+      <div class="tm-kpi-card tm-kpi-accent--amber" style="cursor: pointer;">
+        <div class="tm-kpi-card__body">
+          <div class="tm-kpi-card__top">
+            <div>
+              <div class="tm-kpi-card__label"><%= t('urgentTasks') %></div>
+              <div class="tm-kpi-card__value"><%= urgentAll %></div>
+            </div>
+            <div class="tm-kpi-icon"><i class="bi bi-lightning-charge"></i></div>
           </div>
-          <div class="tm-kpi-icon"><i class="bi bi-lightning-charge"></i></div>
-        </div>
-        <div class="tm-kpi-sub">
-          <span class="tm-pill tm-pill--amber"><i class="bi bi-lightning"></i> <%= urgentAll %></span>
-          <span class="tm-pill"><i class="bi bi-shield-check"></i> AJ</span>
+          <div class="tm-kpi-sub">
+            <span class="tm-pill tm-pill--amber"><i class="bi bi-lightning"></i> <%= urgentAll %></span>
+            <span class="tm-pill"><i class="bi bi-shield-check"></i> AJ</span>
+          </div>
         </div>
       </div>
-    </div>
+    </a>
   </div>
 </div>
 
@@ -156,8 +160,8 @@
           const done = r.done ?? 0;
           const overdue = r.overdue ?? 0;
           const urgent = r.urgent ?? 0;
-          /* Grafikler > Top 3 ile aynı: %55 tamamlanma + %25 zamanında + %20 (100 − açık gecikme oranı) */
-          const performanceScore = Math.max(0, Math.min(100, Number(r.performance_score) || 0));
+          const completionPct =
+            total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
           const initial = (r.username || '?').toString().trim().charAt(0).toUpperCase();
         %>
         <div class="tm-user-card-col">
@@ -174,14 +178,14 @@
                   </div>
                 </div>
 
-                <div class="tm-user-card__rate" title="<%= performanceScoreLabel %>">
-                  <b><%= performanceScore %></b>
+                <div class="tm-user-card__rate" title="<%= completionRateLabel %>">
+                  <b><%= completionPct %>%</b>
                   <span class="tm-user-card__chev" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
                 </div>
               </div>
 
-              <div class="tm-progress" aria-label="<%= performanceScoreLabel %>">
-                <div class="tm-progress__bar <%= performanceScore > 50 ? 'tm-progress__bar--green' : (performanceScore === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= performanceScore %>%;"></div>
+              <div class="tm-progress" aria-label="<%= completionRateLabel %>">
+                <div class="tm-progress__bar <%= completionPct > 50 ? 'tm-progress__bar--green' : (completionPct === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= completionPct %>%;"></div>
               </div>
 
               <div class="tm-user-card__details">
@@ -263,7 +267,6 @@
           <table class="table table-hover align-middle mb-0 tm-table-soft">
           <thead class="table-light">
             <tr>
-              <th>#</th>
               <th><%= t('personnel') %></th>
               <th class="text-center"><%= t('totalTasks') %></th>
               <th class="text-center"><%= t('status_pending') %></th>
@@ -271,24 +274,20 @@
               <th class="text-center"><%= t('status_done') %></th>
               <th class="text-center"><%= t('overdueTasks') %></th>
               <th class="text-center"><%= t('urgentTasks') %></th>
-              <th class="text-center"><%= performanceScoreLabel %></th>
+              <th class="text-center"><%= completionRateLabel %></th>
             </tr>
           </thead>
           <tbody>
-            <% rows.forEach((r, idx) => { %>
+            <% rows.forEach((r) => { %>
               <%
                 const total = r.total ?? 0;
                 const done = r.done ?? 0;
                 const overdue = r.overdue ?? 0;
                 const urgent = r.urgent ?? 0;
-                const performanceScore = Math.max(0, Math.min(100, Number(r.performance_score) || 0));
-                const rank = idx + 1;
-                const rankClass = rank === 1 ? 'tm-rank tm-rank--1' : rank === 2 ? 'tm-rank tm-rank--2' : rank === 3 ? 'tm-rank tm-rank--3' : '';
+                const completionPct =
+                  total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
               %>
-              <tr class="<%= rank <= 3 ? 'tm-top-row' : '' %>">
-                <td>
-                  <span class="<%= rankClass %>"><%= rank %></span>
-                </td>
+              <tr>
                 <td>
                   <div class="fw-bold"><%= r.username %></div>
                   <div class="small text-muted">
@@ -334,9 +333,9 @@
                 <td class="text-center" style="min-width: 160px;">
                   <div class="d-flex align-items-center gap-2 justify-content-center">
                     <div class="tm-progress" style="width: 110px;">
-                      <div class="tm-progress__bar <%= performanceScore > 50 ? 'tm-progress__bar--green' : (performanceScore === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= performanceScore %>%;"></div>
+                      <div class="tm-progress__bar <%= completionPct > 50 ? 'tm-progress__bar--green' : (completionPct === 50 ? 'tm-progress__bar--amber' : 'tm-progress__bar--red') %>" style="width: <%= completionPct %>%;"></div>
                     </div>
-                    <span class="fw-bold"><%= performanceScore %></span>
+                    <span class="fw-bold"><%= completionPct %>%</span>
                   </div>
                 </td>
               </tr>
