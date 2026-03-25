@@ -1994,36 +1994,67 @@
       `;
     }
 
+    /**
+     * Görev Dağılımı / SQL ile aynı: görev, atanana + sorumlu_2 + sorumlu_3 + konu_sorumlusu
+     * rollerindeki her kullanıcıya bir kez sayılır (aynı kişi iki roldeyse tek sayım).
+     */
+    function taskResponsibleDisplayNames(task) {
+      const names = new Set();
+      const add = (v) => {
+        const s = String(v || '').trim();
+        if (s) names.add(s);
+      };
+      if (task) {
+        add(task.assigned_username);
+        add(task.sorumlu_2_username);
+        add(task.sorumlu_3_username);
+        add(task.konu_sorumlusu_username);
+      }
+      return Array.from(names);
+    }
+
+    /** admin/task-distribution SQL ile aynı: %55 tamamlanma + %25 zamanında + %20×(100−açık gecikme oranı) */
+    function performanceScoreFromRates(completionRate, onTimeRate, overdueAmongOpenPct) {
+      const raw =
+        completionRate * 0.55 +
+        onTimeRate * 0.25 +
+        (100 - overdueAmongOpenPct) * 0.2;
+      return Math.max(0, Math.min(100, Math.round(raw)));
+    }
+
     function renderTopPerformers() {
       const container = document.getElementById('top-performers-board');
       if (!container) return;
 
       const byUser = new Map();
       tasks.forEach(t => {
-        const user = safeLabel(t.assigned_username);
-        if (!byUser.has(user)) {
-          byUser.set(user, {
-            user,
-            total: 0,
-            completed: 0,
-            open: 0,
-            overdue: 0,
-            onTimeCompleted: 0
-          });
-        }
-        const stat = byUser.get(user);
-        stat.total += 1;
-        if (isDone(t)) {
-          stat.completed += 1;
-          const deadline = parseDate(t.deadline);
-          const completedAt = parseDate(t.completed_at);
-          if (deadline && completedAt && completedAt.getTime() <= deadline.getTime()) {
-            stat.onTimeCompleted += 1;
+        const responsible = taskResponsibleDisplayNames(t);
+        if (!responsible.length) return;
+        responsible.forEach((user) => {
+          if (!byUser.has(user)) {
+            byUser.set(user, {
+              user,
+              total: 0,
+              completed: 0,
+              open: 0,
+              overdue: 0,
+              onTimeCompleted: 0
+            });
           }
-        } else {
-          stat.open += 1;
-          if (isOverdue(t)) stat.overdue += 1;
-        }
+          const stat = byUser.get(user);
+          stat.total += 1;
+          if (isDone(t)) {
+            stat.completed += 1;
+            const deadline = parseDate(t.deadline);
+            const completedAt = parseDate(t.completed_at);
+            if (deadline && completedAt && completedAt.getTime() <= deadline.getTime()) {
+              stat.onTimeCompleted += 1;
+            }
+          } else {
+            stat.open += 1;
+            if (isOverdue(t)) stat.overdue += 1;
+          }
+        });
       });
 
       const ranked = Array.from(byUser.values())
@@ -2033,7 +2064,7 @@
           const completionRate = s.total ? Math.round((s.completed / s.total) * 100) : 0;
           const onTimeRate = s.completed ? Math.round((s.onTimeCompleted / s.completed) * 100) : 0;
           const overdueRate = s.open ? Math.round((s.overdue / s.open) * 100) : 0;
-          const score = Math.round((completionRate * 0.55) + (onTimeRate * 0.25) + ((100 - overdueRate) * 0.20));
+          const score = performanceScoreFromRates(completionRate, onTimeRate, overdueRate);
           return { ...s, completionRate, onTimeRate, overdueRate, score };
         })
         .sort((a, b) => b.score - a.score || b.completed - a.completed || a.overdue - b.overdue)
