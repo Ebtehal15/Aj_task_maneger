@@ -36,6 +36,20 @@ console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set (masked)' : '
 console.log('  DB_SSL:', process.env.DB_SSL || 'not set');
 console.log('  SESSION_SECRET:', process.env.SESSION_SECRET ? '✅ Set' : '❌ Not set (using default)');
 
+function parseSessionMaxAgeMinutes() {
+  const raw = process.env.SESSION_MAX_AGE_MINUTES;
+  if (raw === undefined || String(raw).trim() === '') return 20;
+  const n = parseInt(String(raw).trim(), 10);
+  if (Number.isNaN(n) || n < 1) return 20;
+  if (n > 24 * 60) return 24 * 60;
+  return n;
+}
+
+const SESSION_MAX_AGE_MINUTES = parseSessionMaxAgeMinutes();
+const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_MINUTES * 60 * 1000;
+
+console.log('  SESSION_MAX_AGE_MINUTES:', process.env.SESSION_MAX_AGE_MINUTES ? SESSION_MAX_AGE_MINUTES : `${SESSION_MAX_AGE_MINUTES} (default)`);
+
 // Initialize database (SQLite)
 initDb();
 
@@ -127,10 +141,11 @@ const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'super-secret-demo-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Her istekte cookie süresini yenile (hareketsizlikte SESSION_MAX_AGE_MINUTES sonra düşer)
   name: 'connect.sid', // Explicit session cookie name
   proxy: IS_PROD,
   cookie: {
-    // maxAge verilmezse cookie tarayıcı kapanana kadar geçerlidir
+    maxAge: SESSION_MAX_AGE_MS,
     // In production use secure cookies (requires trust proxy). In local dev allow HTTP.
     secure: IS_PROD,
     httpOnly: true,
@@ -143,6 +158,7 @@ const sessionConfig = {
 console.log('🔍 Session Config:');
 console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
 console.log('  Cookie secure:', sessionConfig.cookie.secure ? '✅ Yes (HTTPS only)' : '❌ No (HTTP allowed)');
+console.log('  Session maxAge:', SESSION_MAX_AGE_MINUTES, 'min (rolling), env SESSION_MAX_AGE_MINUTES');
 console.log('  SESSION_SECRET:', process.env.SESSION_SECRET ? '✅ Set' : '❌ Not set (using default)');
 
 app.use(session(sessionConfig));
