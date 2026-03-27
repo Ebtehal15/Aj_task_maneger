@@ -56,12 +56,14 @@
       <thead class="table-light">
         <tr>
           <th scope="col"><%= t('auditLogColTime') %></th>
-          <th scope="col"><%= t('auditLogColUser') %></th>
+          <th scope="col"><%= t('auditLogColPerformedBy') %></th>
           <th scope="col"><%= t('auditLogColAction') %></th>
           <th scope="col"><%= t('auditLogColEntity') %></th>
-          <th scope="col"><%= t('auditLogColEntityId') %></th>
           <th scope="col"><%= t('auditLogColDetails') %></th>
           <th scope="col"><%= t('auditLogColIp') %></th>
+          <% if (typeof canDeleteAuditLog !== 'undefined' && canDeleteAuditLog) { %>
+          <th scope="col" class="text-end"><%= t('delete') %></th>
+          <% } %>
         </tr>
       </thead>
       <tbody>
@@ -82,12 +84,26 @@
         %>
         <tr>
           <td class="text-nowrap"><%= timeStr %></td>
-          <td><%= row.username_snapshot || '—' %></td>
+          <td><strong><%= (row.u_username || row.username_snapshot) || '—' %></strong></td>
           <td><code><%= row.action %></code></td>
-          <td><%= row.entity_type || '—' %></td>
-          <td><%= row.entity_id != null ? row.entity_id : '—' %></td>
+          <td class="small">
+            <% if (row.entity_type) { %>
+              <%= row.entity_type %><% if (row.entity_id != null) { %> <span class="text-muted">#<%= row.entity_id %></span><% } %>
+            <% } else { %>
+              —
+            <% } %>
+          </td>
           <td class="small text-break" style="max-width: 280px;"><%= detStr || '—' %></td>
           <td class="small text-nowrap"><%= row.ip_address || '—' %></td>
+          <% if (typeof canDeleteAuditLog !== 'undefined' && canDeleteAuditLog) { %>
+          <td class="text-end text-nowrap">
+            <form method="post" action="/admin/audit-log/<%= row.id %>/delete" class="d-inline js-audit-delete-form" id="audit-delete-form-<%= row.id %>">
+              <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1 js-audit-delete-open" title="<%= t('auditLogDelete') %>" data-form-id="audit-delete-form-<%= row.id %>" aria-haspopup="dialog">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+          <% } %>
         </tr>
         <% }); %>
       </tbody>
@@ -108,4 +124,81 @@
     <% } %>
   </nav>
   <% } %>
+<% } %>
+
+<% if (typeof canDeleteAuditLog !== 'undefined' && canDeleteAuditLog) { %>
+<div class="modal fade" id="auditDeleteModal" tabindex="-1" aria-labelledby="auditDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-content tm-audit-delete-modal border-0 shadow-lg overflow-hidden">
+      <div class="tm-audit-delete-modal__header text-center py-4 px-3">
+        <div class="tm-audit-delete-modal__icon mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle">
+          <i class="bi bi-shield-exclamation fs-3"></i>
+        </div>
+        <h2 class="h5 mb-1 fw-semibold text-dark" id="auditDeleteModalLabel"><%= t('auditLogDeleteModalTitle') %></h2>
+        <p class="small text-muted mb-0 px-1"><%= t('auditLogDeleteConfirm') %></p>
+        <p class="small text-danger mb-0 mt-2 fw-medium"><%= t('auditLogDeleteModalHint') %></p>
+      </div>
+      <div class="modal-footer flex-wrap justify-content-center gap-2 border-0 pt-0 pb-4 px-3 bg-white">
+        <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal"><%= t('cancel') %></button>
+        <button type="button" class="btn btn-danger px-4 fw-semibold" id="auditDeleteModalConfirm">
+          <i class="bi bi-trash me-1"></i><%= t('auditLogDelete') %>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tm-audit-delete-modal {
+    border-radius: 1rem;
+  }
+  .tm-audit-delete-modal__header {
+    background: linear-gradient(135deg, #facc15 0%, #eab308 55%, #fde047 100%);
+  }
+  .tm-audit-delete-modal__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: rgba(255, 255, 255, 0.55);
+    color: #854d0e;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
+</style>
+
+<script>
+(function () {
+  function initAuditDeleteModal() {
+    if (typeof bootstrap === 'undefined') {
+      console.warn('[audit-log] Bootstrap not loaded; delete modal disabled.');
+      return;
+    }
+    var modalEl = document.getElementById('auditDeleteModal');
+    if (!modalEl) return;
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    var pendingForm = null;
+    document.querySelectorAll('.js-audit-delete-open').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var fid = btn.getAttribute('data-form-id');
+        pendingForm = fid ? document.getElementById(fid) : null;
+        modal.show();
+      });
+    });
+    var confirmBtn = document.getElementById('auditDeleteModalConfirm');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function () {
+        if (pendingForm) pendingForm.submit();
+        pendingForm = null;
+        modal.hide();
+      });
+    }
+    modalEl.addEventListener('hidden.bs.modal', function () {
+      pendingForm = null;
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuditDeleteModal);
+  } else {
+    initAuditDeleteModal();
+  }
+})();
+</script>
 <% } %>

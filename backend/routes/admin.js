@@ -226,26 +226,29 @@ router.get('/audit-log', async (req, res) => {
   let p = 1;
 
   if (actionFilter) {
-    conditions.push(`action ILIKE $${p++}`);
+    conditions.push(`al.action ILIKE $${p++}`);
     params.push(`%${actionFilter}%`);
   }
   if (usernameFilter) {
-    conditions.push(`username_snapshot ILIKE $${p++}`);
-    params.push(`%${usernameFilter}%`);
+    conditions.push(`(al.username_snapshot ILIKE $${p} OR u.username ILIKE $${p + 1})`);
+    const uq = `%${usernameFilter}%`;
+    params.push(uq, uq);
+    p += 2;
   }
   if (dateFrom) {
-    conditions.push(`created_at >= $${p++}::date`);
+    conditions.push(`al.created_at >= $${p++}::date`);
     params.push(dateFrom);
   }
   if (dateTo) {
-    conditions.push(`created_at < ($${p++}::date + interval '1 day')`);
+    conditions.push(`al.created_at < ($${p++}::date + interval '1 day')`);
     params.push(dateTo);
   }
 
   const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const auditFrom = `audit_log al LEFT JOIN users u ON al.user_id = u.id`;
 
   try {
-    const countResult = await pool.query(`SELECT COUNT(*)::int AS c FROM audit_log ${whereSql}`, params);
+    const countResult = await pool.query(`SELECT COUNT(*)::int AS c FROM ${auditFrom} ${whereSql}`, params);
     const total = countResult.rows[0].c;
     const totalPages = Math.max(1, Math.ceil(total / perPage) || 1);
     const safePage = Math.min(page, totalPages);
@@ -254,7 +257,7 @@ router.get('/audit-log', async (req, res) => {
     const offsetIdx = p + 1;
     const dataParams = [...params, perPage, (safePage - 1) * perPage];
     const rowsResult = await pool.query(
-      `SELECT * FROM audit_log ${whereSql} ORDER BY created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      `SELECT al.*, u.username AS u_username FROM ${auditFrom} ${whereSql} ORDER BY al.created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
       dataParams
     );
 
@@ -271,12 +274,40 @@ router.get('/audit-log', async (req, res) => {
         date_from: dateFrom,
         date_to: dateTo
       },
-      currentUser: req.user
+      currentUser: req.user,
+      canDeleteAuditLog: req.user.role === 'system_admin'
     });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
   }
+});
+
+// Denetim kaydı silme — yalnızca system_admin
+router.post('/audit-log/:id/delete', async (req, res) => {
+  if (req.user.role !== 'system_admin') {
+    return res.status(403).render('errors/403', {
+      pageTitle: 'Forbidden',
+      t: req.t,
+      lang: req.lang,
+      dir: req.dir,
+      user: req.user
+    });
+  }
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    return res.redirect('/admin/audit-log');
+  }
+  try {
+    await pool.query('DELETE FROM audit_log WHERE id = $1', [id]);
+  } catch (err) {
+    console.error(err);
+  }
+  const back = req.get('Referer');
+  if (back && back.includes('/admin/audit-log')) {
+    return res.redirect(back);
+  }
+  res.redirect('/admin/audit-log');
 });
 
 // Tasks page - shows all tasks (similar to dashboard but dedicated page)
