@@ -212,6 +212,12 @@
                 <span><%= t('taskDistribution') %></span>
               </a>
             </li>
+            <li class="tm-sidebar-item">
+              <a href="/admin/audit-log" class="tm-sidebar-link">
+                <i class="bi bi-journal-text"></i>
+                <span><%= t('auditLogPageTitle') %></span>
+              </a>
+            </li>
             <% if (currentUser.role === 'system_admin') { %>
             <li class="tm-sidebar-item">
               <a href="/admin/system-admins" class="tm-sidebar-link">

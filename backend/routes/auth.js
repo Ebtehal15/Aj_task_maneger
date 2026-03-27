@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../services/db');
+const { logAudit } = require('../services/auditLog');
 
 const router = express.Router();
 
@@ -157,6 +158,13 @@ router.post('/login', async (req, res) => {
         console.log(`  Session userId: ${req.session.userId}`);
         console.log(`  Response will include Set-Cookie header`);
 
+        logAudit(req, {
+          action: 'auth.login',
+          userId: user.id,
+          username: user.username,
+          details: { role: user.role, route: '/login' }
+        });
+
         // Redirect based on user role
         if (user.role === 'super_admin' || user.role === 'system_admin') {
           console.log(`🔄 Redirecting to /admin/dashboard with sessionId: ${req.sessionID}`);
@@ -238,6 +246,12 @@ router.post('/user-login', async (req, res) => {
             targetRole: 'user'
           });
         }
+        logAudit(req, {
+          action: 'auth.login',
+          userId: user.id,
+          username: user.username,
+          details: { role: user.role, route: '/user-login' }
+        });
         return res.redirect('/user/tasks');
       });
     });
@@ -263,6 +277,14 @@ router.get('/lang/:code', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
+  if (req.user) {
+    logAudit(req, {
+      action: 'auth.logout',
+      userId: req.user.id,
+      username: req.user.username,
+      details: {}
+    });
+  }
   req.session.destroy(() => {
     res.redirect('/login');
   });

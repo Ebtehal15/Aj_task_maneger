@@ -5,6 +5,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
+const { logAudit } = require('../services/auditLog');
 const { addNotification } = require('../services/notifications');
 const { streamTaskPdf } = require('../services/pdfHelper');
 const { translateText } = require('../services/translate');
@@ -517,6 +518,12 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
     }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.create',
+      entityType: 'task',
+      entityId: taskId,
+      details: { title: String(title).trim(), context: 'creator' }
+    });
     res.redirect('/creator/tasks');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -677,6 +684,12 @@ router.post('/tasks/:id/edit', async (req, res) => {
     }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.update',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { title: updatedTitle, context: 'creator' }
+    });
     res.redirect(`/creator/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -766,6 +779,13 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
     }
 
     await client.query('COMMIT');
+    const files = req.files || [];
+    logAudit(req, {
+      action: 'task.status_update',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { status: status || null, filesAdded: files.length, context: 'creator' }
+    });
     res.redirect(`/creator/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -782,7 +802,10 @@ router.post('/tasks/:id/delete', async (req, res) => {
   const userId = req.user.id;
 
   const client = await pool.connect();
+  let titleSnap = null;
   try {
+    const tSnap = await client.query('SELECT title FROM tasks WHERE id = $1', [taskId]);
+    titleSnap = tSnap.rows[0]?.title || null;
     await client.query('BEGIN');
 
     // Permission check: user must be assigned or creator
@@ -815,6 +838,12 @@ router.post('/tasks/:id/delete', async (req, res) => {
     await client.query('DELETE FROM tasks WHERE id = $1', [taskId]);
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.delete',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { title: titleSnap, context: 'creator' }
+    });
     res.redirect('/creator/tasks');
   } catch (err) {
     await client.query('ROLLBACK');

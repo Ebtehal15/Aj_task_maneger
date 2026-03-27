@@ -6,6 +6,7 @@ const PDFDocument = require('pdfkit');
 const bcrypt = require('bcryptjs');
 const ExcelJS = require('exceljs');
 const { getDb } = require('../services/db');
+const { logAudit } = require('../services/auditLog');
 const { addNotification } = require('../services/notifications');
 const { sendTaskAssignedEmail } = require('../services/email');
 const { translateText } = require('../services/translate');
@@ -208,6 +209,73 @@ router.get('/dashboard', async (req, res) => {
       <p>Error: ${err.message}</p>
       <p><a href="/admin/dashboard">Try again</a></p>
     `);
+  }
+});
+
+// Denetim günlüğü (super_admin & system_admin)
+router.get('/audit-log', async (req, res) => {
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const perPage = Math.min(100, Math.max(10, parseInt(String(req.query.perPage || '50'), 10) || 50));
+  const actionFilter = String(req.query.action || '').trim();
+  const usernameFilter = String(req.query.username || '').trim();
+  const dateFrom = String(req.query.date_from || '').trim();
+  const dateTo = String(req.query.date_to || '').trim();
+
+  const conditions = [];
+  const params = [];
+  let p = 1;
+
+  if (actionFilter) {
+    conditions.push(`action ILIKE $${p++}`);
+    params.push(`%${actionFilter}%`);
+  }
+  if (usernameFilter) {
+    conditions.push(`username_snapshot ILIKE $${p++}`);
+    params.push(`%${usernameFilter}%`);
+  }
+  if (dateFrom) {
+    conditions.push(`created_at >= $${p++}::date`);
+    params.push(dateFrom);
+  }
+  if (dateTo) {
+    conditions.push(`created_at < ($${p++}::date + interval '1 day')`);
+    params.push(dateTo);
+  }
+
+  const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  try {
+    const countResult = await pool.query(`SELECT COUNT(*)::int AS c FROM audit_log ${whereSql}`, params);
+    const total = countResult.rows[0].c;
+    const totalPages = Math.max(1, Math.ceil(total / perPage) || 1);
+    const safePage = Math.min(page, totalPages);
+
+    const limitIdx = p;
+    const offsetIdx = p + 1;
+    const dataParams = [...params, perPage, (safePage - 1) * perPage];
+    const rowsResult = await pool.query(
+      `SELECT * FROM audit_log ${whereSql} ORDER BY created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      dataParams
+    );
+
+    res.render('admin/audit-log', {
+      pageTitle: req.t('auditLogPageTitle'),
+      rows: rowsResult.rows,
+      total,
+      page: safePage,
+      totalPages,
+      perPage,
+      filters: {
+        action: actionFilter,
+        username: usernameFilter,
+        date_from: dateFrom,
+        date_to: dateTo
+      },
+      currentUser: req.user
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
   }
 });
 
@@ -1468,10 +1536,16 @@ router.post('/users', avatarUpload.single('avatar'), async (req, res) => {
   try {
   const passwordHash = bcrypt.hashSync(password, 10);
     const avatarPath = req.file ? `uploads/avatars/${req.file.filename}` : null;
-    await pool.query(
-      'INSERT INTO users (username, email, password_hash, role, avatar) VALUES ($1, $2, $3, $4, $5)',
+    const ins = await pool.query(
+      'INSERT INTO users (username, email, password_hash, role, avatar) VALUES ($1, $2, $3, $4, $5) RETURNING id, username',
       [username, email || null, passwordHash, role, avatarPath]
     );
+    logAudit(req, {
+      action: 'user.create',
+      entityType: 'user',
+      entityId: ins.rows[0].id,
+      details: { username: ins.rows[0].username, role }
+    });
     res.redirect('/admin/users');
   } catch (err) {
         console.error(err);
@@ -1558,6 +1632,12 @@ router.post('/users/:id', avatarUpload.single('avatar'), async (req, res) => {
         [username, email || null, role, avatarPath, userId]
       );
     }
+    logAudit(req, {
+      action: 'user.update',
+      entityType: 'user',
+      entityId: parseInt(userId, 10),
+      details: { username, role }
+    });
     res.redirect('/admin/users');
   } catch (err) {
         console.error(err);
@@ -1575,8 +1655,9 @@ router.post('/users/:id/delete', async (req, res) => {
   }
   
   try {
-    const roleResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const roleResult = await pool.query('SELECT role, username FROM users WHERE id = $1', [userId]);
     const targetRole = roleResult.rows[0]?.role;
+    const targetUsername = roleResult.rows[0]?.username;
     if (targetRole === 'system_admin') {
       return res.json({ success: false, error: 'system_admin users can only be managed from System Admin page' });
     }
@@ -1595,6 +1676,12 @@ router.post('/users/:id/delete', async (req, res) => {
       }
     }
     
+    logAudit(req, {
+      action: 'user.delete',
+      entityType: 'user',
+      entityId: parseInt(userId, 10),
+      details: { targetUsername: targetUsername || null }
+    });
     // Delete user
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
     res.json({ success: true });
@@ -1770,6 +1857,12 @@ router.post('/tasks', upload.array('attachments', 20), async (req, res) => {
       }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.create',
+      entityType: 'task',
+      entityId: taskId,
+      details: { title: title.trim() }
+    });
       res.redirect('/admin/dashboard');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -2148,6 +2241,12 @@ router.post('/tasks/:id', async (req, res) => {
     }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.update',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { title: updatedTitle }
+    });
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -2266,6 +2365,12 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
     }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.status_update',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { status, filesAdded: (req.files || []).length }
+    });
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -2299,6 +2404,12 @@ router.post('/tasks/:id/status', async (req, res) => {
       [taskId, req.user.id, status]
     );
 
+    logAudit(req, {
+      action: 'task.status_change',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { status }
+    });
     res.redirect(`/admin/tasks/${taskId}`);
   } catch (err) {
     console.error('Error updating task status', err);
@@ -2311,7 +2422,10 @@ router.post('/tasks/:id/delete', async (req, res) => {
   const taskId = req.params.id;
 
   const client = await pool.connect();
+  let titleSnap = null;
   try {
+    const tSnap = await client.query('SELECT title FROM tasks WHERE id = $1', [taskId]);
+    titleSnap = tSnap.rows[0]?.title || null;
     await client.query('BEGIN');
     
     // Foreign keys with ON DELETE CASCADE should handle these, but being explicit
@@ -2321,6 +2435,12 @@ router.post('/tasks/:id/delete', async (req, res) => {
     await client.query('DELETE FROM tasks WHERE id = $1', [taskId]);
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.delete',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { title: titleSnap }
+    });
     res.redirect('/admin/dashboard');
   } catch (err) {
     await client.query('ROLLBACK');

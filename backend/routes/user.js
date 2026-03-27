@@ -3,6 +3,7 @@ const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
 const { getDb } = require('../services/db');
+const { logAudit } = require('../services/auditLog');
 const { addNotification } = require('../services/notifications');
 const { streamTaskPdf } = require('../services/pdfHelper');
 const { translateText } = require('../services/translate');
@@ -328,6 +329,12 @@ router.post('/tasks/:id/update', upload.array('attachments', 20), async (req, re
     }
 
     await client.query('COMMIT');
+    logAudit(req, {
+      action: 'task.status_update',
+      entityType: 'task',
+      entityId: parseInt(taskId, 10),
+      details: { status, filesAdded: files.length, context: 'user' }
+    });
           res.redirect(`/user/tasks/${taskId}`);
   } catch (err) {
     await client.query('ROLLBACK');

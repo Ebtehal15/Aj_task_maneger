@@ -1,0 +1,111 @@
+<%
+  function auditLogQs(pageNum) {
+    var p = new URLSearchParams();
+    if (filters.action) p.set('action', filters.action);
+    if (filters.username) p.set('username', filters.username);
+    if (filters.date_from) p.set('date_from', filters.date_from);
+    if (filters.date_to) p.set('date_to', filters.date_to);
+    if (pageNum) p.set('page', String(pageNum));
+    var s = p.toString();
+    return s ? '?' + s : '';
+  }
+%>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0"><%= t('auditLogPageTitle') %></h1>
+  <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm">← <%= t('back') %></a>
+</div>
+
+<form method="get" action="/admin/audit-log" class="card shadow-sm mb-3">
+  <div class="card-body p-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-0"><%= t('auditLogFilterAction') %></label>
+        <input type="text" name="action" class="form-control form-control-sm" value="<%= filters.action %>" />
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-0"><%= t('auditLogFilterUsername') %></label>
+        <input type="text" name="username" class="form-control form-control-sm" value="<%= filters.username %>" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-0"><%= t('auditLogDateFrom') %></label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="<%= filters.date_from %>" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-0"><%= t('auditLogDateTo') %></label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="<%= filters.date_to %>" />
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary btn-sm w-100"><%= t('auditLogApplyFilters') %></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<p class="small text-muted mb-2">
+  <%= t('auditLogTotalRows') %>: <strong><%= total %></strong>
+  <% if (typeof page !== 'undefined' && typeof totalPages !== 'undefined') { %>
+    — <%= page %> / <%= totalPages %>
+  <% } %>
+</p>
+
+<% if (!rows || rows.length === 0) { %>
+  <div class="alert alert-secondary"><%= t('auditLogNoEntries') %></div>
+<% } else { %>
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table table-sm table-striped table-hover mb-0 align-middle" style="font-size: 0.85rem;">
+      <thead class="table-light">
+        <tr>
+          <th scope="col"><%= t('auditLogColTime') %></th>
+          <th scope="col"><%= t('auditLogColUser') %></th>
+          <th scope="col"><%= t('auditLogColAction') %></th>
+          <th scope="col"><%= t('auditLogColEntity') %></th>
+          <th scope="col"><%= t('auditLogColEntityId') %></th>
+          <th scope="col"><%= t('auditLogColDetails') %></th>
+          <th scope="col"><%= t('auditLogColIp') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(function (row) {
+          var ts = row.created_at;
+          var timeStr = '';
+          if (ts) {
+            try {
+              var d = new Date(ts);
+              timeStr = d.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
+            } catch (e) { timeStr = String(ts); }
+          }
+          var det = row.details;
+          var detStr = '';
+          if (det != null) {
+            detStr = typeof det === 'object' ? JSON.stringify(det) : String(det);
+          }
+        %>
+        <tr>
+          <td class="text-nowrap"><%= timeStr %></td>
+          <td><%= row.username_snapshot || '—' %></td>
+          <td><code><%= row.action %></code></td>
+          <td><%= row.entity_type || '—' %></td>
+          <td><%= row.entity_id != null ? row.entity_id : '—' %></td>
+          <td class="small text-break" style="max-width: 280px;"><%= detStr || '—' %></td>
+          <td class="small text-nowrap"><%= row.ip_address || '—' %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (typeof page !== 'undefined' && typeof totalPages !== 'undefined' && totalPages > 1) { %>
+  <nav class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <% if (page > 1) { %>
+      <a class="btn btn-outline-secondary btn-sm" href="/admin/audit-log<%= auditLogQs(page - 1) %>"><%= t('auditLogPrev') %></a>
+    <% } else { %>
+      <span></span>
+    <% } %>
+    <% if (page < totalPages) { %>
+      <a class="btn btn-outline-secondary btn-sm" href="/admin/audit-log<%= auditLogQs(page + 1) %>"><%= t('auditLogNext') %></a>
+    <% } else { %>
+      <span></span>
+    <% } %>
+  </nav>
+  <% } %>
+<% } %>
