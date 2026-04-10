@@ -2508,12 +2508,12 @@ router.get('/download-uploads-backup', async (req, res) => {
       return res.status(403).send('Forbidden');
     }
 
-    const backupPath = '/data/uploads-backup.tar.gz';
+    const backupPath = '/data/uploads-backup-new.tar.gz';
     if (!fs.existsSync(backupPath)) {
       return res.status(404).send('Backup file not found: /data/uploads-backup.tar.gz');
     }
 
-    return res.download(backupPath, 'uploads-backup.tar.gz');
+    return res.download(backupPath, '/data/uploads-backup-new.tar.gz');
   } catch (err) {
     console.error('download-uploads-backup error:', err);
     return res.status(500).send('Download failed');
