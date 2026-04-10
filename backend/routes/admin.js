@@ -2499,4 +2499,26 @@ router.post('/translate', async (req, res) => {
   }
 });
 
+
+// Geçici: Render diskindeki uploads yedeğini indir
+router.get('/download-uploads-backup', async (req, res) => {
+  try {
+    // Sadece üst yetkiler erişsin
+    if (!req.user || !['system_admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).send('Forbidden');
+    }
+
+    const backupPath = '/data/uploads-backup.tar.gz';
+    if (!fs.existsSync(backupPath)) {
+      return res.status(404).send('Backup file not found: /data/uploads-backup.tar.gz');
+    }
+
+    return res.download(backupPath, 'uploads-backup.tar.gz');
+  } catch (err) {
+    console.error('download-uploads-backup error:', err);
+    return res.status(500).send('Download failed');
+  }
+});
+
+
 module.exports = router;
